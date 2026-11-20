@@ -41,7 +41,7 @@ class PhraseLayoutSemanticsTest {
         words.forEachIndexed { index, word ->
             composeRule.onNodeWithTag("word_$index").assert(isSensitive)
             composeRule.onNodeWithText(word).assert(isSensitive)
-            composeRule.onNodeWithText("${index + 1}.").assert(isSensitive)
+            composeRule.onNodeWithText(ordinal(index)).assert(isSensitive)
         }
     }
 
@@ -52,7 +52,9 @@ class PhraseLayoutSemanticsTest {
 
         words.forEachIndexed { index, word ->
             composeRule.onNodeWithText(word).assertDoesNotExist()
-            composeRule.onNodeWithText("${index + 1}.").assertDoesNotExist()
+            composeRule.onNodeWithText(ordinal(index)).assertDoesNotExist()
         }
     }
+
+    private fun ordinal(index: Int): String = (index + 1).toString().padStart(2, '0')
 }

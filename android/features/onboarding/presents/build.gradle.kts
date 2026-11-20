@@ -7,6 +7,11 @@ plugins {
 android {
     namespace = "com.gemwallet.android.features.onboarding.presents"
 
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
     buildFeatures {
         compose = true
     }
@@ -22,5 +27,9 @@ dependencies {
     implementation(libs.navigation3.runtime)
 
     debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.ui.tooling.preview)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.androidx.ui.test.junit4)
 }
