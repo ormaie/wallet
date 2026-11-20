@@ -23,6 +23,7 @@ fun WalletImageScreen(onCancel: () -> Unit, viewModel: WalletImageViewModel = hi
         onAction = { action ->
             when (action) {
                 is WalletImageAction.SetEmoji -> viewModel.setEmoji(action.emoji, action.backgroundColor)
+                is WalletImageAction.SetJdenticon -> viewModel.setJdenticon(action.jdenticon)
                 is WalletImageAction.SetNftImage -> viewModel.setNftImage(action.url)
                 WalletImageAction.ResetToDefault -> viewModel.resetToDefault()
                 WalletImageAction.Close -> onCancel()

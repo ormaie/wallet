@@ -63,6 +63,11 @@ fun ListItemImageView(image: ListItemImage, modifier: Modifier = Modifier, style
             scale = AvatarScale.EMOJI,
         )
 
+        is ListItemImage.Jdenticon -> JdenticonView(
+            jdenticon = image.jdenticon,
+            modifier = modifier.size(size),
+        )
+
         is ListItemImage.Initials -> InitialsAvatar(text = image.text, size = size, modifier = modifier, placeholder = AppIcons.Person)
 
         is ListItemImage.Symbol -> if (style == ListItemImageStyle.Action) {

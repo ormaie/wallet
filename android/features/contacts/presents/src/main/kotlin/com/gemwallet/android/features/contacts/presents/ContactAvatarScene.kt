@@ -9,9 +9,15 @@ import com.gemwallet.android.ui.components.EmojiPickerGrid
 import com.gemwallet.android.ui.components.screen.Scene
 import com.gemwallet.android.ui.theme.AvatarEmoji
 import com.gemwallet.android.ui.theme.secondaryFaded
+import uniffi.gemstone.GemJdenticon
 
 @Composable
-internal fun ContactAvatarScene(onSelect: (String, Int) -> Unit, onCancel: () -> Unit) {
+internal fun ContactAvatarScene(
+    identicons: List<GemJdenticon>,
+    onSelect: (String, Int) -> Unit,
+    onSelectIdenticon: (GemJdenticon) -> Unit,
+    onCancel: () -> Unit,
+) {
     val background = MaterialTheme.colorScheme.secondaryFaded
     Scene(
         title = stringResource(R.string.common_emoji),
@@ -21,6 +27,8 @@ internal fun ContactAvatarScene(onSelect: (String, Int) -> Unit, onCancel: () ->
             emojis = AvatarEmoji.all,
             onSelect = { onSelect(it, background.toArgb()) },
             background = background,
+            identicons = identicons,
+            onSelectIdenticon = onSelectIdenticon,
         )
     }
 }

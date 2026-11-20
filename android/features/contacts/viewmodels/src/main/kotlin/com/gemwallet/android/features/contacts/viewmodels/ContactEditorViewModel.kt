@@ -16,6 +16,7 @@ import com.gemwallet.android.features.contacts.viewmodels.models.ContactEditorUI
 import com.gemwallet.android.features.contacts.viewmodels.models.listItemImage
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.image.EmojiAvatarRenderer
+import com.gemwallet.android.ui.components.image.JdenticonAvatarRenderer
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.models.ToastMessage
@@ -43,6 +44,7 @@ import uniffi.gemstone.GemContactAvatar
 import uniffi.gemstone.GemContactAvatarChoice
 import uniffi.gemstone.GemContactEditorServiceInterface
 import uniffi.gemstone.GemContactSession
+import uniffi.gemstone.GemJdenticon
 import uniffi.gemstone.GemNameServiceInterface
 import javax.inject.Inject
 
@@ -105,7 +107,14 @@ class ContactEditorViewModel @Inject constructor(
             name = session.name,
             description = session.description,
             avatar = session.avatarImage().listItemImage(current.emojiBackground),
-            hasAvatar = session.avatar !is GemContactAvatarChoice.Empty,
+            hasAvatar = when (session.avatar) {
+                GemContactAvatarChoice.Empty -> false
+                is GemContactAvatarChoice.Image,
+                is GemContactAvatarChoice.Emoji,
+                is GemContactAvatarChoice.Identicon,
+                -> true
+            },
+            identicons = session.identicons(),
             addressRows = session.addressRows(),
             page = current.page,
             isSaving = session.isSaving,
@@ -160,6 +169,13 @@ class ContactEditorViewModel @Inject constructor(
         it.copy(
             session = it.session.onAvatarChanged(GemContactAvatarChoice.Emoji(emoji)),
             emojiBackground = backgroundColor,
+            page = ContactEditorPage.Form,
+        )
+    }
+
+    fun setIdenticon(jdenticon: GemJdenticon) = state.update {
+        it.copy(
+            session = it.session.onAvatarChanged(GemContactAvatarChoice.Identicon(jdenticon)),
             page = ContactEditorPage.Form,
         )
     }
@@ -242,6 +258,7 @@ class ContactEditorViewModel @Inject constructor(
                     GemContactAvatarChoice.Empty -> GemContactAvatar.Empty
                     is GemContactAvatarChoice.Image -> GemContactAvatar.Image(avatar.imageUrl)
                     is GemContactAvatarChoice.Emoji -> GemContactAvatar.Rendered(EmojiAvatarRenderer.render(context, avatar.emoji, current.emojiBackground))
+                    is GemContactAvatarChoice.Identicon -> GemContactAvatar.Rendered(JdenticonAvatarRenderer.render(context, avatar.value))
                 },
             )
             runCatchingCancellable { service.saveContact(input) }

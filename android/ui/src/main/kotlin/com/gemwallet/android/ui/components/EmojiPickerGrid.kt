@@ -8,23 +8,48 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.gemwallet.android.ui.components.image.AvatarScale
 import com.gemwallet.android.ui.components.image.EmojiView
+import com.gemwallet.android.ui.components.image.JdenticonView
 import com.gemwallet.android.ui.theme.paddingDefault
 import com.gemwallet.android.ui.theme.paddingSmall
+import uniffi.gemstone.GemJdenticon
 
 private const val EMOJI_COLUMNS = 4
 
 @Composable
-fun EmojiPickerGrid(emojis: List<String>, onSelect: (String) -> Unit, background: Color, modifier: Modifier = Modifier) {
+fun EmojiPickerGrid(
+    emojis: List<String>,
+    onSelect: (String) -> Unit,
+    background: Color,
+    modifier: Modifier = Modifier,
+    identicons: List<GemJdenticon> = emptyList(),
+    onSelectIdenticon: ((GemJdenticon) -> Unit)? = null,
+) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(EMOJI_COLUMNS),
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(paddingDefault),
     ) {
+        if (onSelectIdenticon != null) {
+            itemsIndexed(identicons, key = { index, _ -> "identicon_$index" }) { _, identicon ->
+                Box(
+                    modifier = Modifier
+                        .aspectRatio(1f)
+                        .padding(paddingSmall),
+                ) {
+                    JdenticonView(
+                        jdenticon = identicon,
+                        modifier = Modifier.fillMaxSize(),
+                        onClick = { onSelectIdenticon(identicon) },
+                    )
+                }
+            }
+        }
         items(emojis) { emoji ->
             Box(
                 modifier = Modifier

@@ -1,9 +1,9 @@
-use primitives::{AddressFormatStyle, AddressName, AddressType, Chain, Contact};
-use primitives::{OptionStringExt, contact::ContactAddress};
+use primitives::{AddressFormatStyle, AddressName, AddressType, Chain, Contact, OptionStringExt, contact::ContactAddress};
 
 use super::rules;
 use crate::address_formatter::format_address;
 use crate::models::state::GemListPhase;
+use crate::services::avatar::GemJdenticon;
 use crate::services::chain::{GemChainRow, chain_row};
 use crate::services::empty_state::{GemEmptyStateKind, empty_state};
 
@@ -29,6 +29,7 @@ pub enum GemContactAvatarChoice {
     Empty,
     Image { image_url: String },
     Emoji { emoji: String },
+    Identicon { value: GemJdenticon },
 }
 
 #[derive(Debug, Clone, PartialEq, uniffi::Enum)]
@@ -37,6 +38,7 @@ pub enum GemContactAvatarImage {
     Placeholder,
     Image { image_url: String, initials: String },
     Emoji { emoji: String },
+    Identicon { value: GemJdenticon },
 }
 
 #[derive(Debug, Clone, uniffi::Record)]
@@ -104,11 +106,16 @@ impl GemContactSession {
         rules::can_save_contact(&self.name, self.is_saving)
     }
 
+    pub fn identicons(&self) -> Vec<GemJdenticon> {
+        rules::identicons(&self.addresses)
+    }
+
     pub fn avatar_image(&self) -> GemContactAvatarImage {
         match &self.avatar {
             GemContactAvatarChoice::Empty => contact_avatar_image(None, &self.name),
             GemContactAvatarChoice::Image { image_url } => contact_avatar_image(Some(image_url.clone()), &self.name),
             GemContactAvatarChoice::Emoji { emoji } => GemContactAvatarImage::Emoji { emoji: emoji.clone() },
+            GemContactAvatarChoice::Identicon { value } => GemContactAvatarImage::Identicon { value: value.clone() },
         }
     }
 
@@ -272,6 +279,31 @@ mod tests {
 
         assert_eq!((input.id.as_str(), input.name.as_str(), input.description.as_str()), ("contact", "Ada", "Friend"));
         assert!(matches!(input.avatar, GemContactAvatar::Rendered { .. }));
+    }
+
+    #[test]
+    fn test_session_identicons_and_selected_identicon_avatar() {
+        let address = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+        let empty = session();
+        assert_eq!(empty.identicons(), Vec::new());
+
+        let with_address = empty.on_address_saved(GemContactAddressInput {
+            contact_id: "contact".into(),
+            chain: Chain::Ethereum,
+            address: address.into(),
+            memo: None,
+            replacing_id: None,
+        });
+        let icons = with_address.identicons();
+        assert_eq!(icons.len(), 2);
+
+        let selected = icons[0].clone();
+        let chosen = with_address.on_avatar_changed(GemContactAvatarChoice::Identicon { value: selected.clone() });
+        assert_eq!(chosen.avatar_image(), GemContactAvatarImage::Identicon { value: selected.clone() });
+        assert_eq!(
+            chosen.on_address_deleted(chosen.addresses[0].id.clone()).avatar_image(),
+            GemContactAvatarImage::Identicon { value: selected }
+        );
     }
 
     #[test]

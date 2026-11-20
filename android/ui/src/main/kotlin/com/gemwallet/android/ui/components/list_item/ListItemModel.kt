@@ -44,6 +44,7 @@ import com.gemwallet.android.ui.theme.space2
 import com.gemwallet.android.ui.theme.space6
 import uniffi.gemstone.GemAssetIcon
 import uniffi.gemstone.GemAssetIconImage
+import uniffi.gemstone.GemJdenticon
 
 data class ListItemModel(
     val title: String,
@@ -124,6 +125,10 @@ sealed interface ListItemImage {
     }
 
     data class Emoji(val glyph: String, val backgroundColor: Int? = null) : ListItemImage {
+        override val style: ListItemImageStyle = ListItemImageStyle.Avatar
+    }
+
+    data class Jdenticon(val jdenticon: GemJdenticon) : ListItemImage {
         override val style: ListItemImageStyle = ListItemImageStyle.Avatar
     }
 

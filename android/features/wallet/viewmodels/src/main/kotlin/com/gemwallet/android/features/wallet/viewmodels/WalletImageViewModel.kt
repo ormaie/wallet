@@ -11,6 +11,7 @@ import com.gemwallet.android.ext.errorText
 import com.gemwallet.android.ext.runCatchingCancellable
 import com.gemwallet.android.ext.toGem
 import com.gemwallet.android.ui.components.image.EmojiAvatarRenderer
+import com.gemwallet.android.ui.components.image.JdenticonAvatarRenderer
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.theme.AvatarEmoji
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import uniffi.gemstone.GemAvatarList
+import uniffi.gemstone.GemJdenticon
 import uniffi.gemstone.GemWalletDetails
 import uniffi.gemstone.GemWalletServiceInterface
 import javax.inject.Inject
@@ -59,6 +61,11 @@ class WalletImageViewModel @Inject constructor(
 
     fun setEmoji(emoji: String, backgroundColor: Int) = viewModelScope.launch(ioDispatcher) {
         runCatchingCancellable { walletService.setAvatarImage(walletId.id, EmojiAvatarRenderer.render(context, emoji, backgroundColor)) }
+            .onFailure { errorState.value = it.errorText().text(context) }
+    }
+
+    fun setJdenticon(jdenticon: GemJdenticon) = viewModelScope.launch(ioDispatcher) {
+        runCatchingCancellable { walletService.setAvatarImage(walletId.id, JdenticonAvatarRenderer.render(context, jdenticon)) }
             .onFailure { errorState.value = it.errorText().text(context) }
     }
 
