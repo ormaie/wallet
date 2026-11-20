@@ -346,7 +346,7 @@ A haptic is the short vibration that confirms what the user's finger just did, o
 | A value is copied | Success, with its toast | |
 | The user taps the wallet balance to hide or show it | Tap | |
 | The user slides along the price chart, a portfolio chart or a candlestick chart | Tick each time the point under the finger changes, not when it first shows | the first point shows on its own; a tick marks each step after it |
-| The user taps a word that is not the next one on "Confirm", in [Onboarding](product/onboarding.md) | Error, and the word shakes | |
+| The user taps a word that is not the next one on "Confirm", in [Onboarding](product/onboarding.md) | Error, and the word nudges once | |
 | A scanned QR code cannot be read | Error, with its toast | |
 | Any Paste finds nothing on the clipboard | Error | nothing else shows that the tap did nothing; a copied Secret Phrase leaves the clipboard after a minute or once it is pasted, so this happens on real devices |
 | An alert asks to confirm a step that cannot be undone or changes money: deleting a wallet or a node the user added, a high Price Impact on Swap, Modify on a perpetual position | Warning | it marks the one tap to think about; an action with no confirmation, such as disconnecting a dapp, has none |
