@@ -4,6 +4,7 @@ import com.gemwallet.android.application.update.cases.ObserveAppUpdateOffer
 import com.gemwallet.android.application.update.cases.SkipAppUpdate
 import com.gemwallet.android.application.update.cases.SyncAppUpdate
 import com.gemwallet.android.data.coordinators.update.AppUpdateCoordinator
+import com.gemwallet.android.data.coordinators.update.DisabledAppUpdateService
 import com.gemwallet.android.model.BuildInfo
 import dagger.Module
 import dagger.Provides
@@ -25,7 +26,7 @@ object UpdateModule {
 
     @Provides
     @Singleton
-    fun provideAppUpdateCoordinator(appUpdateService: GemAppUpdateService, buildInfo: BuildInfo): AppUpdateCoordinator = AppUpdateCoordinator(appUpdateService, buildInfo)
+    fun provideAppUpdateCoordinator(appUpdateService: GemAppUpdateServiceInterface, buildInfo: BuildInfo): AppUpdateCoordinator = AppUpdateCoordinator(appUpdateService, buildInfo)
 
     @Provides
     @Singleton
@@ -41,5 +42,5 @@ object UpdateModule {
 
     @Provides
     @Singleton
-    fun provideAppUpdateServiceInterface(service: GemAppUpdateService): GemAppUpdateServiceInterface = service
+    fun provideAppUpdateServiceInterface(service: GemAppUpdateService): GemAppUpdateServiceInterface = DisabledAppUpdateService(service)
 }
