@@ -72,7 +72,7 @@ private fun ImportWalletTypeScene(types: GemImportWalletTypes, chainFilter: Text
                     ChainItem(
                         modifier = Modifier.testTag("qr_wallet_item"),
                         title = stringResource(id = R.string.wallet_import_qr_wallet),
-                        icon = ListItemImage.Drawable(R.drawable.ic_qr_code_scanner, style = ListItemImageStyle.Settings),
+                        icon = ListItemImage.Drawable(R.drawable.qr_wallet, style = ListItemImageStyle.Avatar),
                         listPosition = ListPosition.Last,
                         onClick = onSelectQrWallet,
                     )
