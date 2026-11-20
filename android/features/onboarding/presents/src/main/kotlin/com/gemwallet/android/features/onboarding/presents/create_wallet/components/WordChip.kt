@@ -85,6 +85,7 @@ internal fun WordChip(word: String, isEnable: Boolean, modifier: Modifier = Modi
                     .fillMaxSize()
                     .shake(shakeController)
                     .clip(shape)
+                    .testTag("word_option")
                     .clickable(enabled = wordState != WordState.Idle || isEnable) {
                         if (!isEnable) {
                             return@clickable
@@ -102,7 +103,8 @@ internal fun WordChip(word: String, isEnable: Boolean, modifier: Modifier = Modi
                             )
                             wordState = WordState.Error
                         }
-                    },
+                    }
+                    .semantics { if (!isEnable) disabled() },
                 shape = shape,
                 color = bgColor,
             ) {
@@ -123,10 +125,7 @@ internal fun WordChip(word: String, isEnable: Boolean, modifier: Modifier = Modi
                             minFontSize = wordChipMinFontSize,
                             maxFontSize = wordChipMaxFontSize,
                         ),
-                        modifier = Modifier
-                            .testTag("word_option")
-                            .semantics { if (!isEnable) disabled() }
-                            .sensitiveData(),
+                        modifier = Modifier.sensitiveData(),
                     )
                 }
             }
