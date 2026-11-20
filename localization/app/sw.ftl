@@ -91,6 +91,7 @@ wallet_scan_hint_address = Anwani ya mkoba
 wallet_default_name = Wallet #%d
 wallet_default_name_chain = %@ Wallet #%d
 wallet_copy_address = Nakili Anwani
+wallet_copied = Imenakiliwa
 wallet_watch_tooltip_title = Pochi ya kutazama tu. Huna udhibiti wa fedha hizi.
 wallet_watch_empty_state_title = Unatazama pochi hii.
 wallet_stake = Weka Hisa

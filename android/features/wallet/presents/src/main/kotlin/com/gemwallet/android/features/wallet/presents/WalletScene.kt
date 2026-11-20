@@ -3,6 +3,8 @@
 package com.gemwallet.android.features.wallet.presents
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -30,6 +32,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import com.gemwallet.android.domains.asset.aggregates.AssetInfoDataAggregate
 import com.gemwallet.android.features.assets.presents.banner.Banner
 import com.gemwallet.android.features.nft.presents.CollectionsPreviewAction
@@ -45,6 +48,7 @@ import com.gemwallet.android.ui.components.screen.SnackbarHost
 import com.gemwallet.android.ui.open
 import com.gemwallet.android.ui.theme.paddingDefault
 import com.gemwallet.android.ui.theme.paddingSmall
+import com.gemwallet.android.ui.theme.space0
 import com.gemwallet.android.ui.theme.space2
 import com.wallet.core.primitives.AssetId
 import uniffi.gemstone.GemAssetSectionKind
@@ -74,6 +78,7 @@ internal fun WalletScene(
     snackbar: SnackbarHostState,
     listState: LazyListState,
     assetActions: AssetContextActions,
+    bottomPadding: Dp = space0,
     onAction: (WalletAction) -> Unit,
 ) {
     val context = LocalContext.current
@@ -89,7 +94,11 @@ internal fun WalletScene(
                 onScan = { onAction(WalletAction.Scan) },
             )
         },
-        snackbarHost = { SnackbarHost(snackbar) },
+        snackbarHost = {
+            Box(modifier = Modifier.padding(bottom = bottomPadding)) {
+                SnackbarHost(snackbar)
+            }
+        },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
@@ -105,6 +114,7 @@ internal fun WalletScene(
                     .fillMaxHeight()
                     .testTag(AssetsListTag),
                 state = listState,
+                contentPadding = PaddingValues(bottom = bottomPadding),
             ) {
                 item(key = WalletHeaderItemKey) {
                     WalletHeader(

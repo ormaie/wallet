@@ -91,6 +91,7 @@ wallet_scan_hint_address = Cüzdan adresi
 wallet_default_name = Cüzdan #%d
 wallet_default_name_chain = %@ Cüzdanı #%d
 wallet_copy_address = Adresi Kopyala
+wallet_copied = Kopyalandı
 wallet_watch_tooltip_title = Yalnızca izleme cüzdanı. Bu fonlar sizin kontrolünüzde değil.
 wallet_watch_empty_state_title = Bu cüzdanı izliyorsunuz.
 wallet_stake = Stake

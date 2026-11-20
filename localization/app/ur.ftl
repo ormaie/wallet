@@ -91,6 +91,7 @@ wallet_scan_hint_address = والیٹ کا پتہ
 wallet_default_name = والیٹ #%d
 wallet_default_name_chain = %@ والیٹ #%d
 wallet_copy_address = ایڈریس کاپی کریں
+wallet_copied = کاپی ہو گیا
 wallet_watch_tooltip_title = صرف دیکھنے کے لیے والیٹ۔ ان فنڈز پر آپ کا کنٹرول نہیں ہے۔
 wallet_watch_empty_state_title = آپ اس والیٹ کو دیکھ رہے ہیں۔
 wallet_stake = اسٹیک

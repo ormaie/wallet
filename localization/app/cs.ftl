@@ -91,6 +91,7 @@ wallet_scan_hint_address = Adresa peněženky
 wallet_default_name = Peněženka č. %d
 wallet_default_name_chain = %@ Peněženka č.%d
 wallet_copy_address = Kopírovat adresu
+wallet_copied = Zkopírováno
 wallet_watch_tooltip_title = Peněženka pouze ke sledování. Tyto prostředky neovládáte.
 wallet_watch_empty_state_title = Sledujete tuto peněženku.
 wallet_stake = Stake

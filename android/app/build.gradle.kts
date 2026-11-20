@@ -195,6 +195,7 @@ dependencies {
 
     // Features
     implementation(project(":features:transactions:presents"))
+    implementation(project(":features:transactions:viewmodels"))
     implementation(project(":features:assets:presents"))
     implementation(project(":features:assets:viewmodels"))
     implementation(project(":features:qr_scanner:presents"))

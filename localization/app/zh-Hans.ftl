@@ -91,6 +91,7 @@ wallet_scan_hint_address = 钱包地址
 wallet_default_name = 钱包 #%d
 wallet_default_name_chain = %@ 钱包 #%d
 wallet_copy_address = 复制地址
+wallet_copied = 已复制
 wallet_watch_tooltip_title = 仅供观察的钱包。这些资金不受您控制。
 wallet_watch_empty_state_title = 正在观察这个钱包。
 wallet_stake = 质押

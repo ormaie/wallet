@@ -91,6 +91,7 @@ wallet_scan_hint_address = 지갑 주소
 wallet_default_name = 지갑 #%d
 wallet_default_name_chain = %@ 지갑 #%d
 wallet_copy_address = 주소 복사
+wallet_copied = 복사됨
 wallet_watch_tooltip_title = 보기 전용 지갑입니다. 이 자금을 제어할 수 없습니다.
 wallet_watch_empty_state_title = 당신은 이 지갑을 보고 있습니다.
 wallet_stake = 스테이킹

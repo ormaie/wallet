@@ -91,6 +91,7 @@ wallet_scan_hint_address = Địa chỉ ví
 wallet_default_name = Ví #%d
 wallet_default_name_chain = %@ Ví #%d
 wallet_copy_address = Sao chép địa chỉ
+wallet_copied = Đã sao chép
 wallet_watch_tooltip_title = Ví chỉ để theo dõi. Bạn không kiểm soát số tiền này.
 wallet_watch_empty_state_title = Bạn đang xem ví này.
 wallet_stake = Đặt cọc

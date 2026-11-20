@@ -91,6 +91,7 @@ wallet_scan_hint_address = बटुए का पता
 wallet_default_name = वॉलेट #%d
 wallet_default_name_chain = %@ वॉलेट #%d
 wallet_copy_address = पता कॉपी करें
+wallet_copied = कॉपी किया गया
 wallet_watch_tooltip_title = केवल देखने वाला वॉलेट। इन फ़ंड पर आपका नियंत्रण नहीं है।
 wallet_watch_empty_state_title = आप यह बटुआ देख रहे हैं.
 wallet_stake = स्टेक

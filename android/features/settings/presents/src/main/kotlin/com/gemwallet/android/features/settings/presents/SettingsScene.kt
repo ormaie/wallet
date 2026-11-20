@@ -7,12 +7,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import com.gemwallet.android.features.settings.viewmodels.models.settingsAction
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.clickable
@@ -25,7 +26,7 @@ import com.gemwallet.android.ui.theme.space0
 import uniffi.gemstone.GemGroup
 
 @Composable
-fun SettingsScene(sections: List<GemGroup>, onAction: (SettingsAction) -> Unit, scrollState: ScrollState) {
+fun SettingsScene(sections: List<GemGroup>, onAction: (SettingsAction) -> Unit, scrollState: ScrollState, bottomPadding: Dp = space0) {
     Scene(
         title = stringResource(id = R.string.settings_title),
         mainActionPadding = PaddingValues(space0),
@@ -45,7 +46,7 @@ fun SettingsScene(sections: List<GemGroup>, onAction: (SettingsAction) -> Unit, 
                     )
                 }
             }
-            Spacer(modifier = Modifier.size(it.calculateBottomPadding()))
+            Spacer(modifier = Modifier.height(it.calculateBottomPadding() + bottomPadding))
         }
     }
 }

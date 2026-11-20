@@ -91,6 +91,7 @@ wallet_scan_hint_address = Adresa portofelului
 wallet_default_name = Portofelul #%d
 wallet_default_name_chain = %@ Portofelul #%d
 wallet_copy_address = Copiați adresa
+wallet_copied = Copiat
 wallet_watch_tooltip_title = Portofel doar pentru monitorizare. Nu controlezi aceste fonduri.
 wallet_watch_empty_state_title = Te uiți la acest portofel.
 wallet_stake = Staking

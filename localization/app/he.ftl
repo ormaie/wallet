@@ -91,6 +91,7 @@ wallet_scan_hint_address = כתובת הארנק
 wallet_default_name = ארנק #%d
 wallet_default_name_chain = %@ ארנק #%d
 wallet_copy_address = העתק כתובת
+wallet_copied = הועתק
 wallet_watch_tooltip_title = ארנק לצפייה בלבד. אין לך שליטה על הכספים האלה.
 wallet_watch_empty_state_title = אתה צופה בארנק הזה.
 wallet_stake = סטייקינג

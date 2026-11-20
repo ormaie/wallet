@@ -91,6 +91,7 @@ wallet_scan_hint_address = آدرس کیف پول
 wallet_default_name = کیف پول %d
 wallet_default_name_chain = %@ کیف پول %d
 wallet_copy_address = کپی کردن آدرس
+wallet_copied = کپی شد
 wallet_watch_tooltip_title = کیف پول فقط برای مشاهده. شما کنترلی بر این وجوه ندارید.
 wallet_watch_empty_state_title = شما در حال تماشای این کیف پول هستید.
 wallet_stake = استیک

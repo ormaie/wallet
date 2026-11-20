@@ -91,7 +91,7 @@ internal fun SupportMessageInputBar(state: TextFieldState, onPickImage: () -> Un
             }
         }
         FilledIconButton(onClick = onSend, enabled = canSend, modifier = Modifier.size(actionIconSize)) {
-            Icon(imageVector = AppIcons.Send, contentDescription = stringResource(R.string.wallet_send))
+            Icon(imageVector = AppIcons.SendMessage, contentDescription = stringResource(R.string.wallet_send))
         }
     }
 }

@@ -176,6 +176,8 @@ wallet_default_name = Wallet #%d
 wallet_default_name_chain = %@ Wallet #%d
 # Used in wallet creation, import, receive, and wallet detail screens for the copy address label.
 wallet_copy_address = Copy Address
+# Confirmation label shown on the copy button after copying an address.
+wallet_copied = Copied
 # Used in the wallet and asset header banner for watch wallets.
 wallet_watch_tooltip_title = Watch-only wallet. You don't control these funds.
 # Used as the empty state title on asset and activity screens for watch wallets.

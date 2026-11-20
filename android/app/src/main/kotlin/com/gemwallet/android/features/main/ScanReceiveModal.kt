@@ -19,6 +19,7 @@ import com.gemwallet.android.features.qr_scanner.presents.QRScannerScreen
 import com.gemwallet.android.features.transfer.presents.receive.ReceiveScreen
 import com.gemwallet.android.ui.components.PortraitOrientationLock
 import com.gemwallet.android.ui.components.ScanReceiveSwitcher
+import com.gemwallet.android.ui.components.rememberTabsBarProgress
 import com.gemwallet.android.ui.components.screen.ModalBottomSheet
 import com.gemwallet.android.ui.components.screen.SheetExpansion
 import com.gemwallet.android.ui.theme.SheetSizing
@@ -45,13 +46,14 @@ fun ScanReceiveModal(isVisible: Boolean, showsSelector: Boolean, onDismissReques
         var mode by rememberSaveable { mutableStateOf(ScanReceiveMode.Scan) }
         var receiveAssetId by rememberSaveable { mutableStateOf<String?>(null) }
         var isReceivePresented by rememberSaveable { mutableStateOf(false) }
+        val modeProgress = rememberTabsBarProgress(ScanReceiveMode.entries, mode)
 
         Box(modifier = Modifier.fillMaxSize()) {
             when (mode) {
                 ScanReceiveMode.Scan -> QRScannerScreen(
                     scanType = QRScanType.Universal,
                     onCancel = onDismissRequest,
-                    titleContent = { if (showsSelector) ScanReceiveSwitcher(mode = mode, onModeChange = { mode = it }) },
+                    titleContent = { if (showsSelector) ScanReceiveSwitcher(mode = mode, onModeChange = { mode = it }, progress = modeProgress) },
                     onResult = onScan,
                 )
 
@@ -63,7 +65,7 @@ fun ScanReceiveModal(isVisible: Boolean, showsSelector: Boolean, onDismissReques
                         receiveAssetId = it.toIdentifier()
                         isReceivePresented = true
                     },
-                    titleContent = { ScanReceiveSwitcher(mode = mode, onModeChange = { mode = it }) },
+                    titleContent = { ScanReceiveSwitcher(mode = mode, onModeChange = { mode = it }, progress = modeProgress) },
                     closeIcon = true,
                     showFilter = false,
                 )

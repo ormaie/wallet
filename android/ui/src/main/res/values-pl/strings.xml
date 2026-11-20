@@ -85,6 +85,7 @@
   <string name="wallet_default_name">Portfel #%1$d</string>
   <string name="wallet_default_name_chain">%1$s Portfel #%2$d</string>
   <string name="wallet_copy_address">Skopiuj adres</string>
+  <string name="wallet_copied">Skopiowano</string>
   <string name="wallet_watch_tooltip_title">Portfel tylko do obserwacji. Nie kontrolujesz tych środków.</string>
   <string name="wallet_watch_empty_state_title">Oglądasz ten portfel.</string>
   <string name="wallet_stake">Stakuj</string>

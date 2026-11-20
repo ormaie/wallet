@@ -91,6 +91,7 @@ wallet_scan_hint_address = Adres portfela
 wallet_default_name = Portfel #%d
 wallet_default_name_chain = %@ Portfel #%d
 wallet_copy_address = Skopiuj adres
+wallet_copied = Skopiowano
 wallet_watch_tooltip_title = Portfel tylko do obserwacji. Nie kontrolujesz tych środków.
 wallet_watch_empty_state_title = Oglądasz ten portfel.
 wallet_stake = Stakuj

@@ -91,6 +91,7 @@ wallet_scan_hint_address = Portemonnee-adres
 wallet_default_name = Portemonnee #%d
 wallet_default_name_chain = %@ Portemonnee #%d
 wallet_copy_address = Kopieer adres
+wallet_copied = Gekopieerd
 wallet_watch_tooltip_title = Alleen-kijken-portemonnee. Je hebt geen controle over deze tegoeden.
 wallet_watch_empty_state_title = Je houdt deze portemonnee in de gaten.
 wallet_stake = Inzet

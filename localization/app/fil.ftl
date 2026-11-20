@@ -91,6 +91,7 @@ wallet_scan_hint_address = Address ng wallet
 wallet_default_name = Wallet #%d
 wallet_default_name_chain = %@ Wallet #%d
 wallet_copy_address = Kopyahin ang Address
+wallet_copied = Nakopya
 wallet_watch_tooltip_title = Wallet na pang-bantay lamang. Hindi mo kontrolado ang mga pondong ito.
 wallet_watch_empty_state_title = Binabantayan mo ang wallet na ito.
 wallet_stake = Mag-stake

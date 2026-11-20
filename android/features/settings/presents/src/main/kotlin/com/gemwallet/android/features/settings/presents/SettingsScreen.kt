@@ -4,15 +4,16 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.unit.Dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gemwallet.android.features.settings.viewmodels.SettingsViewModel
 import com.gemwallet.android.ui.models.actions.SettingsAction
+import com.gemwallet.android.ui.theme.space0
 
 @Composable
-fun SettingsScreen(onAction: (SettingsAction) -> Unit, scrollState: ScrollState = rememberScrollState()) {
-    val viewModel: SettingsViewModel = hiltViewModel()
+fun SettingsScreen(onAction: (SettingsAction) -> Unit, scrollState: ScrollState = rememberScrollState(), bottomPadding: Dp = space0, viewModel: SettingsViewModel = hiltViewModel()) {
     val sections by viewModel.sections.collectAsStateWithLifecycle()
 
     LifecycleResumeEffect(Unit) {
@@ -20,5 +21,10 @@ fun SettingsScreen(onAction: (SettingsAction) -> Unit, scrollState: ScrollState 
         onPauseOrDispose { }
     }
 
-    SettingsScene(sections = sections, onAction = onAction, scrollState = scrollState)
+    SettingsScene(
+        sections = sections,
+        onAction = onAction,
+        scrollState = scrollState,
+        bottomPadding = bottomPadding,
+    )
 }

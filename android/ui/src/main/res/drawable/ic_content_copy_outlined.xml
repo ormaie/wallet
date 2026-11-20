@@ -1,11 +1,14 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="960"
-    android:viewportHeight="960"
-    android:tint="@color/icon_tint"
-    android:autoMirrored="true">
-  <path
-      android:fillColor="@android:color/white"
-      android:pathData="M360,720Q327,720 303.5,696.5Q280,673 280,640L280,160Q280,127 303.5,103.5Q327,80 360,80L720,80Q753,80 776.5,103.5Q800,127 800,160L800,640Q800,673 776.5,696.5Q753,720 720,720L360,720ZM360,640L720,640Q720,640 720,640Q720,640 720,640L720,160Q720,160 720,160Q720,160 720,160L360,160Q360,160 360,160Q360,160 360,160L360,640Q360,640 360,640Q360,640 360,640ZM200,880Q167,880 143.5,856.5Q120,833 120,800L120,280Q120,263 131.5,251.5Q143,240 160,240Q177,240 188.5,251.5Q200,263 200,280L200,800Q200,800 200,800Q200,800 200,800L600,800Q617,800 628.5,811.5Q640,823 640,840Q640,857 628.5,868.5Q617,880 600,880L200,880ZM360,640Q360,640 360,640Q360,640 360,640L360,160Q360,160 360,160Q360,160 360,160L360,160Q360,160 360,160Q360,160 360,160L360,640Q360,640 360,640Q360,640 360,640L360,640Z"/>
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/icon_tint">
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M11.5,9 L18.5,9 C19.881,9 21,10.119 21,11.5 L21,18.5 C21,19.881 19.881,21 18.5,21 L11.5,21 C10.119,21 9,19.881 9,18.5 L9,11.5 C9,10.119 10.119,9 11.5,9 Z M5.5,15 C4.119,15 3,13.881 3,12.5 L3,5.5 C3,4.119 4.119,3 5.5,3 L12.5,3 C13.881,3 15,4.119 15,5.5" />
 </vector>

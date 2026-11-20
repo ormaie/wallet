@@ -91,6 +91,7 @@ wallet_scan_hint_address = Adireshin wallet
 wallet_default_name = Wallet #%d
 wallet_default_name_chain = %@ Wallet #%d
 wallet_copy_address = Kwafi Adireshin
+wallet_copied = An kwafa
 wallet_watch_tooltip_title = Walat na kallo kawai. Ba ku da ikon sarrafa waɗannan kuɗaɗe ba.
 wallet_watch_empty_state_title = Kuna kallon wannan walat.
 wallet_stake = Saka hannun jari

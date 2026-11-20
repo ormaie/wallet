@@ -91,6 +91,7 @@ wallet_scan_hint_address = ที่อยู่กระเป๋าเงิ�
 wallet_default_name = กระเป๋าเงิน #%d
 wallet_default_name_chain = %@ กระเป๋าเงิน #%d
 wallet_copy_address = คัดลอกที่อยู่
+wallet_copied = คัดลอกแล้ว
 wallet_watch_tooltip_title = กระเป๋าเงินสำหรับดูเท่านั้น คุณไม่ได้ควบคุมเงินเหล่านี้
 wallet_watch_empty_state_title = คุณกำลังดูกระเป๋าสตางค์นี้
 wallet_stake = สเตค

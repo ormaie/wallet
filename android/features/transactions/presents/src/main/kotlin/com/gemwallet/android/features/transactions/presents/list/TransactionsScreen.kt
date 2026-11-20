@@ -5,14 +5,23 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.unit.Dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gemwallet.android.features.transactions.viewmodels.TransactionsViewModel
 import com.gemwallet.android.ui.components.RefreshOnTimer
+import com.gemwallet.android.ui.theme.space0
 import com.wallet.core.primitives.TransactionId
 
 @Composable
-fun TransactionsScreen(onTransaction: (TransactionId) -> Unit, onBuy: (() -> Unit)? = null, onReceive: (() -> Unit)? = null, listState: LazyListState = rememberLazyListState(), viewModel: TransactionsViewModel = hiltViewModel()) {
+fun TransactionsScreen(
+    onTransaction: (TransactionId) -> Unit,
+    onBuy: (() -> Unit)? = null,
+    onReceive: (() -> Unit)? = null,
+    listState: LazyListState = rememberLazyListState(),
+    bottomPadding: Dp = space0,
+    viewModel: TransactionsViewModel = hiltViewModel(),
+) {
     val transactions by viewModel.transactions.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val filter by viewModel.filter.collectAsStateWithLifecycle()
@@ -34,6 +43,7 @@ fun TransactionsScreen(onTransaction: (TransactionId) -> Unit, onBuy: (() -> Uni
         filter = filter,
         filterView = filterView,
         listState = listState,
+        bottomPadding = bottomPadding,
         onAction = { action ->
             when (action) {
                 TransactionsAction.Refresh -> viewModel.refresh()

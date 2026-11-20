@@ -2,6 +2,7 @@ package com.gemwallet.android.features.transactions.presents.list
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -18,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.LoadOnListEnd
 import com.gemwallet.android.ui.components.empty.EmptyContentView
@@ -48,6 +50,7 @@ internal fun TransactionsScene(
     filter: GemTransactionsFilterSession,
     filterView: GemTransactionsFilterView,
     listState: LazyListState = rememberLazyListState(),
+    bottomPadding: Dp = space0,
     onAction: (TransactionsAction) -> Unit,
 ) {
     var showFilters by rememberSaveable { mutableStateOf(false) }
@@ -78,11 +81,18 @@ internal fun TransactionsScene(
             when (phase) {
                 null -> Unit
 
-                is GemListPhase.Error -> LazyColumn(modifier = Modifier.fillMaxSize()) {
+                is GemListPhase.Error -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = bottomPadding),
+                ) {
                     item { GemListRowView(row = GemListRow.Error(phase.error), listPosition = ListPosition.Single) }
                 }
 
-                is GemListPhase.Empty -> LazyColumn(modifier = Modifier.fillMaxSize()) {
+                is GemListPhase.Empty -> LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = bottomPadding),
+                ) {
                     item {
                         EmptyContentView(
                             state = phase.state,
@@ -104,6 +114,7 @@ internal fun TransactionsScene(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         state = listState,
+                        contentPadding = PaddingValues(bottom = bottomPadding),
                     ) {
                         transactionsList(
                             sections = transactionSections,

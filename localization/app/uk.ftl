@@ -91,6 +91,7 @@ wallet_scan_hint_address = Адреса гаманця
 wallet_default_name = Гаманець № %d
 wallet_default_name_chain = Гаманець %@ № %d
 wallet_copy_address = Копіювати адресу
+wallet_copied = Скопійовано
 wallet_watch_tooltip_title = Гаманець лише для спостереження. Ви не контролюєте ці кошти.
 wallet_watch_empty_state_title = Ви спостерігаєте за цим гаманцем.
 wallet_stake = Стейкінг

@@ -91,6 +91,7 @@ wallet_scan_hint_address = Адрес кошелька
 wallet_default_name = Кошелек № %d
 wallet_default_name_chain = %@ Кошелек № %d
 wallet_copy_address = Копировать адрес
+wallet_copied = Скопировано
 wallet_watch_tooltip_title = Кошелек только для наблюдения. Вы не управляете этими средствами.
 wallet_watch_empty_state_title = Вы следите за этим кошельком.
 wallet_stake = Стейк

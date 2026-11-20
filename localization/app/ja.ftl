@@ -91,6 +91,7 @@ wallet_scan_hint_address = ウォレットアドレス
 wallet_default_name = ウォレット #%d
 wallet_default_name_chain = %@ ウォレット #%d
 wallet_copy_address = アドレスをコピー
+wallet_copied = コピー済み
 wallet_watch_tooltip_title = 閲覧専用ウォレットです。この資金はあなたの管理下にありません。
 wallet_watch_empty_state_title = このウォレットは閲覧専用です。
 wallet_stake = ステーク

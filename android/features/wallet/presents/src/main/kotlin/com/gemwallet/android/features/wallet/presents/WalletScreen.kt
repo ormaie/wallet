@@ -11,14 +11,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.Dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gemwallet.android.features.wallet.viewmodels.WalletViewModel
 import com.gemwallet.android.ui.components.list_item.AssetContextActions
 import com.gemwallet.android.ui.components.screen.ToastEffect
+import com.gemwallet.android.ui.theme.space0
 
 @Composable
-fun WalletScreen(onAction: (WalletAction.Navigation) -> Unit, onContentReady: () -> Unit = {}, listState: LazyListState = rememberLazyListState(), viewModel: WalletViewModel = hiltViewModel()) {
+fun WalletScreen(
+    onAction: (WalletAction.Navigation) -> Unit,
+    onContentReady: () -> Unit = {},
+    listState: LazyListState = rememberLazyListState(),
+    bottomPadding: Dp = space0,
+    viewModel: WalletViewModel = hiltViewModel(),
+) {
     val importing by viewModel.isLoadingAssets.collectAsStateWithLifecycle()
     val pinnedAssets by viewModel.pinnedAssets.collectAsStateWithLifecycle()
     val unpinnedAssets by viewModel.unpinnedAssets.collectAsStateWithLifecycle()
@@ -63,6 +71,7 @@ fun WalletScreen(onAction: (WalletAction.Navigation) -> Unit, onContentReady: ()
         snackbar = snackbar,
         listState = listState,
         assetActions = assetActions,
+        bottomPadding = bottomPadding,
     ) { action ->
         when (action) {
             WalletAction.Refresh -> viewModel.onRefresh()

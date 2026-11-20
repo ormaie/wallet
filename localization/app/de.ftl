@@ -91,6 +91,7 @@ wallet_scan_hint_address = Wallet-Adresse
 wallet_default_name = Wallet #%d
 wallet_default_name_chain = %@ Wallet #%d
 wallet_copy_address = Adresse kopieren
+wallet_copied = Kopiert
 wallet_watch_tooltip_title = Nur-Beobachten-Wallet. Sie haben keine Kontrolle über diese Gelder.
 wallet_watch_empty_state_title = Sie beobachten diese Wallet.
 wallet_stake = Staking

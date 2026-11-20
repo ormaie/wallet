@@ -91,6 +91,7 @@ wallet_scan_hint_address = Tegnebogsadresse
 wallet_default_name = Tegnebog #%d
 wallet_default_name_chain = %@ tegnebog #%d
 wallet_copy_address = Kopiér adresse
+wallet_copied = Kopieret
 wallet_watch_tooltip_title = Tegnebog kun til overvågning. Du kontrollerer ikke disse midler.
 wallet_watch_empty_state_title = Du holder øje med denne tegnebog.
 wallet_stake = Indsats

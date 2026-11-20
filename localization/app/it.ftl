@@ -91,6 +91,7 @@ wallet_scan_hint_address = Indirizzo del portafoglio
 wallet_default_name = Portafoglio n.%d
 wallet_default_name_chain = %@ Portafoglio n.%d
 wallet_copy_address = Copia indirizzo
+wallet_copied = Copiato
 wallet_watch_tooltip_title = Portafoglio di sola osservazione. Non controlli questi fondi.
 wallet_watch_empty_state_title = Stai guardando questo portafoglio.
 wallet_stake = Stake

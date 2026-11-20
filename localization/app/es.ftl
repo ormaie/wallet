@@ -91,6 +91,7 @@ wallet_scan_hint_address = Dirección de la billetera
 wallet_default_name = Billetera #%d
 wallet_default_name_chain = Billetera %@ #%d
 wallet_copy_address = Copiar dirección
+wallet_copied = Copiado
 wallet_watch_tooltip_title = Billetera solo de observación. No controlas estos fondos.
 wallet_watch_empty_state_title = Estás observando esta billetera.
 wallet_stake = Stake

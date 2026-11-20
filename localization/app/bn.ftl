@@ -91,6 +91,7 @@ wallet_scan_hint_address = ওয়ালেটের ঠিকানা
 wallet_default_name = ওয়ালেট #%d
 wallet_default_name_chain = %@ ওয়ালেট #%d
 wallet_copy_address = কপি ঠিকানা
+wallet_copied = কপি করা হয়েছে
 wallet_watch_tooltip_title = শুধুমাত্র দেখার ওয়ালেট। এই তহবিল আপনার নিয়ন্ত্রণে নেই।
 wallet_watch_empty_state_title = আপনি এই ওয়ালেটটি দেখছেন।
 wallet_stake = স্টেক

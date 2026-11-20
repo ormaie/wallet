@@ -91,6 +91,7 @@ wallet_scan_hint_address = Alamat dompet
 wallet_default_name = Dompet %d
 wallet_default_name_chain = Dompet %@ #%d
 wallet_copy_address = Salin Alamat
+wallet_copied = Disalin
 wallet_watch_tooltip_title = Dompet khusus pantau. Anda tidak mengontrol dana ini.
 wallet_watch_empty_state_title = Anda sedang memantau dompet ini.
 wallet_stake = Staking

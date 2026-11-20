@@ -85,6 +85,7 @@
   <string name="wallet_default_name">錢包 #%1$d</string>
   <string name="wallet_default_name_chain">%1$s 錢包 #%2$d</string>
   <string name="wallet_copy_address">複製地址</string>
+  <string name="wallet_copied">已複製</string>
   <string name="wallet_watch_tooltip_title">僅供觀察的錢包。這些資金不受您控制。</string>
   <string name="wallet_watch_empty_state_title">正在觀察此錢包。</string>
   <string name="wallet_stake">質押</string>

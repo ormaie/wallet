@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -56,17 +59,19 @@ import com.gemwallet.android.ui.components.list_item.sectionHeaderHorizontalPadd
 import com.gemwallet.android.ui.components.list_item.sectionHeaderItem
 import com.gemwallet.android.ui.components.screen.ModalBottomSheet
 import com.gemwallet.android.ui.components.screen.SheetExpansion
+import com.gemwallet.android.ui.icons.AppIcons
 import com.gemwallet.android.ui.localization.errorText
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.localization.stringRes
 import com.gemwallet.android.ui.localization.suffix
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.models.ListPosition
-import com.gemwallet.android.ui.theme.alpha10
 import com.gemwallet.android.ui.theme.listItemIconSize
 import com.gemwallet.android.ui.theme.paddingDefault
 import com.gemwallet.android.ui.theme.paddingHalfSmall
 import com.gemwallet.android.ui.theme.paddingLarge
+import com.gemwallet.android.ui.theme.pendingColor
+import com.gemwallet.android.ui.theme.smallIconSize
 import com.wallet.core.primitives.AssetId
 import com.wallet.core.primitives.FeePriority
 import com.wallet.core.primitives.FeeUnitType
@@ -313,7 +318,7 @@ private fun FeeRow(row: GemFeeRateRow, position: ListPosition, onClick: () -> Un
     ListItem(
         modifier = Modifier.clickable { onClick() },
         leading = {
-            EmojiCircle(row.emoji, listItemIconSize, row.isSelected)
+            FeeRateIcon(row.kind, listItemIconSize, row.isSelected)
         },
         title = {
             ListItemTitleText(row.title.text(context))
@@ -332,7 +337,8 @@ private fun FeeRow(row: GemFeeRateRow, position: ListPosition, onClick: () -> Un
 }
 
 @Composable
-private fun EmojiCircle(emoji: String, size: Dp, isSelected: Boolean = false) {
+private fun FeeRateIcon(kind: GemFeeRateKind, size: Dp, isSelected: Boolean) {
+    val style = kind.iconStyle(isSelected)
     IconWithBadge(
         size = size,
         badge = if (isSelected) {
@@ -344,16 +350,53 @@ private fun EmojiCircle(emoji: String, size: Dp, isSelected: Boolean = false) {
         Box(
             modifier = Modifier
                 .size(size)
-                .background(MaterialTheme.colorScheme.secondary.copy(alpha = alpha10), CircleShape),
+                .background(style.containerColor, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = emoji,
-                style = MaterialTheme.typography.headlineSmall,
+            Icon(
+                imageVector = style.icon,
+                contentDescription = null,
+                modifier = Modifier.size(smallIconSize),
+                tint = style.tint,
             )
         }
     }
 }
+
+@Composable
+private fun GemFeeRateKind.iconStyle(isSelected: Boolean): FeeRateIconStyle = when (this) {
+    is GemFeeRateKind.Priority -> when (priority.toPrimitives()) {
+        FeePriority.Normal -> FeeRateIconStyle(
+            icon = AppIcons.FeeNormal,
+            tint = MaterialTheme.colorScheme.tertiary,
+            containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = FEE_ICON_CONTAINER_ALPHA),
+        )
+
+        FeePriority.Fast -> FeeRateIconStyle(
+            icon = AppIcons.FeeFast,
+            tint = pendingColor,
+            containerColor = pendingColor.copy(alpha = FEE_ICON_CONTAINER_ALPHA),
+        )
+    }
+
+    GemFeeRateKind.Custom -> if (isSelected) {
+        FeeRateIconStyle(
+            icon = AppIcons.FeeCustom,
+            tint = MaterialTheme.colorScheme.primary,
+            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = FEE_ICON_CONTAINER_ALPHA),
+        )
+    } else {
+        FeeRateIconStyle(
+            icon = AppIcons.FeeCustom,
+            tint = MaterialTheme.colorScheme.onSurface,
+            containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = FEE_ICON_CONTAINER_ALPHA),
+        )
+    }
+}
+
+private data class FeeRateIconStyle(val icon: ImageVector, val tint: Color, val containerColor: Color)
+
+private const val FEE_ICON_CONTAINER_ALPHA = 0.14f
 
 @Composable
 private fun feeUnitSuffix(feeUnitType: FeeUnitType?, assetSymbol: String): String = feeUnitType?.suffix(assetSymbol) ?: assetSymbol

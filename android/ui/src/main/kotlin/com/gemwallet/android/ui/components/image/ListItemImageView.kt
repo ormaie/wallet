@@ -160,7 +160,7 @@ fun ListItemSymbol.vector(): ImageVector = when (this) {
     ListItemSymbol.Unpin -> AppIcons.KeepOff
     ListItemSymbol.AddCircle -> AppIcons.AddCircleOutlined
     ListItemSymbol.Buy -> AppIcons.Buy
-    ListItemSymbol.Swap -> AppIcons.SwapVert
+    ListItemSymbol.Swap -> AppIcons.Swap
     ListItemSymbol.Receive -> AppIcons.Receive
     ListItemSymbol.Add -> AppIcons.Add
     ListItemSymbol.Article -> AppIcons.Article

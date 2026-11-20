@@ -91,6 +91,7 @@ wallet_scan_hint_address = عنوان المحفظة
 wallet_default_name = المحفظة #%d
 wallet_default_name_chain = %@ المحفظة رقم %d
 wallet_copy_address = نسخ العنوان
+wallet_copied = تم النسخ
 wallet_watch_tooltip_title = محفظة للمراقبة فقط. أنت لا تتحكم في هذه الأموال.
 wallet_watch_empty_state_title = أنت تشاهد هذه المحفظة.
 wallet_stake = التخزين

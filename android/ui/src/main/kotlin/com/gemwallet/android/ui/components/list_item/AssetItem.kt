@@ -1,21 +1,40 @@
 package com.gemwallet.android.ui.components.list_item
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +52,8 @@ import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.models.ListPosition
 import com.gemwallet.android.ui.style.color
 import com.gemwallet.android.ui.theme.adaptivePadding
+import com.gemwallet.android.ui.theme.alpha20
+import com.gemwallet.android.ui.theme.alpha60
 import com.gemwallet.android.ui.theme.compactIconSize
 import com.gemwallet.android.ui.theme.iconSize
 import com.gemwallet.android.ui.theme.paddingHalfSmall
@@ -40,6 +61,7 @@ import com.gemwallet.android.ui.theme.paddingMiddle
 import com.gemwallet.android.ui.theme.space0
 import com.gemwallet.android.ui.theme.space6
 import com.wallet.core.primitives.Asset
+import kotlinx.coroutines.delay
 import uniffi.gemstone.GemAssetIcon
 import uniffi.gemstone.GemAssetItemRow
 import uniffi.gemstone.GemAssetItemTrailing
@@ -73,14 +95,7 @@ fun AssetListItem(row: GemAssetItemRow, listPosition: ListPosition, modifier: Mo
 
         GemAssetItemTrailing.Copy -> {
             {
-                IconButton(onClick = { onAction?.invoke(AssetItemAction.Copy) }, modifier = Modifier.size(iconSize)) {
-                    Icon(
-                        imageVector = AppIcons.ContentCopyOutlined,
-                        contentDescription = stringResource(R.string.common_copy),
-                        modifier = Modifier.size(compactIconSize),
-                        tint = MaterialTheme.colorScheme.secondary,
-                    )
-                }
+                AssetCopyButton(onClick = { onAction?.invoke(AssetItemAction.Copy) })
             }
         }
 
@@ -220,6 +235,76 @@ private fun BalanceInfo(crypto: String, equivalent: String, color: Color, equiva
                 textAlign = TextAlign.End,
                 color = equivalentColor,
                 style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+private const val COPY_FEEDBACK_DURATION_MS = 1_500L
+private const val COPY_ICON_ANIMATION_MS = 180
+private const val COPY_ICON_INITIAL_SCALE = 0.6f
+
+@Composable
+private fun AssetCopyButton(onClick: () -> Unit) {
+    var copyTrigger by remember { mutableIntStateOf(0) }
+    var isCopied by remember { mutableStateOf(false) }
+
+    LaunchedEffect(copyTrigger) {
+        if (copyTrigger > 0) {
+            delay(COPY_FEEDBACK_DURATION_MS)
+            isCopied = false
+        }
+    }
+
+    val containerColor by animateColorAsState(
+        targetValue = if (isCopied) {
+            MaterialTheme.colorScheme.tertiary.copy(alpha = alpha20)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = alpha60)
+        },
+        animationSpec = tween(COPY_ICON_ANIMATION_MS),
+        label = "asset_copy_container",
+    )
+    val iconTint by animateColorAsState(
+        targetValue = if (isCopied) {
+            MaterialTheme.colorScheme.tertiary
+        } else {
+            MaterialTheme.colorScheme.secondary
+        },
+        animationSpec = tween(COPY_ICON_ANIMATION_MS),
+        label = "asset_copy_tint",
+    )
+    val description = stringResource(if (isCopied) R.string.common_copied_to_clipboard else R.string.common_copy)
+
+    Box(
+        modifier = Modifier
+            .size(iconSize)
+            .clip(CircleShape)
+            .background(containerColor)
+            .clickable(
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.common_copy),
+            ) {
+                isCopied = true
+                copyTrigger++
+                onClick()
+            }
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        AnimatedContent(
+            targetState = isCopied,
+            transitionSpec = {
+                (fadeIn(tween(COPY_ICON_ANIMATION_MS)) + scaleIn(tween(COPY_ICON_ANIMATION_MS), initialScale = COPY_ICON_INITIAL_SCALE))
+                    .togetherWith(fadeOut(tween(COPY_ICON_ANIMATION_MS)) + scaleOut(tween(COPY_ICON_ANIMATION_MS), targetScale = COPY_ICON_INITIAL_SCALE))
+            },
+            label = "asset_copy_icon",
+        ) { copied ->
+            Icon(
+                imageVector = if (copied) AppIcons.Check else AppIcons.ContentCopyOutlined,
+                contentDescription = null,
+                modifier = Modifier.size(compactIconSize),
+                tint = iconTint,
             )
         }
     }

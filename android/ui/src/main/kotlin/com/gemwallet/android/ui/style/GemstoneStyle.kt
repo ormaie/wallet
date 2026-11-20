@@ -115,7 +115,7 @@ fun GemHeaderButtonKind.iconRes(): Int = when (this) {
     GemHeaderButtonKind.SEND -> R.drawable.ic_action_send
     GemHeaderButtonKind.RECEIVE -> R.drawable.ic_action_receive
     GemHeaderButtonKind.BUY -> R.drawable.ic_action_buy
-    GemHeaderButtonKind.SWAP -> R.drawable.ic_swap_vert
+    GemHeaderButtonKind.SWAP -> R.drawable.ic_action_swap
     GemHeaderButtonKind.DEPOSIT -> R.drawable.ic_action_deposit
     GemHeaderButtonKind.WITHDRAW -> R.drawable.ic_action_withdraw
     GemHeaderButtonKind.MORE -> R.drawable.ic_more_vert
@@ -172,7 +172,7 @@ fun GemListRowIcon.image(): ListItemImage? = when (this) {
     GemListRowIcon.PREFERENCES -> ListItemImage.Drawable(R.drawable.settings_preferences)
     GemListRowIcon.WALLET_CONNECT -> ListItemImage.Drawable(R.drawable.settings_wc)
     GemListRowIcon.SUPPORT -> ListItemImage.Drawable(R.drawable.settings_support)
-    GemListRowIcon.REWARDS -> ListItemImage.Drawable(R.drawable.settings_wallets)
+    GemListRowIcon.REWARDS -> ListItemImage.Drawable(R.drawable.settings_rewards)
     GemListRowIcon.ABOUT_US -> ListItemImage.Drawable(R.drawable.settings_about_us)
     GemListRowIcon.DEVELOPER -> ListItemImage.Drawable(R.drawable.settings_developer)
     GemListRowIcon.CURRENCY -> ListItemImage.Drawable(R.drawable.settings_currency)
