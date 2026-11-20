@@ -24,6 +24,7 @@ import com.wallet.core.primitives.Asset
 import uniffi.gemstone.GemGroup
 import uniffi.gemstone.GemListItem
 import uniffi.gemstone.GemNameIndicator
+import uniffi.gemstone.GemRecipient
 
 @Composable
 internal fun RecipientScene(
@@ -34,6 +35,7 @@ internal fun RecipientScene(
     memo: String,
     addressError: String,
     nameResolveIndicator: GemNameIndicator?,
+    matchedContact: GemRecipient?,
     sections: List<GemGroup>,
     buttonState: ButtonState,
     onAction: (RecipientAction) -> Unit,
@@ -46,6 +48,7 @@ internal fun RecipientScene(
     ) {
         val onAddress: (String) -> Unit = { onAction(RecipientAction.SetAddress(it)) }
         val onMemo: (String) -> Unit = { onAction(RecipientAction.SetMemo(it)) }
+        val onUseMatchedMemo: () -> Unit = { matchedContact?.memo?.let(onMemo) }
         val onQrScan: (QrScanField) -> Unit = { onAction(RecipientAction.Scan(it)) }
         val onSubmitAddress: () -> Unit = { onAction(RecipientAction.ValidateAddress) }
         LazyColumn(
@@ -58,9 +61,11 @@ internal fun RecipientScene(
                 address = address,
                 addressError = addressError,
                 nameResolveIndicator = nameResolveIndicator,
+                matchedContact = matchedContact,
                 memo = memo,
                 onAddress = onAddress,
                 onMemo = onMemo,
+                onUseMatchedMemo = onUseMatchedMemo,
                 onQrScan = onQrScan,
                 onSubmitAddress = onSubmitAddress,
             )

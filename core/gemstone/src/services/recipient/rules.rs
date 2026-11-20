@@ -114,6 +114,24 @@ pub fn contact_recipients(contacts: Vec<ContactData>, chain: Chain) -> Vec<GemRe
         .collect()
 }
 
+pub fn matched_contact(chain: Chain, input: &str, state: &GemNameRecordState, contacts: &[ContactData]) -> Option<GemRecipient> {
+    let resolved = address(chain, input, state)?;
+    contacts.iter().find_map(|data| {
+        data.addresses.iter().find_map(|contact_address| {
+            if contact_address.chain != chain {
+                return None;
+            }
+            let normalized = parse_address(&contact_address.address, chain)?;
+            (normalized == resolved).then(|| GemRecipient {
+                address: normalized,
+                name: Some(data.contact.name.clone()),
+                memo: contact_address.memo.as_deref().map(str::trim).filter(|memo| !memo.is_empty()).map(str::to_string),
+                references: vec![],
+            })
+        })
+    })
+}
+
 pub fn recipient_sections(wallets: Vec<WalletAddressItem>, chain: Chain, contacts: Vec<GemRecipient>) -> Vec<GemGroup> {
     let sorted = sorted_by_wallet_order(wallets, |item| &item.wallet);
     let rows = |include: &dyn Fn(&WalletAddressItem) -> bool| -> Vec<GemRecipientRow> {
@@ -546,5 +564,79 @@ mod tests {
 
         assert_eq!(names(&sections[0]), vec!["watching"]);
         assert_eq!(sections.len(), 1);
+    }
+
+    #[test]
+    fn test_matched_contact_normalizes_evm_case_whitespace_and_memo() {
+        let contacts = vec![ContactData {
+            contact: primitives::Contact {
+                name: "Plasma One".to_string(),
+                ..primitives::Contact::mock()
+            },
+            addresses: vec![
+                primitives::ContactAddress {
+                    address: CHECKSUMMED.to_string(),
+                    chain: Chain::Ethereum,
+                    memo: Some("   ".to_string()),
+                    ..primitives::ContactAddress::mock("a")
+                },
+                primitives::ContactAddress {
+                    address: "UQA5olhYULHkui4mTQM0LodWG0EqUaxmK6-e3mHrCZFO2diA".to_string(),
+                    chain: Chain::Ton,
+                    memo: Some(" 104829301 ".to_string()),
+                    ..primitives::ContactAddress::mock("b")
+                },
+            ],
+        }];
+
+        let padded_lowercase = format!("  {ADDRESS} \n");
+        assert_eq!(
+            matched_contact(Chain::Ethereum, &padded_lowercase, &GemNameRecordState::None, &contacts),
+            Some(GemRecipient::named(CHECKSUMMED.to_string(), "Plasma One".to_string()))
+        );
+        assert_eq!(
+            matched_contact(Chain::Ton, "UQA5olhYULHkui4mTQM0LodWG0EqUaxmK6-e3mHrCZFO2diA", &GemNameRecordState::None, &contacts),
+            Some(GemRecipient {
+                memo: Some("104829301".to_string()),
+                ..GemRecipient::named("UQA5olhYULHkui4mTQM0LodWG0EqUaxmK6-e3mHrCZFO2diA".to_string(), "Plasma One".to_string())
+            })
+        );
+        assert_eq!(matched_contact(Chain::Polygon, ADDRESS, &GemNameRecordState::None, &contacts), None);
+        assert_eq!(matched_contact(Chain::Ethereum, "", &GemNameRecordState::None, &contacts), None);
+        assert_eq!(matched_contact(Chain::Ethereum, "0x5615E8AB93b9d695b6d4d6545f7792aA59e1068a", &GemNameRecordState::None, &contacts), None);
+    }
+
+    #[test]
+    fn test_matched_contact_matches_resolved_name_records_only_when_complete() {
+        let contacts = vec![ContactData {
+            contact: primitives::Contact {
+                name: "Vitalik".to_string(),
+                ..primitives::Contact::mock()
+            },
+            addresses: vec![primitives::ContactAddress {
+                address: ADDRESS.to_string(),
+                chain: Chain::Ethereum,
+                ..primitives::ContactAddress::mock("a")
+            }],
+        }];
+        let ens = NameRecord::mock("vitalik.eth", ADDRESS);
+
+        assert_eq!(
+            matched_contact(Chain::Ethereum, "vitalik.eth", &GemNameRecordState::Complete { record: ens }, &contacts),
+            Some(GemRecipient::named(CHECKSUMMED.to_string(), "Vitalik".to_string()))
+        );
+        assert_eq!(
+            matched_contact(
+                Chain::Ethereum,
+                "vitalik.eth",
+                &GemNameRecordState::Loading {
+                    name: "vitalik.eth".into(),
+                    chain: Chain::Ethereum,
+                },
+                &contacts
+            ),
+            None
+        );
+        assert_eq!(matched_contact(Chain::Ethereum, "vitalik.eth", &GemNameRecordState::Error, &contacts), None);
     }
 }

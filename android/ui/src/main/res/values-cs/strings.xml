@@ -144,6 +144,8 @@
   <string name="transfer_activate_asset_title">Aktivujte aktivum</string>
   <string name="transfer_recipient_my_wallets">Moje peněženky</string>
   <string name="transfer_recipient_view_wallets">Zobrazit peněženky</string>
+  <string name="transfer_recipient_matched_contact">Shodný kontakt: %1$s</string>
+  <string name="transfer_recipient_use_memo">Použít memo</string>
   <string name="transfer_minimum_account_balance">Po uplynutí této doby musí zůstat minimální zůstatek %1$s, pokud nepoužíváte celý zůstatek.</string>
   <string name="transfer_destination_account_activation">Cílová adresa vyžaduje minimum %1$s.</string>
   <string name="transfer_smart_contract_title">Chytrá smlouva</string>

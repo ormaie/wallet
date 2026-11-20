@@ -26,6 +26,7 @@ fun RecipientScreen(cancelAction: CancelAction, amountAction: AmountTransactionA
     val buttonState by viewModel.buttonState.collectAsStateWithLifecycle()
     val memo by viewModel.memo.collectAsStateWithLifecycle()
     val nameResolveIndicator by viewModel.nameResolveIndicator.collectAsStateWithLifecycle()
+    val matchedContact by viewModel.matchedContact.collectAsStateWithLifecycle()
 
     var scan by rememberSaveable { mutableStateOf(QrScanField.None) }
 
@@ -41,6 +42,7 @@ fun RecipientScreen(cancelAction: CancelAction, amountAction: AmountTransactionA
                 memo = memo,
                 addressError = addressError,
                 nameResolveIndicator = nameResolveIndicator,
+                matchedContact = matchedContact,
                 sections = sections,
                 buttonState = buttonState,
                 onAction = { action ->

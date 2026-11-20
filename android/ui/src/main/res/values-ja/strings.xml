@@ -144,6 +144,8 @@
   <string name="transfer_activate_asset_title">資産を有効化</string>
   <string name="transfer_recipient_my_wallets">マイウォレット</string>
   <string name="transfer_recipient_view_wallets">ウォレットを表示</string>
+  <string name="transfer_recipient_matched_contact">一致する連絡先: %1$s</string>
+  <string name="transfer_recipient_use_memo">メモを使用</string>
   <string name="transfer_minimum_account_balance">全額を使用する場合を除き、取引後も最低 %1$s の残高を維持する必要があります。</string>
   <string name="transfer_destination_account_activation">宛先アドレスには最低 %1$s が必要です。</string>
   <string name="transfer_smart_contract_title">スマートコントラクト</string>

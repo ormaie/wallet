@@ -306,6 +306,10 @@ transfer_activate_asset_title = Activate Asset
 transfer_recipient_my_wallets = My Wallets
 # Used in Transfer, Send, Stake, and confirmation flows for the recipient view wallets label.
 transfer_recipient_view_wallets = View Wallets
+# Used in Transfer recipient flow when the entered address matches a saved contact. Contains 1 string placeholder.
+transfer_recipient_matched_contact = Matched contact: %@
+# Used in Transfer recipient flow to fill the memo saved on a matched contact.
+transfer_recipient_use_memo = Use Memo
 # Used in Transfer, Send, Stake, and confirmation flows for the minimum account balance label. Contains 1 string placeholder.
 transfer_minimum_account_balance = A minimum %@ balance must remain after this, unless you're using your full balance.
 # Used in Transfer, Send, Stake, and confirmation flows when a native payment is below the amount required to create the destination address. Contains 1 string placeholder.

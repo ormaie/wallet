@@ -100,13 +100,28 @@ class RecipientViewModel @Inject constructor(
 
     private val chain = state.mapNotNull { (it as? RecipientUIState.Ready)?.asset?.chain }.distinctUntilChanged()
 
+    private val contacts = contactsQuery()
+        .flowOn(ioDispatcher)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
     val sections: StateFlow<List<GemGroup>> = chain.flatMapLatest { chain ->
-        combine(walletAddressItemsQuery(chain), contactsQuery(), getCurrentWalletId()) { wallets, contacts, _ ->
+        combine(walletAddressItemsQuery(chain), contacts, getCurrentWalletId()) { wallets, contacts, _ ->
             service.recipientSections(wallets.map { it.toGem() }, chain.string, contacts.map { it.toGem() })
         }
     }
         .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val matchedContact: StateFlow<GemRecipient?> = combine(
+        chain,
+        addressInput.text,
+        addressInput.nameResolveState,
+        contacts,
+    ) { chain, input, nameState, contacts ->
+        service.matchContact(chain.string, input, nameState, contacts.map { it.toGem() })
+    }
+        .flowOn(ioDispatcher)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val buttonState: StateFlow<ButtonState> = addressInput.isValid
         .map { buttonState(enabled = it) }

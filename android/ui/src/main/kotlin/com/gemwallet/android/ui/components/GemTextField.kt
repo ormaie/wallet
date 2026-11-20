@@ -1,5 +1,14 @@
 package com.gemwallet.android.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,13 +32,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.gemwallet.android.ui.components.list_item.listItem
 import com.gemwallet.android.ui.models.ListPosition
 import com.gemwallet.android.ui.theme.Spacer4
 import com.gemwallet.android.ui.theme.paddingDefault
 
+private const val FLOATING_LABEL_FADE_IN_MS = 180
+private const val FLOATING_LABEL_FADE_OUT_MS = 140
 private val minInputHeight = 40.dp
+private val floatingLabelExpandSpring = spring<IntSize>(
+    dampingRatio = Spring.DampingRatioNoBouncy,
+    stiffness = Spring.StiffnessMediumLow,
+)
+private val floatingLabelShrinkSpring = spring<IntSize>(
+    dampingRatio = Spring.DampingRatioNoBouncy,
+    stiffness = Spring.StiffnessMedium,
+)
 
 @Composable
 fun GemTextField(
@@ -37,6 +57,7 @@ fun GemTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     label: String = "",
+    floatingLabel: (@Composable () -> Unit)? = null,
     error: String = "",
     trailing: (@Composable () -> Unit)? = null,
     singleLine: Boolean = true,
@@ -83,15 +104,40 @@ fun GemTextField(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        if (hasFloatingLabel) {
-                            Text(
-                                text = label,
-                                color = MaterialTheme.colorScheme.secondary,
-                                style = MaterialTheme.typography.bodySmall,
-                            )
+                        AnimatedVisibility(
+                            modifier = Modifier.fillMaxWidth(),
+                            visible = hasFloatingLabel,
+                            enter = expandIn(
+                                expandFrom = Alignment.TopStart,
+                                animationSpec = floatingLabelExpandSpring,
+                                initialSize = { IntSize(it.width, 0) },
+                            ) + fadeIn(
+                                animationSpec = tween(durationMillis = FLOATING_LABEL_FADE_IN_MS),
+                            ),
+                            exit = shrinkOut(
+                                shrinkTowards = Alignment.TopStart,
+                                animationSpec = floatingLabelShrinkSpring,
+                                targetSize = { IntSize(it.width, 0) },
+                            ) + fadeOut(
+                                animationSpec = tween(durationMillis = FLOATING_LABEL_FADE_OUT_MS),
+                            ),
+                        ) {
+                            if (floatingLabel != null) {
+                                floatingLabel()
+                            } else {
+                                Text(
+                                    text = label,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
                         }
                         Box(contentAlignment = Alignment.CenterStart) {
-                            if (label.isNotEmpty() && !hasFloatingLabel) {
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = label.isNotEmpty() && !hasFloatingLabel,
+                                enter = fadeIn(animationSpec = tween(durationMillis = FLOATING_LABEL_FADE_IN_MS)),
+                                exit = ExitTransition.None,
+                            ) {
                                 Text(
                                     text = label,
                                     color = MaterialTheme.colorScheme.secondary,

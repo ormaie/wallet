@@ -21,6 +21,7 @@ flowchart LR
 | When | Expected | Why |
 |---|---|---|
 | A typed name is registered for the network | it resolves to that address while typing | |
+| A typed or resolved address matches a saved contact on the network | the address field's floating label switches in place to the matched contact name, with a one-tap option in the memo field to fill its saved memo when the network uses one and the memo field is empty | the user sees at once that the address belongs to a known contact without shifting the list below and does not miss a saved memo |
 | An Aptos address is not `0x` followed by 64 hex digits, or one of the reserved addresses `0x0` to `0xf` | "Invalid address" wherever an address is typed, pasted or scanned | a shortened or Ethereum address would be padded with zeros into an account no one controls |
 | A mixed-case EVM address has an invalid checksum | "Invalid address" wherever an address is typed, pasted or scanned | a typo must never turn into another account; single-case addresses are accepted |
 | A TON address is marked for testnet or names a workchain other than 0 or -1 | "Invalid address" wherever an address is typed, pasted or scanned | sending on mainnet to an address meant elsewhere can strand the funds |

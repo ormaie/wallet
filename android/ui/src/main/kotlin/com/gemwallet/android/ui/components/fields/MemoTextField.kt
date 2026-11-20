@@ -2,18 +2,29 @@ package com.gemwallet.android.ui.components.fields
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.gemwallet.android.ui.components.GemTextField
 import com.gemwallet.android.ui.components.clipboard.rememberClipboard
 import com.gemwallet.android.ui.components.keyboardFollowsFocus
 import com.gemwallet.android.ui.theme.paddingHalfSmall
+import com.gemwallet.android.ui.theme.paddingSmall
 
 @Composable
-fun MemoTextField(value: String, label: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier, error: String = "", onQrScanner: (() -> Unit)? = null) {
+fun MemoTextField(
+    value: String,
+    label: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    error: String = "",
+    trailingAction: (@Composable () -> Unit)? = null,
+    onQrScanner: (() -> Unit)? = null,
+) {
     val clipboard = rememberClipboard()
     Column(
         modifier = modifier,
@@ -28,14 +39,20 @@ fun MemoTextField(value: String, label: String, onValueChange: (String) -> Unit,
             label = label,
             onValueChange = onValueChange,
             trailing = {
-                TransferTextFieldActions(
-                    value = value,
-                    paste = { clipboard.paste()?.let(onValueChange) },
-                    qrScanner = onQrScanner,
-                    onClean = {
-                        onValueChange("")
-                    },
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(paddingSmall),
+                ) {
+                    trailingAction?.invoke()
+                    TransferTextFieldActions(
+                        value = value,
+                        paste = { clipboard.paste()?.let(onValueChange) },
+                        qrScanner = onQrScanner,
+                        onClean = {
+                            onValueChange("")
+                        },
+                    )
+                }
             },
         )
         if (error.isNotEmpty()) {
