@@ -96,8 +96,15 @@ object KeystoreModule {
     )
 
     @Provides
-    fun provideGemSignMessageService(names: GemNameService, explorer: GemExplorerService, keystore: GemKeystore, passwordStore: PasswordStore, deviceAuthentication: DeviceAuthentication): GemSignMessageService =
-        GemSignMessageService(names, explorer, keystore, GemstoneKeystorePassword(passwordStore, deviceAuthentication))
+    fun provideGemSignMessageService(
+        names: GemNameService,
+        explorer: GemExplorerService,
+        keystore: GemKeystore,
+        passwordStore: PasswordStore,
+        deviceAuthentication: DeviceAuthentication,
+        walletPreferences: GemWalletPreferencesService,
+    ): GemSignMessageService =
+        GemSignMessageService(names, explorer, keystore, GemstoneKeystorePassword(passwordStore, deviceAuthentication), walletPreferences)
 
     @Provides
     @Singleton

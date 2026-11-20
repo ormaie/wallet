@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Cüzdan varlıklarından
 wallet_transfer_from_another_wallet = Başka bir cüzdandan aktar
 wallet_portfolio_title = Portföy
 wallet_import_already_imported_message = Bu cüzdan zaten içe aktarıldı.
+wallet_import_qr_wallet = QR Cüzdanı İçe Aktar
+wallet_import_qr_description = AirGap Vault veya BitTool Signer uygulamasından eşitleme QR kodunu tarayın
+wallet_scan_another_qr = Başka Bir QR Tara
+wallet_offline = Çevrimdışı
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Cihazınız jailbreak yapılmış görünüyor. Bu, c
 rootcheck_body = Cihazınızın root erişimi var gibi görünüyor, bu da güvenlik risklerini önemli ölçüde artırabilir. Bu uygulamayı root'lu bir cihazda kullanmak varlıklarınızı yetkisiz erişime ve olası kayba maruz bırakabilir. Fonlarınızın güvenliği için root'suz bir cihaz kullanmanızı şiddetle öneririz.
 rootcheck_ignore = Yoksay
 rootcheck_exit = Çıkış
+
+# QR
+
+qr_sign_title = QR Kod ile İmzala
+qr_sign_step = Adım %d / %d
+qr_sign_instruction = İncelemek ve imzalamak için bu QR kodu soğuk cüzdanınızla tarayın.
+qr_sign_scan_signature = İmzayı Tara
+qr_sign_scan_instruction = Soğuk cüzdanınızda gösterilen imza QR kodunu tarayın.
+qr_sign_progress = %d / %d parça alındı

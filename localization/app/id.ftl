@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Dari aset dompet Anda
 wallet_transfer_from_another_wallet = Transfer dari dompet lain
 wallet_portfolio_title = Portofolio
 wallet_import_already_imported_message = Dompet ini sudah diimpor.
+wallet_import_qr_wallet = Impor Dompet QR
+wallet_import_qr_description = Pindai kode QR sinkronisasi dari AirGap Vault atau BitTool Signer
+wallet_scan_another_qr = Pindai QR Lainnya
+wallet_offline = Offline
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Perangkat Anda tampaknya di-jailbreak. Ini dapat memb
 rootcheck_body = Perangkat Anda tampaknya memiliki akses root, yang dapat meningkatkan risiko keamanan secara signifikan. Penggunaan aplikasi ini pada perangkat yang di-root dapat menyebabkan aset Anda rentan terhadap akses tidak sah dan potensi kerugian. Demi keamanan dana Anda, kami sangat menyarankan untuk menggunakan perangkat yang tidak di-root.
 rootcheck_ignore = Abaikan
 rootcheck_exit = Keluar
+
+# QR
+
+qr_sign_title = Tanda Tangani dengan Kode QR
+qr_sign_step = Langkah %d dari %d
+qr_sign_instruction = Pindai kode QR ini dengan dompet dingin Anda untuk meninjau dan menandatangani.
+qr_sign_scan_signature = Pindai Tanda Tangan
+qr_sign_scan_instruction = Pindai kode QR tanda tangan yang ditampilkan di dompet dingin Anda.
+qr_sign_progress = Diterima %d / %d bagian

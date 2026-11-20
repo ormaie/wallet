@@ -4,6 +4,7 @@ mod confirmation;
 pub(crate) mod error;
 pub(crate) mod header;
 mod model;
+mod qr;
 pub(crate) mod rules;
 pub(crate) mod screen;
 mod swap;
@@ -17,6 +18,7 @@ use std::time::Duration;
 pub use confirmation::GemConfirmation;
 pub use error::GemConfirmError;
 pub use model::*;
+pub use qr::{GemQrSignOutcome, GemQrSignSession, GemQrSignStep};
 pub use swap::ConfirmSwapQuote;
 pub use transfer::GemConfirmTransferService;
 

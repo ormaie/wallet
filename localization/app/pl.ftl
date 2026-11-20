@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Z aktywów w portfelu
 wallet_transfer_from_another_wallet = Przenieś z innego portfela
 wallet_portfolio_title = Portfel inwestycyjny
 wallet_import_already_imported_message = Ten portfel został już zaimportowany.
+wallet_import_qr_wallet = Importuj portfel QR
+wallet_import_qr_description = Zeskanuj kod QR synchronizacji z AirGap Vault lub BitTool Signer
+wallet_scan_another_qr = Zeskanuj kolejny QR
+wallet_offline = Offline
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Wygląda na to, że Twoje urządzenie ma jailbreak. M
 rootcheck_body = Wygląda na to, że Twoje urządzenie ma dostęp root, co może znacznie zwiększyć ryzyko bezpieczeństwa. Korzystanie z tej aplikacji na urządzeniu zrootowanym może narazić Twoje zasoby na nieautoryzowany dostęp i potencjalną utratę. Ze względu na bezpieczeństwo Twoich środków zdecydowanie zalecamy korzystanie z urządzenia bez dostępu root.
 rootcheck_ignore = Ignoruj
 rootcheck_exit = Wyjdź
+
+# QR
+
+qr_sign_title = Podpisz kodem QR
+qr_sign_step = Krok %d z %d
+qr_sign_instruction = Zeskanuj ten kod QR swoim portfelem offline, aby sprawdzić i podpisać.
+qr_sign_scan_signature = Zeskanuj podpis
+qr_sign_scan_instruction = Zeskanuj kod QR podpisu wyświetlony w portfelu offline.
+qr_sign_progress = Odebrano %d / %d części

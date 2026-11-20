@@ -100,9 +100,24 @@ impl GemSwapService {
         approval: &Permit2ApprovalData,
         sign: impl FnOnce(SignMessage) -> Result<Vec<u8>, E>,
     ) -> Result<GemTransferData, E> {
-        let (permit_single, message) = self.permit2_message(quote, approval)?;
+        let (permit_single, message) = self.permit2_signing_data(quote, approval)?;
         let signature = sign(message)?;
-        Ok(self.build_transfer(wallet, quote, rules::swap_assets(transfer)?, FetchQuoteData::Permit2(Permit2Data { permit_single, signature })).await?)
+        Ok(self.build_transfer_with_permit_signature(wallet, quote, transfer, permit_single, signature).await?)
+    }
+
+    pub(crate) fn permit2_signing_data(&self, quote: &Quote, approval: &Permit2ApprovalData) -> Result<(PermitSingle, SignMessage), SwapperError> {
+        self.permit2_message(quote, approval)
+    }
+
+    pub(crate) async fn build_transfer_with_permit_signature(
+        &self,
+        wallet: &Wallet,
+        quote: &Quote,
+        transfer: &GemTransferData,
+        permit_single: PermitSingle,
+        signature: Vec<u8>,
+    ) -> Result<GemTransferData, SwapperError> {
+        self.build_transfer(wallet, quote, rules::swap_assets(transfer)?, FetchQuoteData::Permit2(Permit2Data { permit_single, signature })).await
     }
 
     pub fn pair_for_asset(&self, asset_id: AssetId, has_balance: bool) -> GemSwapPairSuggestion {

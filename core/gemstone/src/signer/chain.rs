@@ -97,28 +97,13 @@ impl ChainTransactionSigner {
     }
 
     fn sign_payment_approval(&self, input: &SignerInput, private_key: &[u8], asset: &Asset, approval: &ApprovalData) -> Result<Vec<GemSignedTransaction>, GemstoneError> {
-        let approve = SignerInput {
-            input: TransactionLoadInput {
-                input_type: TransactionInputType::TokenApprove {
-                    asset: asset.clone(),
-                    approval_data: approval.clone(),
-                },
-                ..input.input.clone()
-            },
-            fee: input.fee.clone(),
-        };
+        let approve = payment_approval_signer_input(input, asset, approval);
         self.one(&approve, private_key, TransactionType::TokenApproval, "token approval", |signer, i, key| signer.sign_token_approval(i, key))
     }
 
     fn sign_swap_transfer(&self, input: &SignerInput, private_key: &[u8], from_asset: &Asset, swap_data: &SwapData) -> Result<Vec<GemSignedTransaction>, GemstoneError> {
-        let is_token = from_asset.id.is_token();
-        let value = if input.input.is_max_value && !is_token { input.input.value.clone() } else { swap_data.quote.from_value.clone() };
-        let mut rewritten = input.clone();
-        rewritten.input.input_type = TransactionInputType::Transfer { asset: from_asset.clone() };
-        rewritten.input.destination_address = swap_data.data.to.clone();
-        rewritten.input.value = value;
-        rewritten.input.memo = swap_data.data.memo.clone();
-        if is_token {
+        let rewritten = swap_transfer_signer_input(input, from_asset, swap_data);
+        if from_asset.id.is_token() {
             self.one(&rewritten, private_key, TransactionType::Swap, "token transfer", |signer, i, key| signer.sign_token_transfer(i, key))
         } else {
             self.one(&rewritten, private_key, TransactionType::Swap, "transfer", |signer, i, key| signer.sign_transfer(i, key))
@@ -158,25 +143,7 @@ impl ChainTransactionSigner {
     }
 
     fn transaction_types(&self, input: &SignerInput, count: usize) -> Result<Vec<TransactionType>, SignerError> {
-        let transaction_type = input.input_type.transaction_type();
-        let expected_transaction_types = match &input.input_type {
-            TransactionInputType::Swap { swap_data: data, .. } if data.data.approval.is_some() && self.chain == Chain::Tempo => {
-                vec![transaction_type]
-            }
-            TransactionInputType::Swap { swap_data: data, .. } if data.data.approval.is_some() => {
-                vec![TransactionType::TokenApproval, transaction_type]
-            }
-            TransactionInputType::Earn { data, .. } if data.approval.is_some() => {
-                vec![TransactionType::TokenApproval, transaction_type]
-            }
-            _ => return Ok(vec![transaction_type; count]),
-        };
-
-        if count != expected_transaction_types.len() {
-            return Err(SignerError::signing_error("unexpected approval transaction count"));
-        }
-
-        Ok(expected_transaction_types)
+        expected_transaction_types(self.chain, input, count)
     }
 
     fn dispatch_message<T, F>(&self, message: &[u8], private_key: &[u8], action: &'static str, method: F) -> Result<T, GemstoneError>
@@ -185,6 +152,56 @@ impl ChainTransactionSigner {
     {
         method(self.signer.as_ref(), message, private_key).map_err(|err| map_signer_error(self.chain, action, err))
     }
+}
+
+pub(crate) fn payment_approval_signer_input(input: &SignerInput, asset: &Asset, approval: &ApprovalData) -> SignerInput {
+    SignerInput {
+        input: TransactionLoadInput {
+            input_type: TransactionInputType::TokenApprove {
+                asset: asset.clone(),
+                approval_data: approval.clone(),
+            },
+            ..input.input.clone()
+        },
+        fee: input.fee.clone(),
+    }
+}
+
+pub(crate) fn swap_transfer_signer_input(input: &SignerInput, from_asset: &Asset, swap_data: &SwapData) -> SignerInput {
+    let is_token = from_asset.id.is_token();
+    let value = if input.input.is_max_value && !is_token {
+        input.input.value.clone()
+    } else {
+        swap_data.quote.from_value.clone()
+    };
+    let mut rewritten = input.clone();
+    rewritten.input.input_type = TransactionInputType::Transfer { asset: from_asset.clone() };
+    rewritten.input.destination_address = swap_data.data.to.clone();
+    rewritten.input.value = value;
+    rewritten.input.memo = swap_data.data.memo.clone();
+    rewritten
+}
+
+pub(crate) fn expected_transaction_types(chain: Chain, input: &SignerInput, count: usize) -> Result<Vec<TransactionType>, SignerError> {
+    let transaction_type = input.input_type.transaction_type();
+    let expected = match &input.input_type {
+        TransactionInputType::Swap { swap_data: data, .. } if data.data.approval.is_some() && chain == Chain::Tempo => {
+            vec![transaction_type]
+        }
+        TransactionInputType::Swap { swap_data: data, .. } if data.data.approval.is_some() => {
+            vec![TransactionType::TokenApproval, transaction_type]
+        }
+        TransactionInputType::Earn { data, .. } if data.approval.is_some() => {
+            vec![TransactionType::TokenApproval, transaction_type]
+        }
+        _ => return Ok(vec![transaction_type; count]),
+    };
+
+    if count != expected.len() {
+        return Err(SignerError::signing_error("unexpected approval transaction count"));
+    }
+
+    Ok(expected)
 }
 
 fn map_signer_error(chain: Chain, action: &str, error: SignerError) -> GemstoneError {

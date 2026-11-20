@@ -12,6 +12,7 @@ import com.gemwallet.android.features.wallet_connector.viewmodels.models.ReviewT
 import com.gemwallet.android.features.wallet_connector.viewmodels.models.SignMessageUIState
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.models.ButtonState
+import com.gemwallet.android.ui.models.QrSignSheetState
 import com.gemwallet.android.ui.models.buttonState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -23,10 +24,14 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import uniffi.gemstone.GemQrMessageSignOutcome
+import uniffi.gemstone.GemQrMessageSignSession
 import uniffi.gemstone.GemSignMessageServiceInterface
 import uniffi.gemstone.GemSignerFailure
 import uniffi.gemstone.applicationConnectionRow
@@ -41,6 +46,10 @@ class SignMessageViewModel @AssistedInject constructor(
 ) : ViewModel() {
 
     private val isSigning = MutableStateFlow(false)
+    private var activeQrSession: GemQrMessageSignSession? = null
+    private var pendingOnSigned: ((String) -> Unit)? = null
+    private val _qrSignState = MutableStateFlow<QrSignSheetState?>(null)
+    val qrSignState: StateFlow<QrSignSheetState?> = _qrSignState.asStateFlow()
 
     private val preview = SignMessageUIState(request, applicationConnectionRow(request.appMetadata.toGem()), signMessageService, ReviewTexts(context))
 
@@ -58,8 +67,17 @@ class SignMessageViewModel @AssistedInject constructor(
         isSigning.value = true
         val state = uiState.value
         viewModelScope.launch(ioDispatcher) {
-            val signature = try {
-                signMessageService.sign(state.wallet.id.id, state.signMessage)
+            try {
+                if (signMessageService.requiresQrSign(state.wallet.id.id)) {
+                    val session = signMessageService.prepareQrSign(state.wallet.toGem(), state.signMessage)
+                    val frames = session.urFrames()
+                    activeQrSession = session
+                    pendingOnSigned = onSigned
+                    _qrSignState.value = QrSignSheetState(urFrames = frames)
+                    return@launch
+                }
+                val signature = signMessageService.sign(state.wallet.id.id, state.signMessage)
+                onSigned(signature)
             } catch (err: CancellationException) {
                 throw err
             } catch (err: Exception) {
@@ -69,10 +87,47 @@ class SignMessageViewModel @AssistedInject constructor(
                     is GemSignerFailure.Retry -> onError(failure.error.text(context))
                     GemSignerFailure.Reject -> request.reject()
                 }
+            }
+        }
+    }
+
+    fun onQrSignFrame(payload: String) {
+        val session = activeQrSession ?: return
+        viewModelScope.launch(ioDispatcher) {
+            val outcome = try {
+                session.receiveFrame(payload)
+            } catch (err: CancellationException) {
+                throw err
+            } catch (err: Throwable) {
+                _qrSignState.update { it?.copy(errorMessage = err.errorText().text(context)) }
                 return@launch
             }
-            onSigned(signature)
+            when (outcome) {
+                is GemQrMessageSignOutcome.Progress -> {
+                    _qrSignState.update {
+                        it?.copy(
+                            receivedParts = outcome.received.toInt(),
+                            expectedParts = outcome.expected.toInt(),
+                            errorMessage = null,
+                        )
+                    }
+                }
+                is GemQrMessageSignOutcome.Signed -> {
+                    val callback = pendingOnSigned
+                    activeQrSession = null
+                    pendingOnSigned = null
+                    _qrSignState.value = null
+                    callback?.invoke(outcome.signature)
+                }
+            }
         }
+    }
+
+    fun dismissQrSign() {
+        activeQrSession = null
+        pendingOnSigned = null
+        _qrSignState.value = null
+        isSigning.value = false
     }
 
     fun onReject(reject: () -> Unit) {

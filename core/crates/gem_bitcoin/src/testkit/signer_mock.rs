@@ -1,3 +1,12 @@
+#[cfg(feature = "signer")]
+use bitcoin::{
+    PublicKey,
+    ecdsa::Signature as BitcoinEcdsaSignature,
+    psbt::Psbt,
+    secp256k1::{Message, PublicKey as Secp256k1PublicKey, Secp256k1, SecretKey},
+    sighash::{EcdsaSighashType, SighashCache},
+};
+use gem_encoding::encode_base64;
 use num_bigint::BigInt;
 use num_bigint::BigUint;
 use primitives::{Asset, AssetId, BitcoinChain, Chain, GasPriceType, SignerInput, TransactionFee, TransactionInputType, TransactionLoadInput, TransactionLoadMetadata, UTXO};
@@ -69,4 +78,30 @@ pub fn mock_utxo_with(transaction_id: &str, vout: i32, value: &str, address: &st
 
 pub fn mock_utxo_with_address(address: &str) -> UTXO {
     mock_utxo_with(TEST_UTXO_TXID, 0, "50000", address)
+}
+
+#[cfg(feature = "signer")]
+pub fn sign_p2wpkh_psbt_for_test(psbt_bytes: &[u8], private_key: &[u8]) -> (Vec<u8>, String) {
+    let secp = Secp256k1::new();
+    let secret_key = SecretKey::from_slice(private_key).unwrap();
+    let pubkey = Secp256k1PublicKey::from_secret_key(&secp, &secret_key);
+    let mut psbt = Psbt::deserialize(psbt_bytes).unwrap();
+    let mut cache = SighashCache::new(&psbt.unsigned_tx);
+    for index in 0..psbt.inputs.len() {
+        let utxo = psbt.inputs[index].witness_utxo.as_ref().unwrap();
+        let sighash = cache
+            .p2wpkh_signature_hash(index, &utxo.script_pubkey, utxo.value, EcdsaSighashType::All)
+            .unwrap();
+        let sig = secp.sign_ecdsa(&Message::from(sighash), &secret_key);
+        psbt.inputs[index].partial_sigs.insert(
+            PublicKey::new(pubkey),
+            BitcoinEcdsaSignature {
+                signature: sig,
+                sighash_type: EcdsaSighashType::All,
+            },
+        );
+    }
+    let signed = psbt.serialize();
+    let encoded = encode_base64(&signed);
+    (signed, encoded)
 }

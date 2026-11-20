@@ -12,8 +12,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,6 +36,18 @@ class WalletsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val sections: StateFlow<List<GemWalletSection>> = getAllWallets.getAllWallets()
+
+    val offlineWalletIds: StateFlow<Set<String>> = sections
+        .map { walletSections ->
+            walletSections
+                .asSequence()
+                .flatMap { it.rows.asSequence() }
+                .map { it.id }
+                .filter { service.isQrSigner(it) }
+                .toSet()
+        }
+        .flowOn(ioDispatcher)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
     private val errorState = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = errorState.asStateFlow()

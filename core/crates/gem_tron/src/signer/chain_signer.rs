@@ -52,6 +52,7 @@ mod tests {
     use serde_json::{Value, json};
 
     use super::TronChainSigner;
+    use super::transaction::{build_unsigned_tron_transactions, format_tron_message_signature};
 
     const PRIVATE_KEY: &str = "2d8f68944bdbfbc0769542fba8fc2d2a3de67393334471624364c7006da2aa54";
     const NILE_PRIVATE_KEY: &str = "75065f100e38d3f3b4c5c4235834ba8216de62272a4f03532c44b31a5734360a";
@@ -782,5 +783,24 @@ mod tests {
         assert!(signature.starts_with("0x"));
         assert_eq!(bytes.len(), 65);
         assert!(bytes[64] == 27 || bytes[64] == 28);
+    }
+
+    #[test]
+    fn unsigned_tron_transaction_and_message_attach_external_signature() {
+        let input = SignerInput::mock_with_input_type(TransactionInputType::Transfer { asset: Asset::from_chain(Chain::Tron) }, SENDER, RECIPIENT, "2000000", TransactionLoadMetadata::mock_tron());
+        let expected = TronChainSigner.sign_transfer(&input, &private_key()).unwrap();
+        let mut unsigned = build_unsigned_tron_transactions(&input).unwrap();
+        assert_eq!(unsigned.len(), 1);
+        let step = unsigned.remove(0);
+        let signature_bytes = hex::decode("ede769f6df28aefe6a846be169958c155e23e7e5c9621d2e8dce1719b4d952b63e8a8bf9f00e41204ac1bf69b1a663dacdf764367e48e4a5afcd6b055a747fb21b").unwrap();
+        assert_eq!(step.attach_signature(&signature_bytes).unwrap(), expected);
+
+        let message = b"BitTool Wallet + BitTool Signer: public interoperability test.";
+        let bittool_sig = hex::decode("597f7cc5c372420b211be852a016127afa9462cc4c3b988d3fee608809b774095de616d3cccf9f2ffb9bdd7a965cde75eafa71f9423b6b0a2e79cd35bfdd31cc01").unwrap();
+        let formatted = format_tron_message_signature(message, "TUEZSdKsoDHQMeZwihtdoBiN46zxhGWYdH", &bittool_sig).unwrap();
+        assert_eq!(
+            formatted,
+            "0x597f7cc5c372420b211be852a016127afa9462cc4c3b988d3fee608809b774095de616d3cccf9f2ffb9bdd7a965cde75eafa71f9423b6b0a2e79cd35bfdd31cc1c"
+        );
     }
 }

@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Pindahkan daripada dompet lain</string>
   <string name="wallet_portfolio_title">Portfolio</string>
   <string name="wallet_import_already_imported_message">Dompet ini telah pun diimport.</string>
+  <string name="wallet_import_qr_wallet">Import Dompet QR</string>
+  <string name="wallet_import_qr_description">Imbas kod QR penyegerakan daripada AirGap Vault atau BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Imbas QR Lain</string>
+  <string name="wallet_offline">Luar talian</string>
   <string name="wallets_title">Dompet</string>
   <string name="receive_warning">Ini alamat anda — hantar sahaja %1$s pada %2$s rangkaian.</string>
   <string name="buy_title">Beli %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Peranti anda nampaknya mempunyai akses root, yang boleh meningkatkan risiko keselamatan dengan ketara. Menggunakan apl ini pada peranti berakar boleh mendedahkan aset anda kepada akses tanpa kebenaran dan potensi kerugian. Untuk keselamatan dana anda, kami amat mengesyorkan anda menggunakan peranti yang tidak berakar.</string>
   <string name="rootcheck_ignore">Abaikan</string>
   <string name="rootcheck_exit">Keluar</string>
+  <string name="qr_sign_title">Tandatangan dengan Kod QR</string>
+  <string name="qr_sign_step">Langkah %1$d daripada %2$d</string>
+  <string name="qr_sign_instruction">Imbas kod QR ini dengan dompet sejuk anda untuk menyemak dan menandatangani.</string>
+  <string name="qr_sign_scan_signature">Imbas Tandatangan</string>
+  <string name="qr_sign_scan_instruction">Imbas kod QR tandatangan yang dipaparkan pada dompet sejuk anda.</string>
+  <string name="qr_sign_progress">Diterima %1$d / %2$d bahagian</string>
 </resources>

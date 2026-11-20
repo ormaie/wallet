@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Von einer anderen Wallet übertragen</string>
   <string name="wallet_portfolio_title">Portfolio</string>
   <string name="wallet_import_already_imported_message">Diese Wallet wurde bereits importiert.</string>
+  <string name="wallet_import_qr_wallet">QR-Wallet importieren</string>
+  <string name="wallet_import_qr_description">Scannen Sie den Sync-QR-Code aus AirGap Vault oder BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Weiteren QR-Code scannen</string>
+  <string name="wallet_offline">Offline</string>
   <string name="wallets_title">Wallets</string>
   <string name="receive_warning">Dies ist Ihre Adresse – senden Sie nur %1$s im %2$s-Netzwerk.</string>
   <string name="buy_title">%1$s kaufen</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Ihr Gerät scheint Root-Zugriff zu haben, was die Sicherheitsrisiken erheblich erhöhen kann. Die Verwendung dieser App auf einem gerooteten Gerät kann Ihre Vermögenswerte einem unbefugten Zugriff und einem möglichen Verlust aussetzen. Zur Sicherheit Ihrer Gelder empfehlen wir dringend die Verwendung eines nicht gerooteten Geräts.</string>
   <string name="rootcheck_ignore">Ignorieren</string>
   <string name="rootcheck_exit">Beenden</string>
+  <string name="qr_sign_title">Mit QR-Code signieren</string>
+  <string name="qr_sign_step">Schritt %1$d von %2$d</string>
+  <string name="qr_sign_instruction">Scannen Sie diesen QR-Code mit Ihrer Cold Wallet zum Prüfen und Signieren.</string>
+  <string name="qr_sign_scan_signature">Signatur scannen</string>
+  <string name="qr_sign_scan_instruction">Scannen Sie den auf Ihrer Cold Wallet angezeigten Signatur-QR-Code.</string>
+  <string name="qr_sign_progress">%1$d / %2$d Teile empfangen</string>
 </resources>

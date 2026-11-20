@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = از دارایی‌های کیف پول شما
 wallet_transfer_from_another_wallet = انتقال از کیف پول دیگر
 wallet_portfolio_title = سبد دارایی
 wallet_import_already_imported_message = این کیف پول قبلاً وارد شده است.
+wallet_import_qr_wallet = وارد کردن کیف پول QR
+wallet_import_qr_description = کد QR همگام‌سازی را از AirGap Vault یا BitTool Signer اسکن کنید
+wallet_scan_another_qr = اسکن کد QR دیگر
+wallet_offline = آفلاین
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = به نظر می‌رسد دستگاه شما جیل�
 rootcheck_body = به نظر می رسد دستگاه شما دسترسی ریشه دارد که می تواند خطرات امنیتی را به میزان قابل توجهی افزایش دهد. استفاده از این برنامه در یک دستگاه روت شده ممکن است دارایی های شما را در معرض دسترسی غیرمجاز و از دست دادن احتمالی قرار دهد. برای ایمنی سرمایه خود، ما قویاً توصیه می کنیم از یک دستگاه غیر روت استفاده کنید.
 rootcheck_ignore = نادیده گرفتن
 rootcheck_exit = خارج شوید
+
+# QR
+
+qr_sign_title = امضا با کد QR
+qr_sign_step = مرحله %d از %d
+qr_sign_instruction = این کد QR را با کیف پول سرد خود برای بررسی و امضا اسکن کنید.
+qr_sign_scan_signature = اسکن امضا
+qr_sign_scan_instruction = کد QR امضای نمایش داده شده در کیف پول سرد خود را اسکن کنید.
+qr_sign_progress = %d / %d بخش دریافت شد

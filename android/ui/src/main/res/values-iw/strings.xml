@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">העבר מארנק אחר</string>
   <string name="wallet_portfolio_title">תיק</string>
   <string name="wallet_import_already_imported_message">ארנק זה כבר יובא.</string>
+  <string name="wallet_import_qr_wallet">ייבוא ארנק QR</string>
+  <string name="wallet_import_qr_description">סרקו את קוד ה-QR לסנכרון מתוך AirGap Vault או BitTool Signer</string>
+  <string name="wallet_scan_another_qr">סריקת קוד QR נוסף</string>
+  <string name="wallet_offline">לא מקוון</string>
   <string name="wallets_title">ארנקים</string>
   <string name="receive_warning">זוהי הכתובת שלך — יש לשלוח אליה רק %1$s ברשת %2$s.</string>
   <string name="buy_title">קנה %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">נראה שלמכשיר שלך יש גישת שורש, מה שיכול להגביר משמעותית את סיכוני האבטחה. שימוש באפליקציה זו במכשיר שורשי עלול לחשוף את הנכסים שלך לגישה לא מורשית ואובדן פוטנציאלי. למען בטיחות הכספים שלך, אנו ממליצים בחום להשתמש במכשיר ללא שורש.</string>
   <string name="rootcheck_ignore">התעלם</string>
   <string name="rootcheck_exit">יציאה</string>
+  <string name="qr_sign_title">חתימה באמצעות קוד QR</string>
+  <string name="qr_sign_step">שלב %1$d מתוך %2$d</string>
+  <string name="qr_sign_instruction">סרקו קוד QR זה באמצעות הארנק הקר שלכם לבדיקה וחתימה.</string>
+  <string name="qr_sign_scan_signature">סריקת חתימה</string>
+  <string name="qr_sign_scan_instruction">סרקו את קוד ה-QR של החתימה המוצג בארנק הקר שלכם.</string>
+  <string name="qr_sign_progress">התקבלו %1$d / %2$d חלקים</string>
 </resources>

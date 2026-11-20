@@ -3,6 +3,7 @@ mod bitcoin_cash;
 mod chain_signer;
 pub mod encoding;
 mod planner;
+mod psbt;
 mod transaction;
 
 #[cfg(feature = "rpc")]
@@ -15,6 +16,7 @@ use primitives::{AssetId, BitcoinChain, SignerError, SignerInput, TransactionFee
 
 pub use chain_signer::BitcoinChainSigner;
 pub use planner::{PlanInput, PlanOutput, SpendFee, SpendPlan, SpendRequest, UtxoPlanner, VirtualSizeFee};
+pub use psbt::{build_transfer_psbt, decode_psbt_base64, extract_signed_psbt_transaction};
 pub use transaction::{PlanSigningKey, der_signature, signature_push_bytes};
 
 #[cfg(feature = "rpc")]

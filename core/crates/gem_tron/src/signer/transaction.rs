@@ -1,17 +1,153 @@
 use gem_hash::sha2::sha256;
 use num_traits::ToPrimitive;
-use primitives::hex;
+use primitives::hex::{self, encode_with_0x};
 use primitives::{
-    SignerError, SignerInput, StakeType, TransactionLoadMetadata, TronStakeData, decode_hex,
+    SignerError, SignerInput, StakeType, TransactionInputType, TransactionLoadMetadata, TransferDataOutputType, TronStakeData, decode_hex,
     swap::{ApprovalData, SwapQuoteData, SwapQuoteDataType},
 };
 use signer::{SignatureScheme, Signer};
 
 use super::builder::{SignedTransactionJson, TronRawData};
+use super::message::tron_hash_message;
 use super::wallet_connect::WalletConnectPayload;
 use crate::address::TronAddress;
 use crate::transaction::{TronContract, contract::TronResource};
 use crate::trc20;
+
+const TRON_SIGNATURE_LEN: usize = 65;
+const ETHEREUM_RECOVERY_OFFSET: u8 = 27;
+
+enum UnsignedTronKind {
+    Built(TronRawData),
+    WalletConnect {
+        payload: WalletConnectPayload,
+        transaction_hash: [u8; 32],
+    },
+}
+
+pub struct UnsignedTronTransaction {
+    owner: TronAddress,
+    raw_data_bytes: Vec<u8>,
+    kind: UnsignedTronKind,
+}
+
+impl UnsignedTronTransaction {
+    pub fn owner_bytes(&self) -> [u8; 21] {
+        self.owner.bytes()
+    }
+
+    pub fn raw_data_bytes(&self) -> &[u8] {
+        &self.raw_data_bytes
+    }
+
+    pub fn attach_signature(&self, signature_bytes: &[u8]) -> Result<String, SignerError> {
+        let transaction_id = match &self.kind {
+            UnsignedTronKind::Built(_) => sha256(&self.raw_data_bytes),
+            UnsignedTronKind::WalletConnect { transaction_hash, .. } => *transaction_hash,
+        };
+        let normalized = verify_and_normalize_tron_signature(&transaction_id, &self.owner, signature_bytes)?;
+        let signature_hex = hex::encode(normalized);
+
+        match &self.kind {
+            UnsignedTronKind::Built(raw_data) => {
+                serde_json::to_string(&SignedTransactionJson::new(raw_data.json(), &self.raw_data_bytes, &transaction_id, signature_hex)).map_err(Into::into)
+            }
+            UnsignedTronKind::WalletConnect { payload, transaction_hash } => payload.encode_output(*transaction_hash, signature_hex),
+        }
+    }
+}
+
+pub fn build_unsigned_tron_transactions(input: &SignerInput) -> Result<Vec<UnsignedTronTransaction>, SignerError> {
+    let owner = TronAddress::parse(&input.sender_address)?;
+    match &input.input_type {
+        TransactionInputType::Transfer { asset } => {
+            let payload = if asset.id.is_native() {
+                build_native_transfer(input, owner, &input.destination_address, input.value_as_u64()?)?
+            } else {
+                build_token_transfer(input, owner, &input.destination_address)?
+            };
+            Ok(vec![build_unsigned_from_contract(input, owner, payload)?])
+        }
+        TransactionInputType::TokenApprove { approval_data, .. } => {
+            let payload = build_token_approval(input, owner, approval_data)?;
+            Ok(vec![build_unsigned_from_contract(input, owner, payload)?])
+        }
+        TransactionInputType::Swap { swap_data, .. } => {
+            let payloads = build_swap_payloads(input, owner, &swap_data.data)?;
+            payloads
+                .into_iter()
+                .map(|payload| build_unsigned_from_contract(input, owner, payload))
+                .collect()
+        }
+        TransactionInputType::Stake { .. } => {
+            let payloads = build_stake_payloads(input, owner)?;
+            payloads
+                .into_iter()
+                .map(|payload| build_unsigned_from_contract(input, owner, payload))
+                .collect()
+        }
+        TransactionInputType::Generic { .. } => Ok(vec![build_unsigned_wallet_connect(input, owner)?]),
+        TransactionInputType::Payment { extra, .. } => match extra.output_type {
+            TransferDataOutputType::EncodedTransaction => Ok(vec![build_unsigned_wallet_connect(input, owner)?]),
+            TransferDataOutputType::Signature => SignerError::invalid_input_err("Payment signature output is not supported"),
+        },
+        TransactionInputType::Deposit { .. }
+        | TransactionInputType::Withdrawal { .. }
+        | TransactionInputType::TransferNft { .. }
+        | TransactionInputType::Account { .. }
+        | TransactionInputType::Perpetual { .. }
+        | TransactionInputType::Earn { .. } => SignerError::invalid_input_err("Unsupported Tron transaction input type"),
+    }
+}
+
+pub fn format_tron_message_signature(message: &[u8], expected_sender: &str, signature_bytes: &[u8]) -> Result<String, SignerError> {
+    let sender = TronAddress::parse(expected_sender)?;
+    let digest = tron_hash_message(message);
+    let mut signature = verify_and_normalize_tron_signature(&digest, &sender, signature_bytes)?;
+    signature[TRON_SIGNATURE_LEN - 1] += ETHEREUM_RECOVERY_OFFSET;
+    Ok(encode_with_0x(&signature))
+}
+
+fn build_unsigned_from_contract(input: &SignerInput, owner: TronAddress, payload: ContractPayload) -> Result<UnsignedTronTransaction, SignerError> {
+    let raw_data = TronRawData::from_input_with_data(input, payload.contract, payload.fee_limit, payload.data)?;
+    let raw_data_bytes = raw_data.encode();
+    Ok(UnsignedTronTransaction {
+        owner,
+        raw_data_bytes,
+        kind: UnsignedTronKind::Built(raw_data),
+    })
+}
+
+fn build_unsigned_wallet_connect(input: &SignerInput, owner: TronAddress) -> Result<UnsignedTronTransaction, SignerError> {
+    let payload = WalletConnectPayload::parse(input)?;
+    let (transaction_hash, raw_data_bytes) = payload.validated_raw_data()?;
+    Ok(UnsignedTronTransaction {
+        owner,
+        raw_data_bytes,
+        kind: UnsignedTronKind::WalletConnect { payload, transaction_hash },
+    })
+}
+
+fn verify_and_normalize_tron_signature(digest: &[u8; 32], expected_owner: &TronAddress, signature_bytes: &[u8]) -> Result<[u8; TRON_SIGNATURE_LEN], SignerError> {
+    if signature_bytes.len() != TRON_SIGNATURE_LEN {
+        return SignerError::invalid_input_err("Invalid Tron signature length");
+    }
+    let recovery = match signature_bytes[TRON_SIGNATURE_LEN - 1] {
+        0 | 1 => signature_bytes[TRON_SIGNATURE_LEN - 1],
+        27 | 28 => signature_bytes[TRON_SIGNATURE_LEN - 1] - ETHEREUM_RECOVERY_OFFSET,
+        _ => return SignerError::invalid_input_err("Invalid Tron signature recovery id"),
+    };
+    let mut normalized = [0u8; TRON_SIGNATURE_LEN];
+    normalized[..TRON_SIGNATURE_LEN - 1].copy_from_slice(&signature_bytes[..TRON_SIGNATURE_LEN - 1]);
+    normalized[TRON_SIGNATURE_LEN - 1] = recovery;
+
+    let recovered = Signer::recover_ethereum_address(digest, &normalized)?;
+    let recovered_bytes = decode_hex(&recovered)?;
+    if recovered_bytes != expected_owner.account_id() {
+        return SignerError::invalid_input_err("Tron signature does not match sender address");
+    }
+    Ok(normalized)
+}
 
 struct ContractPayload {
     contract: TronContract,
@@ -33,16 +169,19 @@ pub(crate) fn sign_token_approval(input: &SignerInput, private_key: &[u8]) -> Re
 
 pub(crate) fn sign_swap(input: &SignerInput, private_key: &[u8]) -> Result<Vec<String>, SignerError> {
     let swap_data = &input.input_type.get_swap_data()?.data;
+    sign_contract_payloads(input, private_key, |owner| build_swap_payloads(input, owner, swap_data))
+}
 
+fn build_swap_payloads(input: &SignerInput, owner: TronAddress, swap_data: &SwapQuoteData) -> Result<Vec<ContractPayload>, SignerError> {
     match swap_data.data_type {
         SwapQuoteDataType::Transfer => SignerError::invalid_input_err("unsupported Tron transfer swap"),
-        SwapQuoteDataType::Contract => sign_contract_payloads(input, private_key, |owner| {
+        SwapQuoteDataType::Contract => {
             let swap_payload = build_contract_swap(input, owner, swap_data)?;
             match &swap_data.approval {
                 Some(approval) => Ok(vec![build_token_approval(input, owner, approval)?, swap_payload]),
                 None => Ok(vec![swap_payload]),
             }
-        }),
+        }
     }
 }
 
@@ -125,45 +264,47 @@ fn build_token_approval(input: &SignerInput, owner: TronAddress, approval: &Appr
 }
 
 pub(crate) fn sign_stake(input: &SignerInput, private_key: &[u8]) -> Result<Vec<String>, SignerError> {
+    sign_contract_payloads(input, private_key, |owner| build_stake_payloads(input, owner))
+}
+
+fn build_stake_payloads(input: &SignerInput, owner: TronAddress) -> Result<Vec<ContractPayload>, SignerError> {
     let stake_type = input.input_type.get_stake_type().map_err(SignerError::invalid_input)?;
     let fee_limit = input.fee.fee()?;
     let TransactionLoadMetadata::Tron { stake_data, .. } = &input.metadata else {
         return SignerError::invalid_input_err("Missing tron metadata");
     };
 
-    sign_contract_payloads(input, private_key, |owner| {
-        let contracts = match stake_type {
-            StakeType::Stake(_) | StakeType::Redelegate(_) => match stake_data {
-                TronStakeData::Votes { votes } => vec![TronContract::vote_witness(owner, votes)?],
-                TronStakeData::Unfreeze { unfreezes: _ } => return SignerError::invalid_input_err("Expected Tron vote stake data"),
-            },
-            StakeType::Unstake(_) => match stake_data {
-                TronStakeData::Votes { votes } => vec![TronContract::vote_witness(owner, votes)?],
-                TronStakeData::Unfreeze { unfreezes } => unfreezes
-                    .iter()
-                    .map(|unfreeze| TronContract::UnfreezeBalanceV2 {
-                        owner,
-                        unfreeze_balance: unfreeze.amount,
-                        resource: TronResource::from(&unfreeze.resource),
-                    })
-                    .collect(),
-            },
-            StakeType::Rewards(_) => vec![TronContract::WithdrawBalance { owner }],
-            StakeType::Withdraw(_) => vec![TronContract::WithdrawExpireUnfreeze { owner }],
-            StakeType::Freeze(resource) => vec![TronContract::FreezeBalanceV2 {
-                owner,
-                frozen_balance: input.value_as_u64()?,
-                resource: TronResource::from(resource),
-            }],
-            StakeType::Unfreeze(resource) => vec![TronContract::UnfreezeBalanceV2 {
-                owner,
-                unfreeze_balance: input.value_as_u64()?,
-                resource: TronResource::from(resource),
-            }],
-        };
+    let contracts = match stake_type {
+        StakeType::Stake(_) | StakeType::Redelegate(_) => match stake_data {
+            TronStakeData::Votes { votes } => vec![TronContract::vote_witness(owner, votes)?],
+            TronStakeData::Unfreeze { unfreezes: _ } => return SignerError::invalid_input_err("Expected Tron vote stake data"),
+        },
+        StakeType::Unstake(_) => match stake_data {
+            TronStakeData::Votes { votes } => vec![TronContract::vote_witness(owner, votes)?],
+            TronStakeData::Unfreeze { unfreezes } => unfreezes
+                .iter()
+                .map(|unfreeze| TronContract::UnfreezeBalanceV2 {
+                    owner,
+                    unfreeze_balance: unfreeze.amount,
+                    resource: TronResource::from(&unfreeze.resource),
+                })
+                .collect(),
+        },
+        StakeType::Rewards(_) => vec![TronContract::WithdrawBalance { owner }],
+        StakeType::Withdraw(_) => vec![TronContract::WithdrawExpireUnfreeze { owner }],
+        StakeType::Freeze(resource) => vec![TronContract::FreezeBalanceV2 {
+            owner,
+            frozen_balance: input.value_as_u64()?,
+            resource: TronResource::from(resource),
+        }],
+        StakeType::Unfreeze(resource) => vec![TronContract::UnfreezeBalanceV2 {
+            owner,
+            unfreeze_balance: input.value_as_u64()?,
+            resource: TronResource::from(resource),
+        }],
+    };
 
-        Ok(contracts.into_iter().map(|contract| ContractPayload { contract, fee_limit, data: None }).collect())
-    })
+    Ok(contracts.into_iter().map(|contract| ContractPayload { contract, fee_limit, data: None }).collect())
 }
 
 pub(crate) fn sign_data(input: &SignerInput, private_key: &[u8]) -> Result<String, SignerError> {

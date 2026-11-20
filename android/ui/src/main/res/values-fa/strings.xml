@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">انتقال از کیف پول دیگر</string>
   <string name="wallet_portfolio_title">سبد دارایی</string>
   <string name="wallet_import_already_imported_message">این کیف پول قبلاً وارد شده است.</string>
+  <string name="wallet_import_qr_wallet">وارد کردن کیف پول QR</string>
+  <string name="wallet_import_qr_description">کد QR همگام‌سازی را از AirGap Vault یا BitTool Signer اسکن کنید</string>
+  <string name="wallet_scan_another_qr">اسکن کد QR دیگر</string>
+  <string name="wallet_offline">آفلاین</string>
   <string name="wallets_title">کیف پول ها</string>
   <string name="receive_warning">این آدرس شماست — فقط ارسال %1$s روی %2$s شبکه.</string>
   <string name="buy_title">خرید %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">به نظر می رسد دستگاه شما دسترسی ریشه دارد که می تواند خطرات امنیتی را به میزان قابل توجهی افزایش دهد. استفاده از این برنامه در یک دستگاه روت شده ممکن است دارایی های شما را در معرض دسترسی غیرمجاز و از دست دادن احتمالی قرار دهد. برای ایمنی سرمایه خود، ما قویاً توصیه می کنیم از یک دستگاه غیر روت استفاده کنید.</string>
   <string name="rootcheck_ignore">نادیده گرفتن</string>
   <string name="rootcheck_exit">خارج شوید</string>
+  <string name="qr_sign_title">امضا با کد QR</string>
+  <string name="qr_sign_step">مرحله %1$d از %2$d</string>
+  <string name="qr_sign_instruction">این کد QR را با کیف پول سرد خود برای بررسی و امضا اسکن کنید.</string>
+  <string name="qr_sign_scan_signature">اسکن امضا</string>
+  <string name="qr_sign_scan_instruction">کد QR امضای نمایش داده شده در کیف پول سرد خود را اسکن کنید.</string>
+  <string name="qr_sign_progress">%1$d / %2$d بخش دریافت شد</string>
 </resources>

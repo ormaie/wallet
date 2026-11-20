@@ -13,6 +13,8 @@ use crate::services::error::GemServiceError;
 pub use model::GemDiscoveryStep;
 pub use store::GemWalletPreferencesStore;
 
+const UNKNOWN_QR_SIGNER_XFP: &str = "unknown";
+
 #[derive(Debug, Clone, Copy, AsRefStr)]
 #[strum(serialize_all = "snake_case")]
 enum WalletPreferenceKey {
@@ -27,6 +29,7 @@ enum WalletPreferenceKey {
     CompleteInitialLoadNfts,
     CompleteInitialWalletConfiguration,
     PerpetualAccountMode,
+    QrSignerXfp,
 }
 
 #[derive(uniffi::Object)]
@@ -117,6 +120,27 @@ impl GemWalletPreferencesService {
         self.set_value(wallet_id, WalletPreferenceKey::PerpetualAccountMode.as_ref().to_string(), value.to_string())
     }
 
+    pub fn is_qr_signer(&self, wallet_id: WalletId) -> bool {
+        self.store
+            .get(wallet_id, WalletPreferenceKey::QrSignerXfp.as_ref().to_string())
+            .is_some_and(|value| !value.is_empty())
+    }
+
+    pub fn qr_signer_xfp(&self, wallet_id: WalletId) -> Option<String> {
+        self.store
+            .get(wallet_id, WalletPreferenceKey::QrSignerXfp.as_ref().to_string())
+            .filter(|value| !value.is_empty() && value != UNKNOWN_QR_SIGNER_XFP)
+    }
+
+    pub fn set_qr_signer_xfp(&self, wallet_id: WalletId, xfp: Option<String>) -> Result<(), GemServiceError> {
+        let value = xfp.filter(|value| !value.is_empty()).unwrap_or_else(|| UNKNOWN_QR_SIGNER_XFP.to_string());
+        self.set_value(wallet_id, WalletPreferenceKey::QrSignerXfp.as_ref().to_string(), value)
+    }
+
+    pub fn clear_qr_signer(&self, wallet_id: WalletId) -> Result<(), GemServiceError> {
+        self.set_value(wallet_id, WalletPreferenceKey::QrSignerXfp.as_ref().to_string(), String::new())
+    }
+
     fn get_timestamp(&self, wallet_id: WalletId, key: WalletPreferenceKey) -> u64 {
         self.get_timestamp_key(wallet_id, key.as_ref().to_string())
     }
@@ -188,6 +212,17 @@ mod tests {
         service.set_perpetual_account_mode(wallet.clone(), PerpetualAccountMode::Unified).unwrap();
         assert_eq!(service.get_perpetual_account_mode(wallet.clone()), PerpetualAccountMode::Unified);
         assert_eq!(service.get_perpetual_account_mode(other), PerpetualAccountMode::Standard);
+
+        assert!(!service.is_qr_signer(wallet.clone()));
+        assert_eq!(service.qr_signer_xfp(wallet.clone()), None);
+        service.set_qr_signer_xfp(wallet.clone(), Some("73c5da0a".to_string())).unwrap();
+        assert!(service.is_qr_signer(wallet.clone()));
+        assert_eq!(service.qr_signer_xfp(wallet.clone()), Some("73c5da0a".to_string()));
+        service.set_qr_signer_xfp(wallet.clone(), None).unwrap();
+        assert!(service.is_qr_signer(wallet.clone()));
+        assert_eq!(service.qr_signer_xfp(wallet.clone()), None);
+        service.clear_qr_signer(wallet.clone()).unwrap();
+        assert!(!service.is_qr_signer(wallet.clone()));
 
         service.delete_preferences(wallet.clone()).unwrap();
         assert_eq!(service.get_transactions_timestamp(wallet.clone(), None), 0);

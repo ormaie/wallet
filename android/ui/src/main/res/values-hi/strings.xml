@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">दूसरे वॉलेट से ट्रांसफर करें</string>
   <string name="wallet_portfolio_title">पोर्टफोलियो</string>
   <string name="wallet_import_already_imported_message">यह बटुआ पहले ही आयात किया जा चुका है।</string>
+  <string name="wallet_import_qr_wallet">QR वॉलेट इम्पोर्ट करें</string>
+  <string name="wallet_import_qr_description">AirGap Vault या BitTool Signer से सिंक QR कोड स्कैन करें</string>
+  <string name="wallet_scan_another_qr">दूसरा QR स्कैन करें</string>
+  <string name="wallet_offline">ऑफ़लाइन</string>
   <string name="wallets_title">बटुए</string>
   <string name="receive_warning">यह आपका पता है — केवल %1$s ही %2$s नेटवर्क पर भेजें।</string>
   <string name="buy_title">%1$s खरीदें</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">ऐसा लगता है कि आपके डिवाइस में रूट एक्सेस है, जो सुरक्षा जोखिमों को काफी हद तक बढ़ा सकता है। रूट किए गए डिवाइस पर इस ऐप का उपयोग करने से आपकी संपत्ति अनधिकृत पहुंच और संभावित नुकसान के संपर्क में आ सकती है। आपके फंड की सुरक्षा के लिए, हम दृढ़ता से गैर-रूट किए गए डिवाइस का उपयोग करने की सलाह देते हैं।</string>
   <string name="rootcheck_ignore">नजरअंदाज करें</string>
   <string name="rootcheck_exit">बाहर निकलें</string>
+  <string name="qr_sign_title">QR कोड से साइन करें</string>
+  <string name="qr_sign_step">चरण %1$d / %2$d</string>
+  <string name="qr_sign_instruction">समीक्षा और हस्ताक्षर करने के लिए अपने कोल्ड वॉलेट से इस QR कोड को स्कैन करें।</string>
+  <string name="qr_sign_scan_signature">हस्ताक्षर स्कैन करें</string>
+  <string name="qr_sign_scan_instruction">अपने कोल्ड वॉलेट पर दिखाए गए हस्ताक्षर QR कोड को स्कैन करें।</string>
+  <string name="qr_sign_progress">%1$d / %2$d भाग प्राप्त हुए</string>
 </resources>

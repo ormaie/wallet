@@ -13,7 +13,7 @@ pub(crate) mod testkit {
 use zeroize::Zeroizing;
 
 pub use crate::address::Base32Address;
-pub use crate::ed25519::{ED25519_KEY_TYPE, Ed25519KeyPair};
+pub use crate::ed25519::{ED25519_KEY_TYPE, Ed25519KeyPair, verify_ed25519_signature};
 pub use crate::error::InvalidInput;
 pub use crate::secp256k1::{
     generate_private_key as generate_secp256k1_private_key, public_key_from_private as secp256k1_public_key, uncompressed_public_key as secp256k1_uncompress_public_key,

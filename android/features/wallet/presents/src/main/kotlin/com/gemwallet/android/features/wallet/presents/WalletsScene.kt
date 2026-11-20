@@ -17,7 +17,7 @@ import uniffi.gemstone.GemWalletRow
 import uniffi.gemstone.GemWalletSection
 
 @Composable
-internal fun WalletsScene(sections: List<GemWalletSection>, snackbar: SnackbarHostState? = null, onAction: (WalletsAction) -> Unit) {
+internal fun WalletsScene(sections: List<GemWalletSection>, offlineWalletIds: Set<String> = emptySet(), snackbar: SnackbarHostState? = null, onAction: (WalletsAction) -> Unit) {
     val longPressedWallet = remember {
         mutableStateOf("")
     }
@@ -41,6 +41,7 @@ internal fun WalletsScene(sections: List<GemWalletSection>, snackbar: SnackbarHo
             sections.forEach { section ->
                 wallets(
                     section = section,
+                    offlineWalletIds = offlineWalletIds,
                     longPressedWallet = longPressedWallet,
                     onEdit = onEdit,
                     onSelectWallet = onSelectWallet,

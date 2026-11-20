@@ -30,7 +30,7 @@ import uniffi.gemstone.GemImportWalletTypes
 import uniffi.gemstone.GemListPhase
 
 @Composable
-fun ImportWalletTypeScreen(onClose: () -> Unit, onSelect: (ImportType) -> Unit) {
+fun ImportWalletTypeScreen(onClose: () -> Unit, onSelect: (ImportType) -> Unit, onSelectQrWallet: () -> Unit = {}) {
     val viewModel: ImportWalletTypeViewModel = hiltViewModel()
     val types by viewModel.types.collectAsStateWithLifecycle()
 
@@ -38,12 +38,13 @@ fun ImportWalletTypeScreen(onClose: () -> Unit, onSelect: (ImportType) -> Unit) 
         types = types,
         chainFilter = viewModel.chainFilter,
         onSelect = onSelect,
+        onSelectQrWallet = onSelectQrWallet,
         onClose = onClose,
     )
 }
 
 @Composable
-private fun ImportWalletTypeScene(types: GemImportWalletTypes, chainFilter: TextFieldState, onSelect: (ImportType) -> Unit, onClose: () -> Unit) {
+private fun ImportWalletTypeScene(types: GemImportWalletTypes, chainFilter: TextFieldState, onSelect: (ImportType) -> Unit, onSelectQrWallet: () -> Unit, onClose: () -> Unit) {
     Scene(
         title = stringResource(id = R.string.wallet_import_title),
         actions = {
@@ -51,6 +52,7 @@ private fun ImportWalletTypeScene(types: GemImportWalletTypes, chainFilter: Text
         },
         onClose = onClose,
     ) {
+        val showsQrWallet = chainFilter.text.isEmpty()
         LazyColumn(modifier = Modifier) {
             item {
                 SearchBar(query = chainFilter)
@@ -60,9 +62,20 @@ private fun ImportWalletTypeScene(types: GemImportWalletTypes, chainFilter: Text
                     modifier = Modifier.testTag("multicoin_item"),
                     title = types.multicoin.string(LocalContext.current),
                     icon = ListItemImage.Drawable(R.drawable.multicoin_wallet, style = ListItemImageStyle.Avatar),
-                    listPosition = ListPosition.Single,
+                    listPosition = if (showsQrWallet) ListPosition.First else ListPosition.Single,
                 ) {
                     onSelect(ImportType.phrase())
+                }
+            }
+            if (showsQrWallet) {
+                item {
+                    ChainItem(
+                        modifier = Modifier.testTag("qr_wallet_item"),
+                        title = stringResource(id = R.string.wallet_import_qr_wallet),
+                        icon = ListItemImage.Drawable(R.drawable.ic_qr_code_scanner, style = ListItemImageStyle.Settings),
+                        listPosition = ListPosition.Last,
+                        onClick = onSelectQrWallet,
+                    )
                 }
             }
             (types.phase as? GemListPhase.Empty)?.let { empty ->

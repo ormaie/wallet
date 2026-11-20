@@ -239,6 +239,7 @@ class WalletNavigator(
     fun openCreateWalletSecurityReminder() = push(CreateWalletSecurityReminderRoute)
     fun openCreateWallet() = push(CreateWalletRoute)
     fun openImportWallet() = push(ImportWalletTypeRoute)
+    fun openImportQrWallet() = push(ImportWalletRoute.QrWallet)
     fun openImportWallet(importType: ImportType) {
         push(importType.toImportRoute())
     }

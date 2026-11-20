@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gemwallet.android.features.qr_scanner.presents.QrSignBottomSheet
 import com.gemwallet.android.features.wallet_connector.viewmodels.AuthRequestUIState
 import com.gemwallet.android.features.wallet_connector.viewmodels.AuthRequestViewModel
 import com.gemwallet.android.ui.R
@@ -27,6 +28,7 @@ fun AuthRequestScreen(authentication: GemWalletConnectAuthentication, onOpenAddr
     BackHandler(onBack = viewModel::onReject)
     val state by viewModel.state.collectAsStateWithLifecycle()
     val buttonState by viewModel.buttonState.collectAsStateWithLifecycle()
+    val qrSignState by viewModel.qrSignState.collectAsStateWithLifecycle()
 
     LaunchedEffect(authentication.id) {
         viewModel.onRequest(authentication, onError)
@@ -57,6 +59,12 @@ fun AuthRequestScreen(authentication: GemWalletConnectAuthentication, onOpenAddr
             }
         }
     }
+
+    QrSignBottomSheet(
+        state = qrSignState,
+        onScanFrame = viewModel::onQrSignFrame,
+        onDismiss = viewModel::dismissQrSign,
+    )
 }
 
 @Composable

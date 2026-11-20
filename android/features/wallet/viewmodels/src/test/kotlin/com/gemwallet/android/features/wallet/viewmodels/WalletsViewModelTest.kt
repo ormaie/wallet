@@ -13,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -108,6 +109,22 @@ class WalletsViewModelTest {
 
         assertEquals("keystore delete failed", model.error.value)
         assertNull(model.deletion.value)
+    }
+
+    @Test
+    fun `offlineWalletIds marks only QR signer wallets`() = runTest(dispatcher) {
+        val hot = mockGemWalletRow(id = "hot", name = "Wallet #1")
+        val cold = mockGemWalletRow(id = "cold", name = "AirGap #1")
+        wallets.value = listOf(GemWalletSection(GemWalletSectionKind.WALLETS, listOf(hot, cold)))
+        val service: GemWalletServiceInterface = mockk(relaxed = true) {
+            every { isQrSigner("hot") } returns false
+            every { isQrSigner("cold") } returns true
+        }
+        val model = viewModel(service)
+
+        advanceUntilIdle()
+
+        assertEquals(setOf("cold"), model.offlineWalletIds.value)
     }
 
     private fun viewModel(service: GemWalletServiceInterface = mockk(relaxed = true)): WalletsViewModel {

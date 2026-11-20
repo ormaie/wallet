@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Mula sa iyong mga asset sa wallet
 wallet_transfer_from_another_wallet = Maglipat mula sa ibang wallet
 wallet_portfolio_title = Portfolio
 wallet_import_already_imported_message = Na-import na ang wallet na ito.
+wallet_import_qr_wallet = Mag-import ng QR Wallet
+wallet_import_qr_description = I-scan ang sync QR code mula sa AirGap Vault o BitTool Signer
+wallet_scan_another_qr = Mag-scan ng Isa Pang QR
+wallet_offline = Offline
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Mukhang naka-jailbreak ang iyong device. Maaari niton
 rootcheck_body = Mukhang may root access ang iyong device, na maaaring makabuluhang magpapataas ng mga panganib sa seguridad. Ang paggamit ng app na ito sa isang naka-root na device ay maaaring maglantad sa iyong mga asset sa hindi awtorisadong pag-access at potensyal na pagkawala. Para sa kaligtasan ng iyong mga pondo, lubos naming inirerekomenda ang paggamit ng hindi naka-root na device.
 rootcheck_ignore = Huwag pansinin
 rootcheck_exit = Lumabas
+
+# QR
+
+qr_sign_title = Lumagda gamit ang QR Code
+qr_sign_step = Hakbang %d ng %d
+qr_sign_instruction = I-scan ang QR code na ito gamit ang iyong cold wallet upang suriin at lagdaan.
+qr_sign_scan_signature = I-scan ang Lagda
+qr_sign_scan_instruction = I-scan ang signature QR code na ipinapakita sa iyong cold wallet.
+qr_sign_progress = Natanggap %d / %d bahagi

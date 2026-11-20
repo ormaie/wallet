@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Z aktiv ve vaší peněžence
 wallet_transfer_from_another_wallet = Převod z jiné peněženky
 wallet_portfolio_title = Portfolio
 wallet_import_already_imported_message = Tato peněženka již byla importována.
+wallet_import_qr_wallet = Importovat QR peněženku
+wallet_import_qr_description = Naskenujte synchronizační QR kód z AirGap Vault nebo BitTool Signer
+wallet_scan_another_qr = Naskenovat další QR kód
+wallet_offline = Offline
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Vaše zařízení je zřejmě jailbreaknuté. To mů�
 rootcheck_body = Zdá se, že vaše zařízení má přístup root, což může výrazně zvýšit bezpečnostní rizika. Používání této aplikace na zakořeněném zařízení může vystavit váš majetek neoprávněnému přístupu a potenciální ztrátě. Pro bezpečnost vašich finančních prostředků důrazně doporučujeme používat nerootované zařízení.
 rootcheck_ignore = Ignorovat
 rootcheck_exit = Výstup
+
+# QR
+
+qr_sign_title = Podepsat pomocí QR kódu
+qr_sign_step = Krok %d z %d
+qr_sign_instruction = Naskenujte tento QR kód svou offline peněženkou pro kontrolu a podpis.
+qr_sign_scan_signature = Naskenovat podpis
+qr_sign_scan_instruction = Naskenujte QR kód podpisu zobrazený na vaší offline peněžence.
+qr_sign_progress = Přijato %d / %d částí

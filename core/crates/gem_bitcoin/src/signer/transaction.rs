@@ -130,7 +130,7 @@ fn sign_standard<C: Signing>(plan: &SpendPlan, secret_key: &SecretKey, public_ke
     Ok(transaction)
 }
 
-fn validate_chain_input_types(chain: BitcoinChain, plan: &SpendPlan) -> Result<(), SignerError> {
+pub(super) fn validate_chain_input_types(chain: BitcoinChain, plan: &SpendPlan) -> Result<(), SignerError> {
     for input in &plan.inputs {
         match chain {
             BitcoinChain::Bitcoin | BitcoinChain::Litecoin | BitcoinChain::Doge => {}
@@ -144,7 +144,7 @@ fn validate_chain_input_types(chain: BitcoinChain, plan: &SpendPlan) -> Result<(
     Ok(())
 }
 
-fn validate_public_key(chain: BitcoinChain, plan: &SpendPlan, public_key: &PublicKey) -> Result<(), SignerError> {
+pub(super) fn validate_public_key(chain: BitcoinChain, plan: &SpendPlan, public_key: &PublicKey) -> Result<(), SignerError> {
     let key_hash = public_key_hash(&public_key.to_bytes());
     for input in &plan.inputs {
         let expected = script_for_public_key_hash(input.unlocking_script, key_hash);
@@ -155,7 +155,7 @@ fn validate_public_key(chain: BitcoinChain, plan: &SpendPlan, public_key: &Publi
     Ok(())
 }
 
-fn validate_plan_amounts(chain: BitcoinChain, plan: &SpendPlan) -> Result<(), SignerError> {
+pub(super) fn validate_plan_amounts(chain: BitcoinChain, plan: &SpendPlan) -> Result<(), SignerError> {
     let input_total: u128 = plan.inputs.iter().map(|input| input.value.to_sat() as u128).sum();
     let output_total: u128 = plan.outputs.iter().map(|output| output.value.to_sat() as u128).sum();
     let spent_total = output_total + plan.fee as u128;

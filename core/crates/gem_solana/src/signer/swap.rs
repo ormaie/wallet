@@ -3,18 +3,19 @@ use num_traits::ToPrimitive;
 use primitives::{SignerError, SignerInput};
 
 use super::transaction::{block_hash, sign_transaction};
-use crate::{VersionedTransactionExt, decode_transaction};
+use crate::{VersionedTransaction, VersionedTransactionExt, decode_transaction};
 
 pub(crate) fn sign(input: &SignerInput, private_key: &[u8]) -> Result<Vec<String>, SignerError> {
-    let swap_data = input.input_type.get_swap_data()?;
-    let transaction_base64 = &swap_data.data.data;
-
-    let quote_gas_limit = swap_data.data.gas_limit.as_ref().map(|_| swap_data.data.gas_limit_as_u32()).transpose().map_err(SignerError::invalid_input)?;
-
-    Ok(vec![sign_swap_transaction(transaction_base64, private_key, quote_gas_limit, input)?])
+    let mut transaction = prepare_swap_transaction(input)?;
+    sign_transaction(&mut transaction, private_key)?;
+    let bytes = transaction.serialize().map_err(|e| SignerError::signing_error(format!("serialize transaction: {e}")))?;
+    Ok(vec![encode_base64(&bytes)])
 }
 
-fn sign_swap_transaction(transaction_base64: &str, private_key: &[u8], quote_gas_limit: Option<u32>, input: &SignerInput) -> Result<String, SignerError> {
+pub(crate) fn prepare_swap_transaction(input: &SignerInput) -> Result<VersionedTransaction, SignerError> {
+    let swap_data = input.input_type.get_swap_data()?;
+    let transaction_base64 = &swap_data.data.data;
+    let quote_gas_limit = swap_data.data.gas_limit.as_ref().map(|_| swap_data.data.gas_limit_as_u32()).transpose().map_err(SignerError::invalid_input)?;
     let fee = &input.fee;
     let mut transaction = decode_transaction(transaction_base64).map_err(SignerError::invalid_input)?;
 
@@ -42,10 +43,7 @@ fn sign_swap_transaction(transaction_base64: &str, private_key: &[u8], quote_gas
         }
     }
 
-    sign_transaction(&mut transaction, private_key)?;
-
-    let bytes = transaction.serialize().map_err(|e| SignerError::signing_error(format!("serialize transaction: {e}")))?;
-    Ok(encode_base64(&bytes))
+    Ok(transaction)
 }
 
 #[cfg(test)]

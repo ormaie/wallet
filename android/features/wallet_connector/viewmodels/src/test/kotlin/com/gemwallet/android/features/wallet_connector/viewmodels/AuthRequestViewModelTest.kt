@@ -84,6 +84,7 @@ class AuthRequestViewModelTest {
 
     private fun signMessageService(): GemSignMessageServiceInterface = mockk {
         every { payloadPreview(any()) } returns null
+        every { requiresQrSign(any()) } returns false
         coEvery { sign(any(), any()) } returns "0xsignature"
     }
 

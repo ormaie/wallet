@@ -1,11 +1,58 @@
 use alloy_primitives::{Address, B256, Bytes, Signature, U256, keccak256};
-use primitives::SignerError;
+use primitives::{SignerError, hex};
 use signer::{SignatureScheme, Signer};
 
 use super::rlp;
+use crate::eip712::hash_typed_data;
 
 const EIP1559_TX_TYPE_ID: u8 = 0x02;
+const EVM_SIGNATURE_LEN: usize = 65;
+const ETHEREUM_V_OFFSET: u8 = 27;
+const EIP155_V_OFFSET: u8 = 35;
 
+pub fn normalize_evm_signature_recovery(signature_bytes: &[u8]) -> Result<([u8; 64], u8), SignerError> {
+    if signature_bytes.len() != EVM_SIGNATURE_LEN {
+        return Err(SignerError::invalid_input("invalid EVM signature length"));
+    }
+    let mut rs = [0u8; 64];
+    rs.copy_from_slice(&signature_bytes[..64]);
+    let recovery_id = match signature_bytes[64] {
+        0 | 27 => 0,
+        1 | 28 => 1,
+        v if v >= EIP155_V_OFFSET => u8::from(!(v - EIP155_V_OFFSET).is_multiple_of(2)),
+        _ => return Err(SignerError::invalid_input("invalid EVM signature recovery byte")),
+    };
+    Ok((rs, recovery_id))
+}
+
+pub fn attach_typed_data_signature(typed_data_json: &[u8], signature_bytes: &[u8], expected_sender: &str) -> Result<String, SignerError> {
+    let json_str = std::str::from_utf8(typed_data_json).map_err(|_| SignerError::invalid_input("message must be valid UTF-8"))?;
+    let digest = hash_typed_data(json_str)?;
+    format_ethereum_message_signature(&digest, signature_bytes, expected_sender)
+}
+
+pub fn format_ethereum_message_signature(digest: &[u8; 32], signature_bytes: &[u8], expected_sender: &str) -> Result<String, SignerError> {
+    let (rs, recovery_id) = normalize_evm_signature_recovery(signature_bytes)?;
+    let mut normalized = Vec::with_capacity(EVM_SIGNATURE_LEN);
+    normalized.extend_from_slice(&rs);
+    normalized.push(recovery_id + ETHEREUM_V_OFFSET);
+    verify_recovered_sender(digest, &normalized, expected_sender)?;
+    Ok(format!("0x{}", hex::encode(normalized)))
+}
+
+fn verify_recovered_sender(digest: &[u8; 32], signature: &[u8], expected_sender: &str) -> Result<(), SignerError> {
+    let expected = expected_sender.trim();
+    if expected.is_empty() {
+        return Err(SignerError::invalid_input("missing expected sender address"));
+    }
+    let recovered = Signer::recover_ethereum_address(digest, signature)?;
+    if !recovered.eq_ignore_ascii_case(expected) {
+        return Err(SignerError::signing_error("QR signature signer does not match sender address"));
+    }
+    Ok(())
+}
+
+#[derive(Debug, Clone)]
 pub struct Eip1559Transaction {
     pub chain_id: u64,
     pub nonce: u64,
@@ -21,6 +68,17 @@ impl Eip1559Transaction {
     pub fn sign(&self, private_key: &[u8]) -> Result<Vec<u8>, SignerError> {
         let signature = Signer::sign_digest(SignatureScheme::Secp256k1, self.signature_hash().as_slice(), private_key)?;
         let signature = Signature::try_from(signature.as_slice()).map_err(SignerError::from_display)?;
+        Ok(self.encoded(Some(&signature)))
+    }
+
+    pub fn attach_signature(&self, signature_bytes: &[u8], expected_sender: &str) -> Result<Vec<u8>, SignerError> {
+        let (rs, recovery_id) = normalize_evm_signature_recovery(signature_bytes)?;
+        let mut normalized = Vec::with_capacity(EVM_SIGNATURE_LEN);
+        normalized.extend_from_slice(&rs);
+        normalized.push(recovery_id);
+        let hash_bytes: [u8; 32] = self.signature_hash().into();
+        verify_recovered_sender(&hash_bytes, &normalized, expected_sender)?;
+        let signature = Signature::try_from(normalized.as_slice()).map_err(SignerError::from_display)?;
         Ok(self.encoded(Some(&signature)))
     }
 

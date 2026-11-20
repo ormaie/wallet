@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = מנכסי הארנק שלך
 wallet_transfer_from_another_wallet = העבר מארנק אחר
 wallet_portfolio_title = תיק
 wallet_import_already_imported_message = ארנק זה כבר יובא.
+wallet_import_qr_wallet = ייבוא ארנק QR
+wallet_import_qr_description = סרקו את קוד ה-QR לסנכרון מתוך AirGap Vault או BitTool Signer
+wallet_scan_another_qr = סריקת קוד QR נוסף
+wallet_offline = לא מקוון
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = נראה שהמכשיר שלך עבר ג'יילברי
 rootcheck_body = נראה שלמכשיר שלך יש גישת שורש, מה שיכול להגביר משמעותית את סיכוני האבטחה. שימוש באפליקציה זו במכשיר שורשי עלול לחשוף את הנכסים שלך לגישה לא מורשית ואובדן פוטנציאלי. למען בטיחות הכספים שלך, אנו ממליצים בחום להשתמש במכשיר ללא שורש.
 rootcheck_ignore = התעלם
 rootcheck_exit = יציאה
+
+# QR
+
+qr_sign_title = חתימה באמצעות קוד QR
+qr_sign_step = שלב %d מתוך %d
+qr_sign_instruction = סרקו קוד QR זה באמצעות הארנק הקר שלכם לבדיקה וחתימה.
+qr_sign_scan_signature = סריקת חתימה
+qr_sign_scan_instruction = סרקו את קוד ה-QR של החתימה המוצג בארנק הקר שלכם.
+qr_sign_progress = התקבלו %d / %d חלקים

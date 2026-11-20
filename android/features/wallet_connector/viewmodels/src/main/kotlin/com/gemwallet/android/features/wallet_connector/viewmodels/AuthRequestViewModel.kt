@@ -16,6 +16,7 @@ import com.gemwallet.android.features.wallet_connector.viewmodels.models.WalletC
 import com.gemwallet.android.ui.components.list_item.ListItemModel
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.models.ButtonState
+import com.gemwallet.android.ui.models.QrSignSheetState
 import com.gemwallet.android.ui.models.buttonState
 import com.wallet.core.primitives.Account
 import com.wallet.core.primitives.Chain
@@ -37,6 +38,8 @@ import uniffi.gemstone.GemConnectionRow
 import uniffi.gemstone.GemGroup
 import uniffi.gemstone.GemListRow
 import uniffi.gemstone.GemLocalizedText
+import uniffi.gemstone.GemQrMessageSignOutcome
+import uniffi.gemstone.GemQrMessageSignSession
 import uniffi.gemstone.GemSignMessageServiceInterface
 import uniffi.gemstone.GemWalletConnectAuthentication
 import uniffi.gemstone.GemWalletConnectException
@@ -65,6 +68,10 @@ class AuthRequestViewModel @Inject constructor(
 
     private val _state = MutableStateFlow<AuthRequestUIState>(AuthRequestUIState.Loading)
     val state: StateFlow<AuthRequestUIState> = _state.asStateFlow()
+
+    private var activeQrSession: ActiveAuthQrSession? = null
+    private val _qrSignState = MutableStateFlow<QrSignSheetState?>(null)
+    val qrSignState: StateFlow<QrSignSheetState?> = _qrSignState.asStateFlow()
 
     val buttonState: StateFlow<ButtonState> = state
         .map { buttonState(loading = it is AuthRequestUIState.Approving) }
@@ -129,31 +136,84 @@ class AuthRequestViewModel @Inject constructor(
         _state.update { AuthRequestUIState.Approving(current) }
 
         viewModelScope.launch(ioDispatcher) {
+            if (signMessageService.requiresQrSign(approval.wallet.id.id)) {
+                val prepared = runCatchingCancellable {
+                    val session = signMessageService.prepareQrSign(approval.wallet.toGem(), approval.signMessage)
+                    session to session.urFrames()
+                }.getOrElse { err ->
+                    if (phase.compareAndSet(AuthRequestPhase.Signing(request), AuthRequestPhase.Waiting(request))) {
+                        _state.update { AuthRequestUIState.Error(err.errorText().text(context)) }
+                    }
+                    return@launch
+                }
+                activeQrSession = ActiveAuthQrSession(request, current, approval, prepared.first)
+                _qrSignState.value = QrSignSheetState(urFrames = prepared.second)
+                return@launch
+            }
             val signature = runCatchingCancellable { signMessageService.sign(approval.wallet.id.id, approval.signMessage) }.getOrElse { err ->
                 if (phase.compareAndSet(AuthRequestPhase.Signing(request), AuthRequestPhase.Waiting(request))) {
                     _state.update { AuthRequestUIState.Error(err.errorText().text(context)) }
                 }
                 return@launch
             }
-            if (!phase.compareAndSet(AuthRequestPhase.Signing(request), AuthRequestPhase.Sending(request))) {
+            sendApprovedSignature(request, approval, signature)
+        }
+    }
+
+    fun onQrSignFrame(payload: String) {
+        val active = activeQrSession ?: return
+        viewModelScope.launch(ioDispatcher) {
+            val outcome = runCatchingCancellable { active.session.receiveFrame(payload) }.getOrElse { err ->
+                _qrSignState.update { it?.copy(errorMessage = err.errorText().text(context)) }
                 return@launch
             }
-            approveWalletConnectAuthentication.approveAuthentication(
-                authentication = request,
-                wallet = approval.wallet,
-                signature = signature,
-                onSuccess = {
-                    if (phase.compareAndSet(AuthRequestPhase.Sending(request), AuthRequestPhase.Answered(request))) {
-                        finish(request)
+            when (outcome) {
+                is GemQrMessageSignOutcome.Progress -> {
+                    _qrSignState.update {
+                        it?.copy(
+                            receivedParts = outcome.received.toInt(),
+                            expectedParts = outcome.expected.toInt(),
+                            errorMessage = null,
+                        )
                     }
-                },
-                onError = { error ->
-                    if (phase.compareAndSet(AuthRequestPhase.Sending(request), AuthRequestPhase.Waiting(request))) {
-                        _state.update { AuthRequestUIState.Error(error.text(context)) }
-                    }
-                },
-            )
+                }
+                is GemQrMessageSignOutcome.Signed -> {
+                    activeQrSession = null
+                    _qrSignState.value = null
+                    sendApprovedSignature(active.request, active.approval, outcome.signature)
+                }
+            }
         }
+    }
+
+    fun dismissQrSign() {
+        val active = activeQrSession ?: return
+        activeQrSession = null
+        _qrSignState.value = null
+        if (phase.compareAndSet(AuthRequestPhase.Signing(active.request), AuthRequestPhase.Waiting(active.request))) {
+            _state.update { active.reviewState }
+        }
+    }
+
+    private fun sendApprovedSignature(request: GemWalletConnectAuthentication, approval: AuthApproval, signature: String) {
+        if (!phase.compareAndSet(AuthRequestPhase.Signing(request), AuthRequestPhase.Sending(request))) {
+            return
+        }
+        approveWalletConnectAuthentication.approveAuthentication(
+            authentication = request,
+            wallet = approval.wallet,
+            signature = signature,
+            onSuccess = {
+                if (phase.compareAndSet(AuthRequestPhase.Sending(request), AuthRequestPhase.Answered(request))) {
+                    finish(request)
+                }
+            },
+            onError = { error ->
+                if (phase.compareAndSet(AuthRequestPhase.Sending(request), AuthRequestPhase.Waiting(request))) {
+                    _state.update { AuthRequestUIState.Error(error.text(context)) }
+                }
+            },
+        )
     }
 
     fun onReject() {
@@ -191,6 +251,8 @@ class AuthRequestViewModel @Inject constructor(
     }
 
     private fun reset() {
+        activeQrSession = null
+        _qrSignState.value = null
         phase.value = AuthRequestPhase.Idle
         _state.update { AuthRequestUIState.Loading }
     }
@@ -324,5 +386,12 @@ sealed interface AuthRequestUIState {
 data class AuthApproval(val wallet: Wallet, val account: Account, val message: String, val signMessage: SignMessage, val title: GemLocalizedText, val primaryPayloadFields: List<GemListRow>, val secondaryPayloadFields: List<GemListRow>) {
     val chain: Chain get() = account.chain
 }
+
+private data class ActiveAuthQrSession(
+    val request: GemWalletConnectAuthentication,
+    val reviewState: AuthRequestUIState.Request,
+    val approval: AuthApproval,
+    val session: GemQrMessageSignSession,
+)
 
 private data class AuthPayloadPreview(val title: GemLocalizedText = GemLocalizedText.ReviewRequest, val primaryFields: List<GemListRow> = emptyList(), val secondaryFields: List<GemListRow> = emptyList())

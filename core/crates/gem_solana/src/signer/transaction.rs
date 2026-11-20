@@ -54,7 +54,7 @@ pub(crate) fn sign_single_signer_instructions(input: &SignerInput, private_key: 
     Ok(encode_base64(&transaction.serialize()?))
 }
 
-fn build_legacy_transaction(fee_payer: Pubkey, recent_blockhash: [u8; 32], instructions: &[Instruction]) -> Result<VersionedTransaction, SignerError> {
+pub(crate) fn build_legacy_transaction(fee_payer: Pubkey, recent_blockhash: [u8; 32], instructions: &[Instruction]) -> Result<VersionedTransaction, SignerError> {
     let accounts = instructions
         .iter()
         .flat_map(|instruction| instruction.accounts.iter().cloned())

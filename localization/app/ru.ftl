@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Из активов вашего кошельк
 wallet_transfer_from_another_wallet = Переведите из другого кошелька
 wallet_portfolio_title = Портфель
 wallet_import_already_imported_message = Этот кошелек уже импортирован.
+wallet_import_qr_wallet = Импорт QR-кошелька
+wallet_import_qr_description = Отсканируйте QR-код синхронизации из AirGap Vault или BitTool Signer
+wallet_scan_another_qr = Сканировать другой QR
+wallet_offline = Офлайн
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Похоже, на вашем устройстве в
 rootcheck_body = Похоже, что у вашего устройства есть root-доступ, что может значительно повысить риски безопасности. Использование этого приложения на root-устройстве может подвергнуть ваши активы несанкционированному доступу и потенциальной потере. Для безопасности ваших средств мы настоятельно рекомендуем использовать не root-устройство.
 rootcheck_ignore = Игнорировать
 rootcheck_exit = Выход
+
+# QR
+
+qr_sign_title = Подписать через QR-код
+qr_sign_step = Шаг %d из %d
+qr_sign_instruction = Отсканируйте этот QR-код холодным кошельком для проверки и подписи.
+qr_sign_scan_signature = Сканировать подпись
+qr_sign_scan_instruction = Отсканируйте QR-код подписи на экране холодного кошелька.
+qr_sign_progress = Получено %d / %d частей

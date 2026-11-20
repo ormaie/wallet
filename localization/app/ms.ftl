@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Daripada aset dompet anda
 wallet_transfer_from_another_wallet = Pindahkan daripada dompet lain
 wallet_portfolio_title = Portfolio
 wallet_import_already_imported_message = Dompet ini telah pun diimport.
+wallet_import_qr_wallet = Import Dompet QR
+wallet_import_qr_description = Imbas kod QR penyegerakan daripada AirGap Vault atau BitTool Signer
+wallet_scan_another_qr = Imbas QR Lain
+wallet_offline = Luar talian
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Peranti anda nampaknya telah di-jailbreak. Ini boleh 
 rootcheck_body = Peranti anda nampaknya mempunyai akses root, yang boleh meningkatkan risiko keselamatan dengan ketara. Menggunakan apl ini pada peranti berakar boleh mendedahkan aset anda kepada akses tanpa kebenaran dan potensi kerugian. Untuk keselamatan dana anda, kami amat mengesyorkan anda menggunakan peranti yang tidak berakar.
 rootcheck_ignore = Abaikan
 rootcheck_exit = Keluar
+
+# QR
+
+qr_sign_title = Tandatangan dengan Kod QR
+qr_sign_step = Langkah %d daripada %d
+qr_sign_instruction = Imbas kod QR ini dengan dompet sejuk anda untuk menyemak dan menandatangani.
+qr_sign_scan_signature = Imbas Tandatangan
+qr_sign_scan_instruction = Imbas kod QR tandatangan yang dipaparkan pada dompet sejuk anda.
+qr_sign_progress = Diterima %d / %d bahagian

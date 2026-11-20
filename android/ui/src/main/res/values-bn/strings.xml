@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">অন্য ওয়ালেট থেকে ট্রান্সফার করুন</string>
   <string name="wallet_portfolio_title">পোর্টফোলিও</string>
   <string name="wallet_import_already_imported_message">এই ওয়ালেটটি ইতিমধ্যেই আমদানি করা হয়েছে।</string>
+  <string name="wallet_import_qr_wallet">QR ওয়ালেট ইমপোর্ট করুন</string>
+  <string name="wallet_import_qr_description">AirGap Vault বা BitTool Signer থেকে সিঙ্ক QR কোড স্ক্যান করুন</string>
+  <string name="wallet_scan_another_qr">আরেকটি QR স্ক্যান করুন</string>
+  <string name="wallet_offline">অফলাইন</string>
   <string name="wallets_title">ওয়ালেট</string>
   <string name="receive_warning">এটি আপনার ঠিকানা — শুধুমাত্র পাঠান %1$s উপরে %2$s নেটওয়ার্ক।</string>
   <string name="buy_title">%1$s কিনুন</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">আপনার ডিভাইসে রুট অ্যাক্সেস আছে বলে মনে হচ্ছে, যা উল্লেখযোগ্যভাবে নিরাপত্তা ঝুঁকি বাড়াতে পারে। রুট করা ডিভাইসে এই অ্যাপটি ব্যবহার করলে আপনার সম্পদ অননুমোদিত অ্যাক্সেস এবং সম্ভাব্য ক্ষতির সম্মুখীন হতে পারে। আপনার তহবিলের নিরাপত্তার জন্য, আমরা দৃঢ়ভাবে একটি নন-রুটেড ডিভাইস ব্যবহার করার পরামর্শ দিই।</string>
   <string name="rootcheck_ignore">উপেক্ষা করুন</string>
   <string name="rootcheck_exit">প্রস্থান করুন</string>
+  <string name="qr_sign_title">QR কোড দিয়ে স্বাক্ষর করুন</string>
+  <string name="qr_sign_step">ধাপ %1$d / %2$d</string>
+  <string name="qr_sign_instruction">পর্যালোচনা এবং স্বাক্ষর করতে আপনার কোল্ড ওয়ালেট দিয়ে এই QR কোডটি স্ক্যান করুন।</string>
+  <string name="qr_sign_scan_signature">স্বাক্ষর স্ক্যান করুন</string>
+  <string name="qr_sign_scan_instruction">আপনার কোল্ড ওয়ালেটে দেখানো স্বাক্ষরের QR কোডটি স্ক্যান করুন।</string>
+  <string name="qr_sign_progress">%1$d / %2$d অংশ গৃহীত হয়েছে</string>
 </resources>

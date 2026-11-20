@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Hamisha kutoka pochi nyingine</string>
   <string name="wallet_portfolio_title">Kwingineko</string>
   <string name="wallet_import_already_imported_message">Pochi hii tayari imeingizwa.</string>
+  <string name="wallet_import_qr_wallet">Ingiza Pochi ya QR</string>
+  <string name="wallet_import_qr_description">Changanua msimbo wa QR wa kusawazisha kutoka AirGap Vault au BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Changanua QR Nyingine</string>
+  <string name="wallet_offline">Nje ya mtandao</string>
   <string name="wallets_title">Pochi</string>
   <string name="receive_warning">Hii ni anwani yako — tuma pekee %1$s kwenye %2$s mtandao.</string>
   <string name="buy_title">Nunua %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Kifaa chako kinaonekana kuwa na ufikiaji wa mizizi, ambayo inaweza kuongeza hatari za usalama kwa kiasi kikubwa. Kutumia programu hii kwenye kifaa kilichozinduliwa kunaweza kufichua mali yako kwa ufikiaji usioidhinishwa na uwezekano wa hasara. Kwa usalama wa pesa zako, tunapendekeza sana kutumia kifaa kisicho na mizizi.</string>
   <string name="rootcheck_ignore">Puuza</string>
   <string name="rootcheck_exit">Toka</string>
+  <string name="qr_sign_title">Saini kwa Msimbo wa QR</string>
+  <string name="qr_sign_step">Hatua ya %1$d kati ya %2$d</string>
+  <string name="qr_sign_instruction">Changanua msimbo huu wa QR kwa pochi yako baridi ili kukagua na kusaini.</string>
+  <string name="qr_sign_scan_signature">Changanua Saini</string>
+  <string name="qr_sign_scan_instruction">Changanua msimbo wa QR wa saini unaoonyeshwa kwenye pochi yako baridi.</string>
+  <string name="qr_sign_progress">Imepokelewa sehemu %1$d / %2$d</string>
 </resources>

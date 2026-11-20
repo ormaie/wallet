@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Dai tuoi asset nel portafoglio
 wallet_transfer_from_another_wallet = Trasferisci da un altro portafoglio
 wallet_portfolio_title = Portafoglio
 wallet_import_already_imported_message = Questo portafoglio è già stato importato.
+wallet_import_qr_wallet = Importa portafoglio QR
+wallet_import_qr_description = Scansiona il codice QR di sincronizzazione da AirGap Vault o BitTool Signer
+wallet_scan_another_qr = Scansiona un altro QR
+wallet_offline = Offline
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Il tuo dispositivo sembra essere jailbroken. Questo p
 rootcheck_body = Il tuo dispositivo sembra avere accesso root, il che può aumentare significativamente i rischi per la sicurezza. L'utilizzo di questa app su un dispositivo rooted potrebbe esporre i tuoi asset ad accessi non autorizzati e potenziali perdite. Per la sicurezza dei tuoi fondi, ti consigliamo vivamente di utilizzare un dispositivo non rooted.
 rootcheck_ignore = Ignora
 rootcheck_exit = Esci
+
+# QR
+
+qr_sign_title = Firma con codice QR
+qr_sign_step = Passaggio %d di %d
+qr_sign_instruction = Scansiona questo codice QR con il tuo cold wallet per verificare e firmare.
+qr_sign_scan_signature = Scansiona firma
+qr_sign_scan_instruction = Scansiona il codice QR della firma mostrato sul tuo cold wallet.
+qr_sign_progress = Ricevute %d / %d parti

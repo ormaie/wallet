@@ -1,29 +1,27 @@
-use crate::services::simulation::{asset_status_rows, warning_rows};
 use std::sync::Arc;
 
+use gem_hypercore::signer::{HyperCoreSignStep, build_hypercore_sign_steps};
+use payment::PaymentError;
 use primitives::currency::Currency;
-use primitives::{Chain, SimulationResult, Wallet, WalletId};
+use primitives::{AddressName, BlockExplorerLink, Chain, SignerError, SimulationResult, TransactionInputType, Wallet, WalletId};
+use zeroize::Zeroizing;
 
 use crate::keystore::{GemKeystore, decode_password, keystore_id_for_wallet};
 use crate::models::custom_types::GemBigInt;
 use crate::models::transaction::GemSignedTransaction;
 use crate::payment::GemPaymentService;
-use crate::services::confirm::rules::{confirm_row_contents, insufficient_funds, is_broadcast, submit_message};
+use crate::services::confirm::rules::{ConfirmInput, confirm_row_contents, insufficient_funds, is_broadcast, submit_message};
 use crate::services::confirm::{GemConfirmError, GemConfirmInput, GemConfirmLoad, GemConfirmRowContent, GemConfirmService, GemConfirmSimulation, GemConfirmSimulationState, GemConfirmation, GemSubmitResult, SendInput};
-use payment::PaymentError;
-
 use crate::services::error_text::{GemErrorText, payment_error_text};
 use crate::services::explorer::GemExplorerService;
 use crate::services::name::GemNameService;
 use crate::services::preferences::GemPreferencesService;
+use crate::services::simulation::{asset_status_rows, warning_rows};
 use crate::services::swap::GemSwapService;
 use crate::services::transfer::rules::TransferInput;
 use crate::services::transfer::{GemRecentActivityService, GemTransferData};
 use crate::services::wallet::{GemKeystoreAuthentication, GemKeystorePassword};
-use primitives::AddressName;
-use primitives::BlockExplorerLink;
-use primitives::TransactionInputType;
-use zeroize::Zeroizing;
+use crate::signer::expected_transaction_types;
 
 #[derive(uniffi::Object)]
 pub struct GemConfirmTransferService {
@@ -99,13 +97,65 @@ impl GemConfirmTransferService {
     pub(super) fn confirm(&self) -> &GemConfirmService {
         &self.confirm
     }
+    pub(super) fn is_qr_signer(&self, wallet_id: &WalletId) -> bool {
+        self.confirm.wallet_preferences.is_qr_signer(wallet_id.clone())
+    }
+    pub(super) fn qr_signer_xfp(&self, wallet_id: &WalletId) -> Option<String> {
+        self.confirm.wallet_preferences.qr_signer_xfp(wallet_id.clone())
+    }
 
     pub(super) async fn submit(&self, input: SendInput) -> Result<GemSubmitResult, GemConfirmError> {
+        if self.is_qr_signer(&input.wallet.id) {
+            let input_type = &input.confirm.input.transfer.input_type;
+            let chain = input_type.get_asset().chain();
+            if chain == Chain::HyperCore {
+                let signer_input = input.signer_input()?;
+                let steps = build_hypercore_sign_steps(&signer_input).map_err(|error| super::error::sign_error(input_type, error.into()))?;
+                if steps.iter().all(|step| matches!(step, HyperCoreSignStep::Ready(_))) {
+                    let tx_types = expected_transaction_types(chain, &signer_input, steps.len()).map_err(|error| super::error::sign_error(input_type, error.into()))?;
+                    let sequence = signer_input.input.metadata.get_sequence().ok();
+                    let signed = steps
+                        .into_iter()
+                        .zip(tx_types)
+                        .enumerate()
+                        .filter_map(|(position, (step, transaction_type))| match step {
+                            HyperCoreSignStep::Ready(data) => Some(GemSignedTransaction {
+                                data,
+                                transaction_type,
+                                sequence: sequence.map(|seq| seq + position as u64),
+                            }),
+                            HyperCoreSignStep::RequiresUserTypedData { .. } => None,
+                        })
+                        .collect();
+                    return self.finish_submit(input, signed).await;
+                }
+            }
+            let msg = "QR cold wallet signature required".to_string();
+            return Err(GemConfirmError::Sign {
+                error: SignerError::SigningError(msg.clone()),
+                chain,
+                msg,
+            });
+        }
+
         let password = Zeroizing::new(decode_password(&self.password.get_password(false)?));
         let keystore_id = keystore_id_for_wallet(input.wallet.id.id());
         let input = self.with_signed_permit(input, &keystore_id, &password).await?;
-        let input_type = &input.confirm.input.transfer.input_type;
         let signed = self.confirm.sign(&input, |chain, signer_input| self.keystore.sign(keystore_id, chain, signer_input, password.to_vec()))?;
+        self.finish_submit(input, signed).await
+    }
+
+    pub(super) async fn finish_submit(&self, input: SendInput, signed: Vec<GemSignedTransaction>) -> Result<GemSubmitResult, GemConfirmError> {
+        let input_type = &input.confirm.input.transfer.input_type;
+        let chain = input_type.get_asset().chain();
+        if signed.is_empty() {
+            return Err(GemConfirmError::Sign {
+                error: SignerError::SigningError("no signed transactions".to_string()),
+                chain,
+                msg: "no signed transactions".to_string(),
+            });
+        }
+        input_type.validate_approvals(&signed)?;
         let (transactions, signatures): (Vec<GemSignedTransaction>, Vec<GemSignedTransaction>) = signed.into_iter().partition(|transaction| is_broadcast(input_type, transaction));
         let data: Vec<String> = signatures.iter().map(|transaction| transaction.data.clone()).collect();
         if transactions.is_empty() {

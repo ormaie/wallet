@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Aus Ihren Wallet-Assets
 wallet_transfer_from_another_wallet = Von einer anderen Wallet übertragen
 wallet_portfolio_title = Portfolio
 wallet_import_already_imported_message = Diese Wallet wurde bereits importiert.
+wallet_import_qr_wallet = QR-Wallet importieren
+wallet_import_qr_description = Scannen Sie den Sync-QR-Code aus AirGap Vault oder BitTool Signer
+wallet_scan_another_qr = Weiteren QR-Code scannen
+wallet_offline = Offline
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Ihr Gerät scheint einen Jailbreak zu haben. Das kann
 rootcheck_body = Ihr Gerät scheint Root-Zugriff zu haben, was die Sicherheitsrisiken erheblich erhöhen kann. Die Verwendung dieser App auf einem gerooteten Gerät kann Ihre Vermögenswerte einem unbefugten Zugriff und einem möglichen Verlust aussetzen. Zur Sicherheit Ihrer Gelder empfehlen wir dringend die Verwendung eines nicht gerooteten Geräts.
 rootcheck_ignore = Ignorieren
 rootcheck_exit = Beenden
+
+# QR
+
+qr_sign_title = Mit QR-Code signieren
+qr_sign_step = Schritt %d von %d
+qr_sign_instruction = Scannen Sie diesen QR-Code mit Ihrer Cold Wallet zum Prüfen und Signieren.
+qr_sign_scan_signature = Signatur scannen
+qr_sign_scan_instruction = Scannen Sie den auf Ihrer Cold Wallet angezeigten Signatur-QR-Code.
+qr_sign_progress = %d / %d Teile empfangen

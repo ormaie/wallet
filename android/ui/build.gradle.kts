@@ -29,6 +29,7 @@ dependencies {
     // Images
     api(libs.coil.compose)
 
+    implementation(libs.zxing.core)
     implementation(libs.ktx.core)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.lifecycle.viewmodel.compose)

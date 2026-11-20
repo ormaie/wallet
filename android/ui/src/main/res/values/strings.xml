@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Transfer from another wallet</string>
   <string name="wallet_portfolio_title">Portfolio</string>
   <string name="wallet_import_already_imported_message">This wallet has already been imported.</string>
+  <string name="wallet_import_qr_wallet">Import QR Wallet</string>
+  <string name="wallet_import_qr_description">Scan the sync QR code from AirGap Vault or BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Scan Another QR</string>
+  <string name="wallet_offline">Offline</string>
   <string name="wallets_title">Wallets</string>
   <string name="receive_warning">This is your address — send only %1$s on the %2$s network.</string>
   <string name="buy_title">Buy %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Your device appears to have root access, which can significantly increase security risks. Using this app on a rooted device may expose your assets to unauthorized access and potential loss. For the safety of your funds, we strongly recommend using a non-rooted device.</string>
   <string name="rootcheck_ignore">Ignore</string>
   <string name="rootcheck_exit">Exit</string>
+  <string name="qr_sign_title">Sign with QR Code</string>
+  <string name="qr_sign_step">Step %1$d of %2$d</string>
+  <string name="qr_sign_instruction">Scan this QR code with your cold wallet to review and sign.</string>
+  <string name="qr_sign_scan_signature">Scan Signature</string>
+  <string name="qr_sign_scan_instruction">Scan the signature QR code displayed on your cold wallet.</string>
+  <string name="qr_sign_progress">Received %1$d / %2$d parts</string>
 </resources>

@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = 使用钱包中的资产
 wallet_transfer_from_another_wallet = 从另一个钱包转入
 wallet_portfolio_title = 投资组合
 wallet_import_already_imported_message = 此钱包已导入。
+wallet_import_qr_wallet = 导入二维码冷钱包
+wallet_import_qr_description = 扫描 AirGap Vault 或 BitTool Signer 的同步二维码
+wallet_scan_another_qr = 继续扫描其他二维码
+wallet_offline = 离线
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = 设备似乎已越狱，钱包和资金可能面临�
 rootcheck_body = 检测到设备已获取 root 权限，可能显著增加安全风险。在已 root 的设备上使用此应用可能导致资产遭到未经授权的访问并造成损失。为保障资金安全，强烈建议使用非 root 设备。
 rootcheck_ignore = 忽略
 rootcheck_exit = 退出
+
+# QR
+
+qr_sign_title = 二维码冷钱包签名
+qr_sign_step = 第 %d / %d 步
+qr_sign_instruction = 请使用冷钱包扫描此二维码以核对并签名。
+qr_sign_scan_signature = 扫描签名二维码
+qr_sign_scan_instruction = 请扫描冷钱包上显示的签名结果二维码。
+qr_sign_progress = 已接收 %d / %d 帧

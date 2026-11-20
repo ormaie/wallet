@@ -25,7 +25,16 @@ import com.gemwallet.android.ui.findActivity
 import com.wallet.core.primitives.QRScanType
 
 @Composable
-fun QRScannerScreen(scanType: QRScanType, onCancel: () -> Unit, titleContent: @Composable () -> Unit = { QRScannerTitle() }, onResult: (String) -> Unit) {
+fun QRScannerScreen(
+    scanType: QRScanType,
+    onCancel: () -> Unit,
+    titleContent: @Composable () -> Unit = { QRScannerTitle() },
+    continuous: Boolean = false,
+    hintText: String? = null,
+    progressText: String? = null,
+    errorMessage: String? = null,
+    onResult: (String) -> Unit,
+) {
     val context = LocalContext.current
     val activity = checkNotNull(context.findActivity())
     var isCameraGranted by remember { mutableStateOf(context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) }
@@ -59,6 +68,10 @@ fun QRScannerScreen(scanType: QRScanType, onCancel: () -> Unit, titleContent: @C
         },
         onCancel = onCancel,
         titleContent = titleContent,
+        continuous = continuous,
+        hintText = hintText,
+        progressText = progressText,
+        errorMessage = errorMessage,
         onResult = onResult,
     )
 }

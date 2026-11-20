@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Transfer dari dompet lain</string>
   <string name="wallet_portfolio_title">Portofolio</string>
   <string name="wallet_import_already_imported_message">Dompet ini sudah diimpor.</string>
+  <string name="wallet_import_qr_wallet">Impor Dompet QR</string>
+  <string name="wallet_import_qr_description">Pindai kode QR sinkronisasi dari AirGap Vault atau BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Pindai QR Lainnya</string>
+  <string name="wallet_offline">Offline</string>
   <string name="wallets_title">Dompet</string>
   <string name="receive_warning">Ini alamat Anda — kirim saja %1$s pada %2$s jaringan.</string>
   <string name="buy_title">Beli %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Perangkat Anda tampaknya memiliki akses root, yang dapat meningkatkan risiko keamanan secara signifikan. Penggunaan aplikasi ini pada perangkat yang di-root dapat menyebabkan aset Anda rentan terhadap akses tidak sah dan potensi kerugian. Demi keamanan dana Anda, kami sangat menyarankan untuk menggunakan perangkat yang tidak di-root.</string>
   <string name="rootcheck_ignore">Abaikan</string>
   <string name="rootcheck_exit">Keluar</string>
+  <string name="qr_sign_title">Tanda Tangani dengan Kode QR</string>
+  <string name="qr_sign_step">Langkah %1$d dari %2$d</string>
+  <string name="qr_sign_instruction">Pindai kode QR ini dengan dompet dingin Anda untuk meninjau dan menandatangani.</string>
+  <string name="qr_sign_scan_signature">Pindai Tanda Tangan</string>
+  <string name="qr_sign_scan_instruction">Pindai kode QR tanda tangan yang ditampilkan di dompet dingin Anda.</string>
+  <string name="qr_sign_progress">Diterima %1$d / %2$d bagian</string>
 </resources>

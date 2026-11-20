@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Maglipat mula sa ibang wallet</string>
   <string name="wallet_portfolio_title">Portfolio</string>
   <string name="wallet_import_already_imported_message">Na-import na ang wallet na ito.</string>
+  <string name="wallet_import_qr_wallet">Mag-import ng QR Wallet</string>
+  <string name="wallet_import_qr_description">I-scan ang sync QR code mula sa AirGap Vault o BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Mag-scan ng Isa Pang QR</string>
+  <string name="wallet_offline">Offline</string>
   <string name="wallets_title">Mga Wallet</string>
   <string name="receive_warning">Ito ang iyong address — ipadala lamang %1$s sa %2$s network.</string>
   <string name="buy_title">Bumili ng %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Mukhang may root access ang iyong device, na maaaring makabuluhang magpapataas ng mga panganib sa seguridad. Ang paggamit ng app na ito sa isang naka-root na device ay maaaring maglantad sa iyong mga asset sa hindi awtorisadong pag-access at potensyal na pagkawala. Para sa kaligtasan ng iyong mga pondo, lubos naming inirerekomenda ang paggamit ng hindi naka-root na device.</string>
   <string name="rootcheck_ignore">Huwag pansinin</string>
   <string name="rootcheck_exit">Lumabas</string>
+  <string name="qr_sign_title">Lumagda gamit ang QR Code</string>
+  <string name="qr_sign_step">Hakbang %1$d ng %2$d</string>
+  <string name="qr_sign_instruction">I-scan ang QR code na ito gamit ang iyong cold wallet upang suriin at lagdaan.</string>
+  <string name="qr_sign_scan_signature">I-scan ang Lagda</string>
+  <string name="qr_sign_scan_instruction">I-scan ang signature QR code na ipinapakita sa iyong cold wallet.</string>
+  <string name="qr_sign_progress">Natanggap %1$d / %2$d bahagi</string>
 </resources>

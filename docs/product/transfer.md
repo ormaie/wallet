@@ -39,6 +39,7 @@ flowchart LR
 | The simulation finds a risk | the risk shows before the user confirms | |
 | The simulation predicts balance changes | every digit of each amount, never rounded | what the user approves is exactly what moves |
 | Confirm is sending | the Network Fee and payment asset rows keep their arrow but do not open until the send ends; the payment asset row also waits while Confirm loads | a new fee or asset would reload Confirm and offer it again while the first transaction is still being sent; the rows keep their look so nothing flickers |
+| The wallet is an imported QR cold wallet | Confirm opens "Sign with QR Code" showing the request QR code, then scans the signed QR code back from the offline signer before sending, without asking for device authentication | the offline signer holds the keys and approves each step |
 | Sending fails after Confirm | an error alert; the fee and amounts stay and the button stays Confirm, so a tap sends again | Try Again is only for a failed load |
 | A send of several transactions fails after the network accepted one of them | an error alert; Confirm stays disabled, the Network Fee and payment asset rows stay closed, and the accepted transactions show in activity | sending again would repeat the accepted ones; a new Confirm sends only what is still missing |
 | The network rejects the sent transaction | the network's own reason | it is often the only explanation there is |

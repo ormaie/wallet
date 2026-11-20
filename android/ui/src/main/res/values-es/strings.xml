@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Transfiere desde otra billetera</string>
   <string name="wallet_portfolio_title">Portafolio</string>
   <string name="wallet_import_already_imported_message">Esta billetera ya ha sido importada.</string>
+  <string name="wallet_import_qr_wallet">Importar billetera QR</string>
+  <string name="wallet_import_qr_description">Escanea el código QR de sincronización de AirGap Vault o BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Escanear otro QR</string>
+  <string name="wallet_offline">Sin conexión</string>
   <string name="wallets_title">Billeteras</string>
   <string name="receive_warning">Esta es tu dirección: envía solo %1$s en la red %2$s.</string>
   <string name="buy_title">Comprar %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Tu dispositivo parece tener acceso root, lo que puede aumentar significativamente los riesgos de seguridad. El uso de esta aplicación en un dispositivo rooteado puede exponer tus activos a acceso no autorizado y a una posible pérdida. Para la seguridad de tus fondos, te recomendamos encarecidamente que utilices un dispositivo no rooteado.</string>
   <string name="rootcheck_ignore">Ignorar</string>
   <string name="rootcheck_exit">Salir</string>
+  <string name="qr_sign_title">Firmar con código QR</string>
+  <string name="qr_sign_step">Paso %1$d de %2$d</string>
+  <string name="qr_sign_instruction">Escanea este código QR con tu billetera fría para revisar y firmar.</string>
+  <string name="qr_sign_scan_signature">Escanear firma</string>
+  <string name="qr_sign_scan_instruction">Escanea el código QR de la firma que aparece en tu billetera fría.</string>
+  <string name="qr_sign_progress">Recibidas %1$d / %2$d partes</string>
 </resources>

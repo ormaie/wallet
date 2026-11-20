@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = اپنے والیٹ اثاثوں سے
 wallet_transfer_from_another_wallet = دوسرے والیٹ سے منتقل کریں
 wallet_portfolio_title = پورٹ فولیو
 wallet_import_already_imported_message = یہ والیٹ پہلے ہی درآمد کیا جا چکا ہے۔
+wallet_import_qr_wallet = QR والیٹ امپورٹ کریں
+wallet_import_qr_description = AirGap Vault یا BitTool Signer سے سنک QR کوڈ اسکین کریں
+wallet_scan_another_qr = ایک اور QR اسکین کریں
+wallet_offline = آف لائن
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = لگتا ہے کہ آپ کے آلے پر جیل بر�
 rootcheck_body = ایسا لگتا ہے کہ آپ کے آلے کو روٹ تک رسائی حاصل ہے، جس سے سیکورٹی کے خطرات میں نمایاں اضافہ ہو سکتا ہے۔ اس ایپ کو روٹڈ ڈیوائس پر استعمال کرنے سے آپ کے اثاثوں کو غیر مجاز رسائی اور ممکنہ نقصان کا سامنا کرنا پڑ سکتا ہے۔ آپ کے فنڈز کی حفاظت کے لیے، ہم ایک غیر جڑ والا آلہ استعمال کرنے کی سختی سے سفارش کرتے ہیں۔
 rootcheck_ignore = نظر انداز کرنا
 rootcheck_exit = باہر نکلیں
+
+# QR
+
+qr_sign_title = QR کوڈ سے دستخط کریں
+qr_sign_step = مرحلہ %d از %d
+qr_sign_instruction = جائزہ لینے اور دستخط کرنے کے لیے اپنے کولڈ والیٹ سے یہ QR کوڈ اسکین کریں۔
+qr_sign_scan_signature = دستخط اسکین کریں
+qr_sign_scan_instruction = اپنے کولڈ والیٹ پر دکھایا گیا دستخطی QR کوڈ اسکین کریں۔
+qr_sign_progress = %d / %d حصے موصول ہوئے

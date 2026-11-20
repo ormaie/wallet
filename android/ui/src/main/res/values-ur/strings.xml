@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">دوسرے والیٹ سے منتقل کریں</string>
   <string name="wallet_portfolio_title">پورٹ فولیو</string>
   <string name="wallet_import_already_imported_message">یہ والیٹ پہلے ہی درآمد کیا جا چکا ہے۔</string>
+  <string name="wallet_import_qr_wallet">QR والیٹ امپورٹ کریں</string>
+  <string name="wallet_import_qr_description">AirGap Vault یا BitTool Signer سے سنک QR کوڈ اسکین کریں</string>
+  <string name="wallet_scan_another_qr">ایک اور QR اسکین کریں</string>
+  <string name="wallet_offline">آف لائن</string>
   <string name="wallets_title">والیٹس</string>
   <string name="receive_warning">یہ آپ کا پتہ ہے - صرف بھیجیں۔ %1$s پر %2$s نیٹ ورک</string>
   <string name="buy_title">خریدیں %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">ایسا لگتا ہے کہ آپ کے آلے کو روٹ تک رسائی حاصل ہے، جس سے سیکورٹی کے خطرات میں نمایاں اضافہ ہو سکتا ہے۔ اس ایپ کو روٹڈ ڈیوائس پر استعمال کرنے سے آپ کے اثاثوں کو غیر مجاز رسائی اور ممکنہ نقصان کا سامنا کرنا پڑ سکتا ہے۔ آپ کے فنڈز کی حفاظت کے لیے، ہم ایک غیر جڑ والا آلہ استعمال کرنے کی سختی سے سفارش کرتے ہیں۔</string>
   <string name="rootcheck_ignore">نظر انداز کرنا</string>
   <string name="rootcheck_exit">باہر نکلیں</string>
+  <string name="qr_sign_title">QR کوڈ سے دستخط کریں</string>
+  <string name="qr_sign_step">مرحلہ %1$d از %2$d</string>
+  <string name="qr_sign_instruction">جائزہ لینے اور دستخط کرنے کے لیے اپنے کولڈ والیٹ سے یہ QR کوڈ اسکین کریں۔</string>
+  <string name="qr_sign_scan_signature">دستخط اسکین کریں</string>
+  <string name="qr_sign_scan_instruction">اپنے کولڈ والیٹ پر دکھایا گیا دستخطی QR کوڈ اسکین کریں۔</string>
+  <string name="qr_sign_progress">%1$d / %2$d حصے موصول ہوئے</string>
 </resources>

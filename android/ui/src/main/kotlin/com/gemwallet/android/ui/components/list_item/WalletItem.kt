@@ -1,9 +1,15 @@
 package com.gemwallet.android.ui.components.list_item
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,13 +28,24 @@ import com.gemwallet.android.ui.theme.Spacer16
 import com.gemwallet.android.ui.theme.Spacer8
 import com.gemwallet.android.ui.theme.paddingSmall
 import com.gemwallet.android.ui.theme.space0
+import com.gemwallet.android.ui.theme.space12
+import com.gemwallet.android.ui.theme.space2
+import com.gemwallet.android.ui.theme.space4
+import com.gemwallet.android.ui.theme.space6
 import uniffi.gemstone.GemLocalizedText
 import uniffi.gemstone.GemWalletPlaceholder
 import uniffi.gemstone.GemWalletRow
 import uniffi.gemstone.GemWalletSubtitle
 
 @Composable
-fun WalletItem(row: GemWalletRow, isCurrent: Boolean, modifier: Modifier = Modifier, listPosition: ListPosition, onEdit: ((String) -> Unit)? = null) {
+fun WalletItem(
+    row: GemWalletRow,
+    isCurrent: Boolean,
+    modifier: Modifier = Modifier,
+    listPosition: ListPosition,
+    isOffline: Boolean = false,
+    onEdit: ((String) -> Unit)? = null,
+) {
     val context = LocalContext.current
     ListItem(
         modifier = modifier,
@@ -42,7 +59,14 @@ fun WalletItem(row: GemWalletRow, isCurrent: Boolean, modifier: Modifier = Modif
             )
         },
         title = {
-            ListItemTitleText(text = row.name)
+            ListItemTitleText(
+                text = row.name,
+                titleBadge = if (isOffline) {
+                    { OfflineWalletBadge() }
+                } else {
+                    null
+                },
+            )
         },
         subtitle = {
             ListItemSupportText(row.subtitle.string(context))
@@ -64,6 +88,34 @@ fun WalletItem(row: GemWalletRow, isCurrent: Boolean, modifier: Modifier = Modif
         },
     )
 }
+
+@Composable
+private fun OfflineWalletBadge() {
+    val tint = MaterialTheme.colorScheme.primary
+    Row(
+        modifier = Modifier
+            .padding(start = space2)
+            .background(tint.copy(alpha = OFFLINE_BADGE_BACKGROUND_ALPHA), CircleShape)
+            .padding(horizontal = space6, vertical = space2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(space4),
+    ) {
+        Icon(
+            imageVector = AppIcons.QrCode,
+            contentDescription = null,
+            modifier = Modifier.size(space12),
+            tint = tint,
+        )
+        Text(
+            text = stringResource(R.string.wallet_offline),
+            color = tint,
+            style = MaterialTheme.typography.labelMedium,
+            maxLines = 1,
+        )
+    }
+}
+
+private const val OFFLINE_BADGE_BACKGROUND_ALPHA = 0.14f
 
 @Composable
 private fun WalletEditButton(onClick: () -> Unit) {

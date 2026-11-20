@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = आपके वॉलेट एसेट्स
 wallet_transfer_from_another_wallet = दूसरे वॉलेट से ट्रांसफर करें
 wallet_portfolio_title = पोर्टफोलियो
 wallet_import_already_imported_message = यह बटुआ पहले ही आयात किया जा चुका है।
+wallet_import_qr_wallet = QR वॉलेट इम्पोर्ट करें
+wallet_import_qr_description = AirGap Vault या BitTool Signer से सिंक QR कोड स्कैन करें
+wallet_scan_another_qr = दूसरा QR स्कैन करें
+wallet_offline = ऑफ़लाइन
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = आपका डिवाइस जेलब्रे
 rootcheck_body = ऐसा लगता है कि आपके डिवाइस में रूट एक्सेस है, जो सुरक्षा जोखिमों को काफी हद तक बढ़ा सकता है। रूट किए गए डिवाइस पर इस ऐप का उपयोग करने से आपकी संपत्ति अनधिकृत पहुंच और संभावित नुकसान के संपर्क में आ सकती है। आपके फंड की सुरक्षा के लिए, हम दृढ़ता से गैर-रूट किए गए डिवाइस का उपयोग करने की सलाह देते हैं।
 rootcheck_ignore = नजरअंदाज करें
 rootcheck_exit = बाहर निकलें
+
+# QR
+
+qr_sign_title = QR कोड से साइन करें
+qr_sign_step = चरण %d / %d
+qr_sign_instruction = समीक्षा और हस्ताक्षर करने के लिए अपने कोल्ड वॉलेट से इस QR कोड को स्कैन करें।
+qr_sign_scan_signature = हस्ताक्षर स्कैन करें
+qr_sign_scan_instruction = अपने कोल्ड वॉलेट पर दिखाए गए हस्ताक्षर QR कोड को स्कैन करें।
+qr_sign_progress = %d / %d भाग प्राप्त हुए

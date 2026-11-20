@@ -76,6 +76,10 @@ impl TronAddress {
         &self.0[1..]
     }
 
+    pub fn bytes(&self) -> [u8; PREFIXED_ADDRESS_LEN] {
+        self.0
+    }
+
     #[cfg(feature = "signer")]
     pub(crate) fn from_private_key(private_key: &[u8]) -> Result<Self, SignerError> {
         let public_key = secp256k1_uncompressed_public_key(private_key)?;

@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Переказати з іншого гаманця</string>
   <string name="wallet_portfolio_title">Портфоліо</string>
   <string name="wallet_import_already_imported_message">Цей гаманець вже імпортовано.</string>
+  <string name="wallet_import_qr_wallet">Імпортувати QR-гаманець</string>
+  <string name="wallet_import_qr_description">Зіскануйте QR-код синхронізації з AirGap Vault або BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Зісканувати інший QR</string>
+  <string name="wallet_offline">Офлайн</string>
   <string name="wallets_title">Гаманці</string>
   <string name="receive_warning">Це ваша адреса — надсилайте тільки %1$s в мережі %2$s.</string>
   <string name="buy_title">Купити %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Схоже, ваш пристрій має root-доступ, що може значно збільшити ризики для безпеки. Використання цієї програми на пристрої з root-доступом може наражати ваші активи на несанкціонований доступ і потенційну втрату. Для безпеки ваших коштів ми наполегливо рекомендуємо використовувати пристрій без root-доступу.</string>
   <string name="rootcheck_ignore">Ігнорувати</string>
   <string name="rootcheck_exit">Вийти</string>
+  <string name="qr_sign_title">Підписати за допомогою QR-коду</string>
+  <string name="qr_sign_step">Крок %1$d з %2$d</string>
+  <string name="qr_sign_instruction">Зіскануйте цей QR-код холодним гаманцем для перевірки та підпису.</string>
+  <string name="qr_sign_scan_signature">Зісканувати підпис</string>
+  <string name="qr_sign_scan_instruction">Зіскануйте QR-код підпису на екрані вашого холодного гаманця.</string>
+  <string name="qr_sign_progress">Отримано %1$d / %2$d частин</string>
 </resources>

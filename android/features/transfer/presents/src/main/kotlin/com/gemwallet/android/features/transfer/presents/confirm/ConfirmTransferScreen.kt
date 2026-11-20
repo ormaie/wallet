@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gemwallet.android.domains.confirm.ConfirmTransferInput
 import com.gemwallet.android.ext.toAssetId
 import com.gemwallet.android.ext.toChain
+import com.gemwallet.android.features.qr_scanner.presents.QrSignBottomSheet
 import com.gemwallet.android.features.transfer.presents.confirm.components.ConfirmErrorInfo
 import com.gemwallet.android.features.transfer.presents.confirm.components.FeeDetails
 import com.gemwallet.android.features.transfer.presents.confirm.components.confirmBalanceChangesContent
@@ -76,6 +77,7 @@ import uniffi.gemstone.GemConfirmRowContent
 import uniffi.gemstone.GemConfirmRowLink
 import uniffi.gemstone.GemConfirmSection
 import uniffi.gemstone.GemInfoTopic
+import uniffi.gemstone.GemKeystoreAuthentication
 import uniffi.gemstone.SimulationResult
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -132,6 +134,7 @@ fun ConfirmTransferScreen(
     }
     val isShowBottomSheetInfo by viewModel.isErrorSheetVisible.collectAsStateWithLifecycle()
     val sentTransactionHash by viewModel.sentTransactionHash.collectAsStateWithLifecycle()
+    val qrSignState by viewModel.qrSignState.collectAsStateWithLifecycle()
 
     LaunchedEffect(sentTransactionHash) {
         sentTransactionHash?.let {
@@ -169,9 +172,17 @@ fun ConfirmTransferScreen(
                 icon = button.icon.icon(),
                 onClick = {
                     when (viewModel.action()) {
-                        GemConfirmAction.EXECUTE -> {
-                            viewModel.startExecute()
-                            context.requestAuth(AuthRequest.Confirmation, onCancel = viewModel::cancelExecute, onSuccess = viewModel::submit)
+                        GemConfirmAction.EXECUTE -> when (button.icon) {
+                            GemKeystoreAuthentication.NONE -> {
+                                viewModel.startExecute()
+                                viewModel.submit()
+                            }
+                            GemKeystoreAuthentication.BIOMETRICS,
+                            GemKeystoreAuthentication.PASSCODE,
+                            -> {
+                                viewModel.startExecute()
+                                context.requestAuth(AuthRequest.Confirmation, onCancel = viewModel::cancelExecute, onSuccess = viewModel::submit)
+                            }
                         }
 
                         GemConfirmAction.LOAD -> viewModel.load()
@@ -343,6 +354,12 @@ fun ConfirmTransferScreen(
         InfoBottomSheet(
             item = GemInfoTopic.PaymentVerification.infoSheet().takeIf { isVerificationInfoVisible },
             onClose = { isVerificationInfoVisible = false },
+        )
+
+        QrSignBottomSheet(
+            state = qrSignState,
+            onScanFrame = viewModel::onQrSignFrame,
+            onDismiss = viewModel::dismissQrSign,
         )
     }
 

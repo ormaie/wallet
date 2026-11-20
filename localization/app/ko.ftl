@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = 지갑 자산에서
 wallet_transfer_from_another_wallet = 다른 지갑에서 전송
 wallet_portfolio_title = 포트폴리오
 wallet_import_already_imported_message = 이 지갑은 이미 가져왔습니다.
+wallet_import_qr_wallet = QR 지갑 가져오기
+wallet_import_qr_description = AirGap Vault 또는 BitTool Signer에서 동기화 QR 코드를 스캔하세요
+wallet_scan_another_qr = 다른 QR 스캔
+wallet_offline = 오프라인
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = 기기가 탈옥된 것으로 보입니다. 지갑과
 rootcheck_body = 귀하의 기기는 루트 액세스 권한이 있는 것으로 보이며, 이는 보안 위험을 상당히 증가시킬 수 있습니다. 루팅된 기기에서 이 앱을 사용하면 자산이 무단 액세스 및 잠재적 손실에 노출될 수 있습니다. 자금의 안전을 위해 루팅되지 않은 기기를 사용하는 것이 좋습니다.
 rootcheck_ignore = 무시
 rootcheck_exit = 종료
+
+# QR
+
+qr_sign_title = QR 코드로 서명
+qr_sign_step = %d / %d 단계
+qr_sign_instruction = 콜드 월렛으로 이 QR 코드를 스캔하여 검토하고 서명하세요.
+qr_sign_scan_signature = 서명 스캔
+qr_sign_scan_instruction = 콜드 월렛에 표시된 서명 QR 코드를 스캔하세요.
+qr_sign_progress = %d / %d 파트 수신됨

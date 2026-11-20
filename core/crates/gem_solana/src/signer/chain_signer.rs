@@ -1,15 +1,149 @@
 use std::str;
 
-use ::signer::Ed25519KeyPair;
+use ::signer::{Ed25519KeyPair, verify_ed25519_signature};
 use chrono::Utc;
 use gem_encoding::{encode_base58, encode_base64};
-use primitives::{Chain, ChainSigner, SignerError, SignerInput, TransactionInputType, TransferDataOutputType};
+use primitives::{Chain, ChainSigner, SignerError, SignerInput, TransactionInputType, TransferDataOutputType, swap::SwapQuoteDataType};
 
 use super::{instructions, sign_message as sign_solana_message, swap, transaction};
-use crate::{Pubkey, VersionedTransactionExt, decode_transaction, siws::SiwsMessage, transaction::is_transaction_bytes};
+use crate::{Instruction, Pubkey, SignatureBytes, VersionedTransaction, VersionedTransactionExt, decode_transaction, siws::SiwsMessage, transaction::is_transaction_bytes};
 
 #[derive(Default)]
 pub struct SolanaChainSigner;
+
+#[derive(Debug, Clone)]
+pub struct UnsignedSolanaTransaction {
+    transaction: VersionedTransaction,
+    sender: Pubkey,
+    wallet_slots: Vec<usize>,
+    output_type: TransferDataOutputType,
+}
+
+impl UnsignedSolanaTransaction {
+    pub fn sender_bytes(&self) -> [u8; 32] {
+        *self.sender.as_bytes()
+    }
+
+    pub fn message_bytes(&self) -> Result<Vec<u8>, SignerError> {
+        self.transaction.serialize_message().map_err(SignerError::from_display)
+    }
+
+    pub fn attach_signature(mut self, signature_bytes: &[u8]) -> Result<String, SignerError> {
+        let message = self.message_bytes()?;
+        verify_ed25519_signature(self.sender.as_bytes(), &message, signature_bytes)?;
+        let raw_sig: [u8; 64] = signature_bytes
+            .try_into()
+            .map_err(|_| SignerError::invalid_input("invalid Solana signature length"))?;
+        let signature = SignatureBytes::new(raw_sig);
+        for (index, slot) in self.transaction.signatures_mut().iter_mut().enumerate() {
+            if self.wallet_slots.contains(&index) {
+                *slot = signature;
+            }
+        }
+        match self.output_type {
+            TransferDataOutputType::Signature => Ok(encode_base58(signature.as_bytes())),
+            TransferDataOutputType::EncodedTransaction => {
+                let bytes = self.transaction.serialize().map_err(|e| SignerError::signing_error(format!("serialize transaction: {e}")))?;
+                Ok(encode_base64(&bytes))
+            }
+        }
+    }
+}
+
+pub fn build_unsigned_solana_transaction(input: &SignerInput) -> Result<UnsignedSolanaTransaction, SignerError> {
+    let sender = Pubkey::from_base58(&input.sender_address).map_err(SignerError::from_display)?;
+    match &input.input_type {
+        TransactionInputType::Transfer { asset } => {
+            let ix = if asset.id.is_token() {
+                instructions::token_transfer(input, sender)?
+            } else {
+                instructions::native_transfer(input, sender)?
+            };
+            build_single_signer_unsigned(input, sender, &ix)
+        }
+        TransactionInputType::TransferNft { .. } => build_single_signer_unsigned(input, sender, &instructions::nft_transfer(input, sender)?),
+        TransactionInputType::Stake { .. } => build_single_signer_unsigned(input, sender, &instructions::stake(input, sender)?),
+        TransactionInputType::Swap { swap_data, .. } => match swap_data.data.data_type {
+            SwapQuoteDataType::Transfer => SignerError::invalid_input_err("unsupported Solana transfer swap"),
+            SwapQuoteDataType::Contract => {
+                let transaction = swap::prepare_swap_transaction(input)?;
+                build_multi_slot_unsigned(transaction, sender, TransferDataOutputType::EncodedTransaction)
+            }
+        },
+        TransactionInputType::Generic { .. } | TransactionInputType::Payment { .. } => {
+            let extra = input.input_type.get_generic_data().map_err(SignerError::invalid_input)?;
+            let data = extra.data_as_str().map_err(SignerError::invalid_input)?;
+            let mut transaction = decode_transaction(data).map_err(SignerError::invalid_input)?;
+            if let TransactionInputType::Payment { .. } = input.input_type
+                && !transaction.uses_durable_nonce()
+            {
+                *transaction.recent_blockhash_mut() = transaction::block_hash(input)?;
+            }
+            build_multi_slot_unsigned(transaction, sender, extra.output_type.clone())
+        }
+        TransactionInputType::Deposit { .. }
+        | TransactionInputType::Withdrawal { .. }
+        | TransactionInputType::TokenApprove { .. }
+        | TransactionInputType::Account { .. }
+        | TransactionInputType::Perpetual { .. }
+        | TransactionInputType::Earn { .. } => SignerError::invalid_input_err("unsupported Solana transaction input type"),
+    }
+}
+
+pub fn validate_solana_offchain_message(message: &[u8], expected_sender: &str) -> Result<Pubkey, SignerError> {
+    let sender = Pubkey::from_base58(expected_sender).map_err(SignerError::from_display)?;
+    if is_transaction_bytes(message) {
+        return Err(SignerError::invalid_input(SIGN_MESSAGE_PAYLOAD_REJECTION));
+    }
+    if let Ok(raw) = str::from_utf8(message)
+        && let Some(siws) = SiwsMessage::parse(raw).map_err(SignerError::invalid_input)?
+    {
+        siws.validate(Chain::Solana, Utc::now()).map_err(SignerError::invalid_input)?;
+        if siws.address != expected_sender {
+            return SignerError::invalid_input_err("SIWS account mismatch");
+        }
+    }
+    Ok(sender)
+}
+
+pub fn format_solana_message_signature(message: &[u8], expected_sender: &str, signature_bytes: &[u8]) -> Result<String, SignerError> {
+    let sender = validate_solana_offchain_message(message, expected_sender)?;
+    verify_ed25519_signature(sender.as_bytes(), message, signature_bytes)?;
+    Ok(encode_base58(signature_bytes))
+}
+
+fn build_single_signer_unsigned(input: &SignerInput, sender: Pubkey, instructions: &[Instruction]) -> Result<UnsignedSolanaTransaction, SignerError> {
+    let transaction = transaction::build_legacy_transaction(sender, transaction::block_hash(input)?, instructions)?;
+    if transaction.num_required_signatures() != 1 {
+        return Err(SignerError::invalid_input("Solana transaction requires more than one signer"));
+    }
+    Ok(UnsignedSolanaTransaction {
+        transaction,
+        sender,
+        wallet_slots: vec![0],
+        output_type: TransferDataOutputType::EncodedTransaction,
+    })
+}
+
+fn build_multi_slot_unsigned(
+    transaction: VersionedTransaction,
+    sender: Pubkey,
+    output_type: TransferDataOutputType,
+) -> Result<UnsignedSolanaTransaction, SignerError> {
+    let wallet_slots = transaction.signer_slots(&sender);
+    if wallet_slots.is_empty() {
+        return Err(SignerError::invalid_input("wallet account is not a required signer of the Solana transaction"));
+    }
+    if wallet_slots.iter().any(|index| transaction.signatures().get(*index) != Some(&SignatureBytes::default())) {
+        return Err(SignerError::invalid_input("Solana transaction already contains the wallet signature"));
+    }
+    Ok(UnsignedSolanaTransaction {
+        transaction,
+        sender,
+        wallet_slots,
+        output_type,
+    })
+}
 
 const SIGN_MESSAGE_PAYLOAD_REJECTION: &str = "Serialized Solana transaction or transaction message received in signMessage request; use signTransaction instead";
 
@@ -86,7 +220,7 @@ mod tests {
     use crate::{SignatureBytes, VersionedTransaction};
     use gem_encoding::decode_base58;
     use gem_encoding::decode_base64;
-    use primitives::testkit::signer_mock::TEST_PRIVATE_KEY;
+    use primitives::testkit::signer_mock::{TEST_PRIVATE_KEY, TEST_PRIVATE_KEY_SOLANA_ADDRESS};
     use primitives::{Chain, ChainSigner, SignerInput, TransactionLoadInput, TransactionLoadMetadata, TransferDataOutputType};
 
     fn signed_blockhash(transaction: VersionedTransaction, payment: bool) -> [u8; 32] {
@@ -215,5 +349,18 @@ mod tests {
             format!("Invalid input: {SIGN_MESSAGE_PAYLOAD_REJECTION}")
         );
         assert_eq!(SolanaChainSigner.sign_message(&message, &TEST_PRIVATE_KEY).unwrap_err().to_string(), format!("Invalid input: {SIGN_MESSAGE_PAYLOAD_REJECTION}"));
+    }
+
+    #[test]
+    fn test_qr_unsigned_solana_transaction_roundtrip() {
+        let transaction = mock_v1_transaction(2, 1);
+        let encoded = encode_base64(&transaction.serialize().unwrap());
+        let input = SignerInput::mock_sign_data(Chain::Solana, TEST_PRIVATE_KEY_SOLANA_ADDRESS, &encoded, TransferDataOutputType::EncodedTransaction);
+        let expected = SolanaChainSigner.sign_data(&input, &TEST_PRIVATE_KEY).unwrap();
+
+        let unsigned = build_unsigned_solana_transaction(&input).unwrap();
+        let sig = sign_solana_message(&TEST_PRIVATE_KEY, &unsigned.message_bytes().unwrap()).unwrap();
+        let assembled = unsigned.attach_signature(sig.as_bytes()).unwrap();
+        assert_eq!(assembled, expected);
     }
 }

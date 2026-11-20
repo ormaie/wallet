@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Canja daga wani walat</string>
   <string name="wallet_portfolio_title">Fayil ɗin Kadari</string>
   <string name="wallet_import_already_imported_message">An riga an shigo da wannan walat ɗin.</string>
+  <string name="wallet_import_qr_wallet">Shigo da Walat ɗin QR</string>
+  <string name="wallet_import_qr_description">Duba lambar QR ta haɗawa daga AirGap Vault ko BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Duba Wata Lambar QR</string>
+  <string name="wallet_offline">Offline</string>
   <string name="wallets_title">Wallets</string>
   <string name="receive_warning">Wannan shine adireshinka — aika kawai %1$s a kan %2$s hanyar sadarwa.</string>
   <string name="buy_title">Saya %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Na\'urarka ta bayyana tana da tushen shiga, wanda zai iya ƙara haɗarin tsaro sosai. Yin amfani da wannan ƙa\'idar akan na\'ura mai tushe na iya fallasa kadarorin ku zuwa shiga mara izini da yuwuwar asara. Don amincin kuɗin ku, muna ba da shawarar yin amfani da na\'urar da ba ta da tushe.</string>
   <string name="rootcheck_ignore">Yi watsi da shi</string>
   <string name="rootcheck_exit">Fita</string>
+  <string name="qr_sign_title">Sa hannu da Lambar QR</string>
+  <string name="qr_sign_step">Mataki %1$d daga %2$d</string>
+  <string name="qr_sign_instruction">Duba wannan lambar QR da walat ɗinka na sanyi don dubawa da sa hannu.</string>
+  <string name="qr_sign_scan_signature">Duba Sa Hannu</string>
+  <string name="qr_sign_scan_instruction">Duba lambar QR ta sa hannu da aka nuna a kan walat ɗinka na sanyi.</string>
+  <string name="qr_sign_progress">An karɓi %1$d / %2$d sassa</string>
 </resources>

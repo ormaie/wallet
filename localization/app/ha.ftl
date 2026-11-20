@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Daga kadarorin walat ɗinka
 wallet_transfer_from_another_wallet = Canja daga wani walat
 wallet_portfolio_title = Fayil ɗin Kadari
 wallet_import_already_imported_message = An riga an shigo da wannan walat ɗin.
+wallet_import_qr_wallet = Shigo da Walat ɗin QR
+wallet_import_qr_description = Duba lambar QR ta haɗawa daga AirGap Vault ko BitTool Signer
+wallet_scan_another_qr = Duba Wata Lambar QR
+wallet_offline = Offline
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Na'urarka ta bayyana an yi mata jailbreak. Wannan na 
 rootcheck_body = Na'urarka ta bayyana tana da tushen shiga, wanda zai iya ƙara haɗarin tsaro sosai. Yin amfani da wannan ƙa'idar akan na'ura mai tushe na iya fallasa kadarorin ku zuwa shiga mara izini da yuwuwar asara. Don amincin kuɗin ku, muna ba da shawarar yin amfani da na'urar da ba ta da tushe.
 rootcheck_ignore = Yi watsi da shi
 rootcheck_exit = Fita
+
+# QR
+
+qr_sign_title = Sa hannu da Lambar QR
+qr_sign_step = Mataki %d daga %d
+qr_sign_instruction = Duba wannan lambar QR da walat ɗinka na sanyi don dubawa da sa hannu.
+qr_sign_scan_signature = Duba Sa Hannu
+qr_sign_scan_instruction = Duba lambar QR ta sa hannu da aka nuna a kan walat ɗinka na sanyi.
+qr_sign_progress = An karɓi %d / %d sassa

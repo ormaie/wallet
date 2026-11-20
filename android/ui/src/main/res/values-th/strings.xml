@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">โอนจากกระเป๋าอื่น</string>
   <string name="wallet_portfolio_title">พอร์ตโฟลิโอ</string>
   <string name="wallet_import_already_imported_message">กระเป๋าสตางค์ใบนี้ถูกนำเข้าแล้ว</string>
+  <string name="wallet_import_qr_wallet">นำเข้ากระเป๋าเงิน QR</string>
+  <string name="wallet_import_qr_description">สแกนคิวอาร์โค้ดซิงค์จาก AirGap Vault หรือ BitTool Signer</string>
+  <string name="wallet_scan_another_qr">สแกน QR อื่นเพิ่มเติม</string>
+  <string name="wallet_offline">ออฟไลน์</string>
   <string name="wallets_title">กระเป๋าสตางค์</string>
   <string name="receive_warning">นี่คือที่อยู่ของคุณ — ส่งเฉพาะ %1$s บนเครือข่าย %2$s เท่านั้น</string>
   <string name="buy_title">ซื้อ %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">อุปกรณ์ของคุณดูเหมือนจะมีสิทธิ์เข้าถึงรูท ซึ่งอาจเพิ่มความเสี่ยงด้านความปลอดภัยได้อย่างมาก การใช้แอปนี้บนอุปกรณ์ที่รูทแล้วอาจทำให้ทรัพย์สินของคุณถูกเข้าถึงโดยไม่ได้รับอนุญาตและอาจสูญหายได้ เพื่อความปลอดภัยของเงินของคุณ เราขอแนะนำอย่างยิ่งให้ใช้อุปกรณ์ที่ไม่ได้รับการรูท</string>
   <string name="rootcheck_ignore">ไม่สนใจ</string>
   <string name="rootcheck_exit">ออก</string>
+  <string name="qr_sign_title">ลงนามด้วยคิวอาร์โค้ด</string>
+  <string name="qr_sign_step">ขั้นตอนที่ %1$d จาก %2$d</string>
+  <string name="qr_sign_instruction">สแกนคิวอาร์โค้ดนี้ด้วยกระเป๋าเงินออฟไลน์ของคุณเพื่อตรวจสอบและลงนาม</string>
+  <string name="qr_sign_scan_signature">สแกนลายเซ็น</string>
+  <string name="qr_sign_scan_instruction">สแกนคิวอาร์โค้ดลายเซ็นที่แสดงบนกระเป๋าเงินออฟไลน์ของคุณ</string>
+  <string name="qr_sign_progress">ได้รับแล้ว %1$d / %2$d ส่วน</string>
 </resources>

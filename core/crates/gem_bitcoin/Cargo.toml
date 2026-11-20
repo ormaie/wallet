@@ -26,7 +26,7 @@ num-bigint = { workspace = true }
 serde_serializers = { path = "../serde_serializers", features = ["bigint"] }
 
 # Optional signer dependencies
-gem_encoding = { path = "../gem_encoding", optional = true, features = ["base58"] }
+gem_encoding = { path = "../gem_encoding", optional = true, features = ["base58", "base64"] }
 gem_hash = { path = "../gem_hash", optional = true }
 bitcoin = { workspace = true, optional = true }
 bech32 = { workspace = true, optional = true }

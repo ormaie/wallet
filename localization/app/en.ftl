@@ -220,6 +220,14 @@ wallet_transfer_from_another_wallet = Transfer from another wallet
 wallet_portfolio_title = Portfolio
 # Used in wallet creation, import, receive, and wallet detail screens for the import already imported message.
 wallet_import_already_imported_message = This wallet has already been imported.
+# Used in the import wallet type selection and QR cold wallet import screen title.
+wallet_import_qr_wallet = Import QR Wallet
+# Used on the QR cold wallet import screen describing what QR code to scan.
+wallet_import_qr_description = Scan the sync QR code from AirGap Vault or BitTool Signer
+# Button on the QR cold wallet import screen to scan an additional account QR code.
+wallet_scan_another_qr = Scan Another QR
+# Short badge shown next to an air-gapped QR cold wallet name in the wallets list.
+wallet_offline = Offline
 
 # Wallets
 
@@ -1452,3 +1460,18 @@ rootcheck_body = Your device appears to have root access, which can significantl
 rootcheck_ignore = Ignore
 # Used in rootcheck UI for the exit label.
 rootcheck_exit = Exit
+
+# QR
+
+# Title of the air-gapped QR cold wallet signing sheet.
+qr_sign_title = Sign with QR Code
+# Step indicator on multi-step QR cold wallet signing. First %d is current step, second %d is total steps.
+qr_sign_step = Step %d of %d
+# Instruction shown below the animated unsigned transaction QR code.
+qr_sign_instruction = Scan this QR code with your cold wallet to review and sign.
+# Button that opens the camera scanner to read the cold wallet signature QR code.
+qr_sign_scan_signature = Scan Signature
+# Hint shown on the camera scanner when scanning a cold wallet signature QR code.
+qr_sign_scan_instruction = Scan the signature QR code displayed on your cold wallet.
+# Progress indicator when receiving multi-frame UR QR codes. First %d is received parts, second %d is expected parts.
+qr_sign_progress = Received %d / %d parts

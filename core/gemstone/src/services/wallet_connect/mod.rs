@@ -38,7 +38,9 @@ pub use model::{
     GemConnection, GemConnectionDetails, GemConnectionsView, GemSessionApproval, GemSessionProposal, GemSignerFailure, GemWalletConnectAuthAccount, GemWalletConnectFailure, GemWalletConnectMessageRequest, GemWalletConnectOutcome,
     GemWalletConnectRejection, GemWalletConnectRejectionReason, GemWalletConnectResponse, GemWalletConnectRpcError, GemWalletConnectSessionRequest, GemWalletConnectTransactionAction, GemWalletConnectTransactionRequest,
 };
-pub use sign_message::{GemSignMessagePreview, GemSignMessageService};
+pub use sign_message::{
+    GemQrMessageSignOutcome, GemQrMessageSignSession, GemSignMessagePreview, GemSignMessageService,
+};
 pub use signer::GemWalletConnectSigner;
 pub use store::GemConnectionStore;
 

@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = ウォレット内の資産を使用
 wallet_transfer_from_another_wallet = 別のウォレットから送金
 wallet_portfolio_title = ポートフォリオ
 wallet_import_already_imported_message = このウォレットは既にインポート済みです。
+wallet_import_qr_wallet = QRウォレットをインポート
+wallet_import_qr_description = AirGap VaultまたはBitTool Signerの同期QRコードをスキャンしてください
+wallet_scan_another_qr = 別のQRコードをスキャン
+wallet_offline = オフライン
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = このデバイスは脱獄されているようで�
 rootcheck_body = このデバイスは root 化されているようです。root 化されたデバイスではセキュリティリスクが大幅に高まり、資産への不正アクセスや損失につながる可能性があります。資金を守るため、root 化されていないデバイスの使用を強くお勧めします。
 rootcheck_ignore = 無視する
 rootcheck_exit = 終了
+
+# QR
+
+qr_sign_title = QRコードで署名
+qr_sign_step = ステップ %d / %d
+qr_sign_instruction = コールドウォレットでこのQRコードをスキャンして確認・署名してください。
+qr_sign_scan_signature = 署名をスキャン
+qr_sign_scan_instruction = コールドウォレットに表示された署名QRコードをスキャンしてください。
+qr_sign_progress = %d / %d パーツ受信済み

@@ -16,7 +16,7 @@ const SECP256K1_UNCOMPRESSED_PUBLIC_KEY_LEN: usize = 65;
 const ED25519_PUBLIC_KEY_LEN: usize = 32;
 const EVM_ADDRESS_LEN: usize = 20;
 
-pub(super) fn address_from_public_key(public_key: &[u8], chain: Chain) -> Result<String, AccountDerivationError> {
+pub(crate) fn address_from_public_key(public_key: &[u8], chain: Chain) -> Result<String, AccountDerivationError> {
     match chain.chain_type() {
         ChainType::Ethereum | ChainType::HyperCore => Ok(gem_evm::EthereumAddress::from_bytes(secp256k1_keccak_address_hash(public_key)?).encode()),
         ChainType::Tron => Ok(gem_tron::address::TronAddress::from(secp256k1_keccak_address_hash(public_key)?).encode()),

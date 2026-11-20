@@ -32,6 +32,7 @@ pub mod support;
 pub(crate) mod testkit;
 pub mod transaction_state;
 pub mod transfer_amount;
+pub mod ur;
 pub mod url_action;
 pub mod wallet_connect;
 

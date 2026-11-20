@@ -25,6 +25,7 @@ import uniffi.gemstone.GemWalletSectionKind
 
 internal fun LazyListScope.wallets(
     section: GemWalletSection,
+    offlineWalletIds: Set<String> = emptySet(),
     longPressedWallet: MutableState<String>,
     onEdit: (GemWalletRow) -> Unit,
     onSelectWallet: (GemWalletRow) -> Unit,
@@ -43,6 +44,7 @@ internal fun LazyListScope.wallets(
                     row = row,
                     isCurrent = row.isCurrent,
                     listPosition = ListPosition.getPosition(index, section.rows.size),
+                    isOffline = row.id in offlineWalletIds,
                     onEdit = { onEdit(row) },
                     modifier = it,
                 )

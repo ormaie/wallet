@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Din activele portofelului tău
 wallet_transfer_from_another_wallet = Transferă din alt portofel
 wallet_portfolio_title = Portofoliu
 wallet_import_already_imported_message = Acest portofel a fost deja importat.
+wallet_import_qr_wallet = Importă portofel QR
+wallet_import_qr_description = Scanează codul QR de sincronizare din AirGap Vault sau BitTool Signer
+wallet_scan_another_qr = Scanează alt cod QR
+wallet_offline = Offline
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Dispozitivul dvs. pare să aibă jailbreak. Acest luc
 rootcheck_body = Dispozitivul dvs. pare să aibă acces root, ceea ce poate crește semnificativ riscurile de securitate. Utilizarea acestei aplicații pe un dispozitiv cu acces root poate expune activele dvs. la acces neautorizat și la o potențială pierdere. Pentru siguranța fondurilor dvs., vă recomandăm insistent să utilizați un dispozitiv care nu este rootat.
 rootcheck_ignore = Ignoră
 rootcheck_exit = Ieșire
+
+# QR
+
+qr_sign_title = Semnează cu cod QR
+qr_sign_step = Pasul %d din %d
+qr_sign_instruction = Scanează acest cod QR cu portofelul tău rece pentru a verifica și semna.
+qr_sign_scan_signature = Scanează semnătura
+qr_sign_scan_instruction = Scanează codul QR al semnăturii afișat pe portofelul tău rece.
+qr_sign_progress = Primite %d / %d părți

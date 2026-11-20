@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = من أصول محفظتك
 wallet_transfer_from_another_wallet = حوّل من محفظة أخرى
 wallet_portfolio_title = المحفظة الاستثمارية
 wallet_import_already_imported_message = تم استيراد هذه المحفظة بالفعل.
+wallet_import_qr_wallet = استيراد محفظة QR
+wallet_import_qr_description = امسح رمز QR للمزامنة من AirGap Vault أو BitTool Signer
+wallet_scan_another_qr = مسح رمز QR آخر
+wallet_offline = غير متصل
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = يبدو أن جهازك قد خضع لكسر الح�
 rootcheck_body = يبدو أن جهازك يتمتع بصلاحيات الجذر، مما قد يزيد من مخاطر الأمان بشكل كبير. قد يؤدي استخدام هذا التطبيق على جهاز به صلاحيات الجذر إلى تعريض أصولك لوصول غير مصرح به وخسارة محتملة. ولضمان سلامة أموالك، نوصي بشدة باستخدام جهاز غير متجذر.
 rootcheck_ignore = يتجاهل
 rootcheck_exit = مخرج
+
+# QR
+
+qr_sign_title = توقيع عبر رمز QR
+qr_sign_step = الخطوة %d من %d
+qr_sign_instruction = امسح رمز QR هذا باستخدام محفظتك الباردة للمراجعة والتوقيع.
+qr_sign_scan_signature = مسح التوقيع
+qr_sign_scan_instruction = امسح رمز QR للتوقيع المعروض على محفظتك الباردة.
+qr_sign_progress = تم استلام %d / %d أجزاء

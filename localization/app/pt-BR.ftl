@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Dos ativos da sua carteira
 wallet_transfer_from_another_wallet = Transfira de outra carteira
 wallet_portfolio_title = Portfólio
 wallet_import_already_imported_message = Esta carteira já foi importada.
+wallet_import_qr_wallet = Importar carteira QR
+wallet_import_qr_description = Escaneie o QR code de sincronização do AirGap Vault ou BitTool Signer
+wallet_scan_another_qr = Escanear outro QR
+wallet_offline = Offline
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Seu dispositivo parece ter jailbreak. Isso pode coloc
 rootcheck_body = Seu dispositivo parece ter acesso root, o que pode aumentar significativamente os riscos de segurança. Usar este aplicativo em um dispositivo rooteado pode expor seus ativos a acesso não autorizado e perda potencial. Para a segurança de seus fundos, recomendamos fortemente usar um dispositivo não rooteado.
 rootcheck_ignore = Ignorar
 rootcheck_exit = Sair
+
+# QR
+
+qr_sign_title = Assinar com QR code
+qr_sign_step = Etapa %d de %d
+qr_sign_instruction = Escaneie este QR code com sua carteira fria para revisar e assinar.
+qr_sign_scan_signature = Escanear assinatura
+qr_sign_scan_instruction = Escaneie o QR code da assinatura exibido em sua carteira fria.
+qr_sign_progress = Recebidas %d / %d partes

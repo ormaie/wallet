@@ -1,6 +1,7 @@
 pub mod error;
 pub mod model;
 pub mod password;
+pub mod qr;
 pub mod rules;
 pub mod store;
 pub mod verify_phrase;
@@ -32,7 +33,7 @@ use std::sync::Arc;
 
 use gem_hypercore::agent::Agent;
 use gem_keystore::Mnemonic;
-use primitives::{Chain, ChainAsset, NFTData, Wallet, WalletId, WalletSource, WalletType};
+use primitives::{Account, Chain, ChainAsset, ChainType, NFTData, Wallet, WalletId, WalletSource, WalletType};
 
 use crate::gateway::SecureStoreWrapper;
 use crate::keystore::decode_password;
@@ -50,10 +51,12 @@ use crate::services::nft::rules as nft_rules;
 use crate::services::preferences::{GemPreferencesService, GemSecureStore};
 use crate::services::wallet_preferences::GemWalletPreferencesService;
 use crate::services::wallet_session::GemWalletSessionService;
+use crate::ur::merge_unique_accounts;
 
 pub use error::GemWalletImportError;
 pub use model::{GemAvatarList, GemPrivateKeyAccount, GemWalletDeletion, GemWalletDetails, GemWalletImportKind, GemWalletImportRequest, GemWalletImportResult, GemWalletImportScreen, GemWalletImportType, GemWalletSecret};
 pub use password::{GemKeystoreAuthentication, GemKeystorePassword};
+pub use qr::{GemQrPairingPreview, GemQrPairingSession};
 pub use store::GemWalletStore;
 pub use verify_phrase::{GemVerifyPhraseSession, GemVerifyPhraseSetup};
 
@@ -119,8 +122,73 @@ impl GemWalletService {
         self.session.set_current_wallet_id(Some(wallet_id))
     }
 
+    pub fn is_qr_signer(&self, wallet_id: WalletId) -> bool {
+        self.preferences.is_qr_signer(wallet_id)
+    }
+
     pub fn wallet_details(&self, wallet: Wallet) -> GemWalletDetails {
-        rules::details(&wallet, |chain, address| self.explorer.get_address_url(chain, address))
+        let mut details = rules::details(&wallet, |chain, address| self.explorer.get_address_url(chain, address));
+        if self.preferences.is_qr_signer(wallet.id) {
+            details.backup = None;
+            details.advanced = None;
+        }
+        details
+    }
+
+    pub fn qr_pairing_session(&self) -> Arc<GemQrPairingSession> {
+        Arc::new(GemQrPairingSession::new())
+    }
+
+    pub async fn import_qr_wallet(&self, session: Arc<GemQrPairingSession>, default_name: String) -> Result<GemWalletImportResult, GemServiceError> {
+        let name = default_name.trim().to_string();
+        if name.is_empty() {
+            return Err(GemServiceError::InvalidInput {
+                msg: "a wallet cannot be stored without a name".to_string(),
+            });
+        }
+        let (master_fingerprint, accounts) = session.snapshot();
+        let (wallet_id, wallet_type) = qr::resolve_qr_wallet_identity(&accounts)?;
+        let wallets = self.store.get_wallets().await?;
+
+        if let Some(mut existing) = rules::existing_wallet(&wallets, &wallet_id, wallet_type) {
+            if self.preferences.is_qr_signer(existing.id.clone()) {
+                let existing_xfp = self.preferences.qr_signer_xfp(existing.id.clone());
+                if let (Some(stored_xfp), Some(incoming_xfp)) = (&existing_xfp, &master_fingerprint)
+                    && !stored_xfp.eq_ignore_ascii_case(incoming_xfp)
+                {
+                    return Err(GemServiceError::InvalidInput {
+                        msg: format!("QR code belongs to a different wallet ({incoming_xfp} vs {stored_xfp})"),
+                    });
+                }
+                merge_unique_accounts(&mut existing.accounts, accounts);
+                existing.accounts = qr::ordered_accounts(&existing.accounts);
+                self.store_wallet(&existing).await?;
+                if existing_xfp.is_none() && master_fingerprint.is_some() {
+                    self.preferences.set_qr_signer_xfp(existing.id.clone(), master_fingerprint)?;
+                }
+                self.invalidate_subscriptions()?;
+            }
+            self.session.set_current_wallet_id(Some(existing.id.clone()))?;
+            return Ok(GemWalletImportResult::Existing { wallet: existing });
+        }
+
+        let index = rules::next_wallet_index(&wallets);
+        let wallet = Wallet {
+            id: wallet_id,
+            external_id: None,
+            name,
+            index,
+            wallet_type,
+            accounts,
+            is_pinned: false,
+            image_url: None,
+            source: WalletSource::Import,
+        };
+        self.store_wallet(&wallet).await?;
+        self.preferences.set_qr_signer_xfp(wallet.id.clone(), master_fingerprint)?;
+        self.session.set_current_wallet_id(Some(wallet.id.clone()))?;
+        self.invalidate_subscriptions()?;
+        Ok(GemWalletImportResult::New { wallet })
     }
 
     pub fn create_wallet(&self) -> Result<Vec<String>, GemServiceError> {
@@ -158,7 +226,9 @@ impl GemWalletService {
         let wallet = self.wallet(wallet_id.clone()).await?;
         if wallet.wallet_type != WalletType::View {
             self.remove_hypercore_agents(&wallet).await?;
-            self.keystore.delete_wallet_secrets(wallet.id.id(), rules::legacy_keystore_id(&wallet))?;
+            if !self.preferences.is_qr_signer(wallet.id.clone()) {
+                self.keystore.delete_wallet_secrets(wallet.id.id(), rules::legacy_keystore_id(&wallet))?;
+            }
         }
         self.store.delete_wallet(wallet.id.clone()).await?;
         self.names.delete_names(rules::wallet_address_names(&wallet)).await?;
@@ -178,6 +248,11 @@ impl GemWalletService {
     }
 
     pub async fn export_secret(&self, wallet_id: WalletId) -> Result<GemWalletSecret, GemServiceError> {
+        if self.preferences.is_qr_signer(wallet_id.clone()) {
+            return Err(GemServiceError::Core {
+                msg: format!("wallet {} keeps no secret", wallet_id.id()),
+            });
+        }
         let wallet = self.wallet(wallet_id.clone()).await?;
         let keystore_id = keystore_id_for_wallet(wallet.id.id());
         let password = decode_password(&self.password.get_password(false)?);
@@ -196,10 +271,18 @@ impl GemWalletService {
     }
 
     pub async fn private_key_accounts(&self, wallet_id: WalletId) -> Result<Vec<GemPrivateKeyAccount>, GemServiceError> {
+        if self.preferences.is_qr_signer(wallet_id.clone()) {
+            return Ok(Vec::new());
+        }
         Ok(rules::private_key_accounts(&self.wallet(wallet_id).await?))
     }
 
     pub async fn export_private_key(&self, wallet_id: WalletId, chain: Chain) -> Result<GemWalletSecret, GemServiceError> {
+        if self.preferences.is_qr_signer(wallet_id.clone()) {
+            return Err(GemServiceError::Core {
+                msg: format!("wallet {} has no {chain} private key to export", wallet_id.id()),
+            });
+        }
         let wallet = self.wallet(wallet_id).await?;
         if !rules::private_key_chains(&wallet).contains(&chain) {
             return Err(GemServiceError::Core {
@@ -316,10 +399,16 @@ impl GemWalletService {
             msg: format!("invalid wallet id {}", preview.wallet_id),
         })?;
         let wallets = self.store.get_wallets().await?;
-        if let Some(wallet) = rules::existing_wallet(&wallets, &wallet_id, preview.wallet_type) {
+        if let Some(mut wallet) = rules::existing_wallet(&wallets, &wallet_id, preview.wallet_type) {
             if wallet.wallet_type != WalletType::View && !self.keystore.exists(keystore_id_for_wallet(wallet.id.id()))? {
                 let password = decode_password(&self.password.get_password(!self.keystore.has_stored_wallets()?)?);
-                self.keystore.create_store(keystore_import(import), password)?;
+                let stored = self.keystore.create_store(keystore_import(import), password)?;
+                if self.preferences.is_qr_signer(wallet.id.clone()) {
+                    wallet.accounts = stored.accounts.into_iter().map(rules::account).collect();
+                    self.store_wallet(&wallet).await?;
+                    self.preferences.clear_qr_signer(wallet.id.clone())?;
+                    self.invalidate_subscriptions()?;
+                }
             }
             return Ok(GemWalletImportResult::Existing { wallet });
         }
@@ -363,20 +452,46 @@ impl GemWalletService {
     }
 
     pub async fn setup_chains_outcome(&self, chains: Vec<Chain>) -> Result<SetupChainsOutcome, GemServiceError> {
-        let candidates: Vec<(Wallet, Vec<Chain>)> = rules::wallets_missing_chains(self.store.get_wallets().await?, &chains)
-            .into_iter()
-            .filter(|(wallet, _)| self.keystore.exists(keystore_id_for_wallet(wallet.id.id())).unwrap_or(false))
-            .take(SETUP_CHAINS_WALLETS_LIMIT)
-            .collect();
-        if candidates.is_empty() {
-            return Ok(SetupChainsOutcome::default());
-        }
-        let password = decode_password(&self.password.get_password(false)?);
         let mut outcome = SetupChainsOutcome::default();
-        for (mut wallet, missing) in candidates {
-            match self.add_chains(&mut wallet, missing, password.clone()).await {
-                Ok(()) => outcome.wallets.push(wallet),
-                Err(error) => outcome.failures.push((wallet.id, error)),
+        let mut candidates = Vec::new();
+        for (mut wallet, missing) in rules::wallets_missing_chains(self.store.get_wallets().await?, &chains) {
+            if self.preferences.is_qr_signer(wallet.id.clone()) {
+                if let Some(ethereum) = wallet.account(Chain::Ethereum).cloned() {
+                    let evm_missing: Vec<Chain> = missing
+                        .into_iter()
+                        .filter(|chain| matches!(chain.chain_type(), ChainType::Ethereum | ChainType::HyperCore))
+                        .collect();
+                    if !evm_missing.is_empty() {
+                        for chain in evm_missing {
+                            wallet.accounts.push(Account {
+                                chain,
+                                address: ethereum.address.clone(),
+                                derivation_path: ethereum.derivation_path.clone(),
+                                extended_public_key: ethereum.extended_public_key.clone(),
+                            });
+                        }
+                        wallet.accounts = qr::ordered_accounts(&wallet.accounts);
+                        match self.store_wallet(&wallet).await {
+                            Ok(()) => outcome.wallets.push(wallet),
+                            Err(error) => outcome.failures.push((wallet.id, error)),
+                        }
+                    }
+                }
+                continue;
+            }
+            if candidates.len() < SETUP_CHAINS_WALLETS_LIMIT
+                && self.keystore.exists(keystore_id_for_wallet(wallet.id.id())).unwrap_or(false)
+            {
+                candidates.push((wallet, missing));
+            }
+        }
+        if !candidates.is_empty() {
+            let password = decode_password(&self.password.get_password(false)?);
+            for (mut wallet, missing) in candidates {
+                match self.add_chains(&mut wallet, missing, password.clone()).await {
+                    Ok(()) => outcome.wallets.push(wallet),
+                    Err(error) => outcome.failures.push((wallet.id, error)),
+                }
             }
         }
         if !outcome.wallets.is_empty() {
@@ -420,7 +535,16 @@ fn keystore_import(import: GemWalletImportType) -> GemImportType {
 
 #[cfg(test)]
 mod tests {
-    use primitives::Account;
+    use std::fs;
+
+    use futures::executor::block_on;
+    use primitives::{AddressType, Currency, hex};
+    use serde_json::{json, to_vec};
+
+    use super::testkit::{OTHER_PHRASE, PHRASE, TEST_PASSWORD, WalletTestkit};
+    use super::*;
+    use crate::ur::UrEncoder;
+    use crate::ur::cbor::{CborValue, encode_cbor};
 
     #[test]
     fn test_wallet_details_carry_the_explorer_for_a_single_account() {
@@ -453,13 +577,6 @@ mod tests {
             }
         );
     }
-    use std::fs;
-
-    use futures::executor::block_on;
-    use primitives::{AddressType, Currency};
-
-    use super::testkit::{OTHER_PHRASE, PHRASE, TEST_PASSWORD, WalletTestkit};
-    use super::*;
 
     #[test]
     fn test_delete_wallet_removes_secret_copies_preserves_preferences_and_reports_outcome() {
@@ -898,6 +1015,183 @@ mod tests {
 
             assert!(matches!(error, GemServiceError::Core { .. }), "{error:?}");
             assert_eq!(context.service.wallets().await.unwrap().len(), 1);
+        });
+    }
+
+    #[test]
+    fn test_qr_wallet_import_hides_secrets_merges_scans_and_deletes_cleanly() {
+        block_on(async {
+            let context = WalletTestkit::new();
+            let payload = json!({
+                "protocol": "bittool-signer-wallet",
+                "version": 1,
+                "network": "mainnet",
+                "masterFingerprint": "73c5da0a",
+                "accounts": [
+                    {
+                        "chain": "btc",
+                        "script": "p2wpkh",
+                        "accountPath": "m/84'/0'/0'",
+                        "xpub": "zpub6rFR7y4Q2AijBEqTUquhVz398htDFrtymD9xYYfG1m4wAcvPhXNfE3EfH1r1ADqtfSdVCToUG868RvUUkgDKf31mGDtKsAYz2oz2AGutZYs"
+                    },
+                    {
+                        "chain": "evm",
+                        "accountPath": "m/44'/60'/0'",
+                        "derive": "0/0",
+                        "xpub": "xpub6BosfCnifzxcFwrSzQiqu2DBVTshkCXacvNsWGYJVVhhawA7d4R5WSWGFNbi8Aw6ZRc1brxMyWMzG3DSSSSoekkudhUd9yLb6qx39T9nMdj"
+                    }
+                ]
+            });
+            let cbor = encode_cbor(&CborValue::Bytes(to_vec(&payload).unwrap()));
+            let frames = UrEncoder::encode("bytes", &cbor, 120);
+
+            let session = context.service.qr_pairing_session();
+            let mut preview = None;
+            for frame in frames {
+                let current = session.receive_frame(frame).unwrap();
+                if current.is_complete {
+                    preview = Some(current);
+                    break;
+                }
+            }
+            let preview = preview.expect("expected completed QR pairing");
+            assert_eq!(preview.master_fingerprint.as_deref(), Some("73c5da0a"));
+            assert_eq!(preview.chains, vec![Chain::Bitcoin, Chain::Ethereum]);
+
+            let password_reads_before = context.passwords.create_requests.lock().unwrap().len();
+            let imported = context.service.import_qr_wallet(session, "AirGap Vault".to_string()).await.unwrap();
+            assert!(matches!(imported, GemWalletImportResult::New { .. }));
+            let wallet = imported.wallet();
+            assert_eq!(wallet.wallet_type, WalletType::Multicoin);
+            assert_eq!(context.service.current_wallet_id().unwrap(), Some(wallet.id.clone()));
+            assert_eq!(context.passwords.create_requests.lock().unwrap().len(), password_reads_before);
+            assert!(context.service.is_qr_signer(wallet.id.clone()));
+
+            let details = context.service.wallet_details(wallet.clone());
+            assert_eq!(details.backup, None);
+            assert_eq!(details.advanced, None);
+            assert!(context.service.export_secret(wallet.id.clone()).await.is_err());
+            assert!(context.service.export_private_key(wallet.id.clone(), Chain::Ethereum).await.is_err());
+            assert_eq!(context.service.private_key_accounts(wallet.id.clone()).await.unwrap(), Vec::new());
+
+            let deletion = context.service.delete_wallet(wallet.id.clone()).await.unwrap();
+            assert_eq!(deletion, GemWalletDeletion::LastWalletDeleted);
+            assert!(!context.service.is_qr_signer(wallet.id));
+        });
+    }
+
+    #[test]
+    fn test_qr_wallet_reimport_preserves_fingerprint_and_rejects_mismatch() {
+        block_on(async {
+            let context = WalletTestkit::new();
+            let evm_pubkey = hex::decode("03774c910fcf07fa96886ea794f0d5caed9afe30b44b83f7e213bb92930e7df4bd").unwrap();
+            let evm_chain_code = hex::decode("3da4bc190a2680111d31fadfdc905f2a7f6ce77c6f109919116f253d43445219").unwrap();
+            let evm_path = CborValue::Array(vec![
+                CborValue::Unsigned(44),
+                CborValue::Bool(true),
+                CborValue::Unsigned(60),
+                CborValue::Bool(true),
+                CborValue::Unsigned(0),
+                CborValue::Bool(true),
+            ]);
+
+            let initial_cbor = encode_cbor(&CborValue::Map(vec![
+                (CborValue::Unsigned(3), CborValue::Bytes(evm_pubkey.clone())),
+                (CborValue::Unsigned(4), CborValue::Bytes(evm_chain_code.clone())),
+                (
+                    CborValue::Unsigned(6),
+                    CborValue::Tag(
+                        304,
+                        Box::new(CborValue::Map(vec![
+                            (CborValue::Unsigned(1), evm_path.clone()),
+                            (CborValue::Unsigned(2), CborValue::Unsigned(0x73c5_da0a)),
+                        ])),
+                    ),
+                ),
+            ]));
+            let initial_session = context.service.qr_pairing_session();
+            let initial_frame = UrEncoder::encode("crypto-hdkey", &initial_cbor, initial_cbor.len()).remove(0);
+            assert!(initial_session.receive_frame(initial_frame).unwrap().is_complete);
+            let wallet = context.service.import_qr_wallet(initial_session, "AirGap Vault".to_string()).await.unwrap().wallet();
+            assert_eq!(context.service.preferences.qr_signer_xfp(wallet.id.clone()), Some("73c5da0a".to_string()));
+
+            let no_xfp_cbor = encode_cbor(&CborValue::Map(vec![
+                (CborValue::Unsigned(3), CborValue::Bytes(evm_pubkey.clone())),
+                (CborValue::Unsigned(4), CborValue::Bytes(evm_chain_code.clone())),
+                (
+                    CborValue::Unsigned(6),
+                    CborValue::Tag(304, Box::new(CborValue::Map(vec![(CborValue::Unsigned(1), evm_path.clone())]))),
+                ),
+            ]));
+            let no_xfp_session = context.service.qr_pairing_session();
+            let no_xfp_frame = UrEncoder::encode("crypto-hdkey", &no_xfp_cbor, no_xfp_cbor.len()).remove(0);
+            assert!(no_xfp_session.receive_frame(no_xfp_frame).unwrap().is_complete);
+            let merged = context.service.import_qr_wallet(no_xfp_session, "AirGap Vault".to_string()).await.unwrap();
+            assert!(matches!(merged, GemWalletImportResult::Existing { .. }));
+            assert_eq!(context.service.preferences.qr_signer_xfp(wallet.id.clone()), Some("73c5da0a".to_string()));
+
+            let mismatched_cbor = encode_cbor(&CborValue::Map(vec![
+                (CborValue::Unsigned(3), CborValue::Bytes(evm_pubkey)),
+                (CborValue::Unsigned(4), CborValue::Bytes(evm_chain_code)),
+                (
+                    CborValue::Unsigned(6),
+                    CborValue::Tag(
+                        304,
+                        Box::new(CborValue::Map(vec![
+                            (CborValue::Unsigned(1), evm_path),
+                            (CborValue::Unsigned(2), CborValue::Unsigned(0xdead_beef)),
+                        ])),
+                    ),
+                ),
+            ]));
+            let mismatched_session = context.service.qr_pairing_session();
+            let mismatched_frame = UrEncoder::encode("crypto-hdkey", &mismatched_cbor, mismatched_cbor.len()).remove(0);
+            assert!(mismatched_session.receive_frame(mismatched_frame).unwrap().is_complete);
+            assert_eq!(
+                context.service.import_qr_wallet(mismatched_session, "AirGap Vault".to_string()).await.unwrap_err(),
+                GemServiceError::InvalidInput {
+                    msg: "QR code belongs to a different wallet (deadbeef vs 73c5da0a)".to_string(),
+                }
+            );
+            assert_eq!(context.service.preferences.qr_signer_xfp(wallet.id), Some("73c5da0a".to_string()));
+        });
+    }
+
+    #[test]
+    fn test_delete_qr_wallet_removes_its_hyperliquid_agent_key() {
+        block_on(async {
+            let context = WalletTestkit::new();
+            let evm_pubkey = hex::decode("03774c910fcf07fa96886ea794f0d5caed9afe30b44b83f7e213bb92930e7df4bd").unwrap();
+            let evm_chain_code = hex::decode("3da4bc190a2680111d31fadfdc905f2a7f6ce77c6f109919116f253d43445219").unwrap();
+            let evm_path = CborValue::Array(vec![
+                CborValue::Unsigned(44),
+                CborValue::Bool(true),
+                CborValue::Unsigned(60),
+                CborValue::Bool(true),
+                CborValue::Unsigned(0),
+                CborValue::Bool(true),
+            ]);
+            let cbor = encode_cbor(&CborValue::Map(vec![
+                (CborValue::Unsigned(3), CborValue::Bytes(evm_pubkey)),
+                (CborValue::Unsigned(4), CborValue::Bytes(evm_chain_code)),
+                (
+                    CborValue::Unsigned(6),
+                    CborValue::Tag(304, Box::new(CborValue::Map(vec![(CborValue::Unsigned(1), evm_path)]))),
+                ),
+            ]));
+            let session = context.service.qr_pairing_session();
+            let frame = UrEncoder::encode("crypto-hdkey", &cbor, cbor.len()).remove(0);
+            assert!(session.receive_frame(frame).unwrap().is_complete);
+            let wallet = context.service.import_qr_wallet(session, "AirGap Vault".to_string()).await.unwrap().wallet();
+            let hypercore_address = &wallet.account(Chain::HyperCore).unwrap().address;
+            let agent = Agent::new(Arc::new(SecureStoreWrapper { store: context.secure_store.clone() }));
+            agent.get_or_create_credentials(hypercore_address).unwrap();
+            assert_eq!(context.secure_store.values.lock().unwrap().len(), 2);
+
+            let deletion = context.service.delete_wallet(wallet.id).await.unwrap();
+
+            assert_eq!(deletion, GemWalletDeletion::LastWalletDeleted);
+            assert!(context.secure_store.values.lock().unwrap().is_empty());
         });
     }
 }

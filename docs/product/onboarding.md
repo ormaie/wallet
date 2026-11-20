@@ -1,6 +1,6 @@
 # Onboarding
 
-Getting a wallet into the app: create a new one, or import one with a Secret Phrase, a private key or an address.
+Getting a wallet into the app: create a new one, or import one with a Secret Phrase, a private key, an address or a QR cold wallet.
 
 ## Create wallet
 
@@ -48,6 +48,7 @@ The Import screen, top to bottom:
 | When | Expected | Why |
 |---|---|---|
 | The user picks Multi-Coin | it takes a Secret Phrase | |
+| The user picks Import QR Wallet | the scanner reads one or more sync QR codes from AirGap Vault or BitTool Signer, shows the editable wallet name and networks, and imports the wallet without storing a Secret Phrase or private key on the device | the keys stay on the offline signer |
 | The user picks a single network | it takes a Secret Phrase, a private key where the network supports one, or an address for a watch-only wallet | |
 | The user taps Paste | the copied text fills the input; a pasted Secret Phrase or private key is then cleared from the clipboard | a secret must not stay on the clipboard |
 | A private key is entered for Sui or Aptos | Sui takes `suiprivkey1…` (SIP-15) and Aptos `ed25519-priv-0x…` (AIP-80), and both still take bare hex | bare hex is what the app and older wallets exported before the standard formats |

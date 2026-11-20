@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">從另一個錢包轉入</string>
   <string name="wallet_portfolio_title">投資組合</string>
   <string name="wallet_import_already_imported_message">此錢包已匯入。</string>
+  <string name="wallet_import_qr_wallet">匯入 QR 冷錢包</string>
+  <string name="wallet_import_qr_description">掃描 AirGap Vault 或 BitTool Signer 的同步 QR Code</string>
+  <string name="wallet_scan_another_qr">繼續掃描其他 QR Code</string>
+  <string name="wallet_offline">離線</string>
   <string name="wallets_title">錢包</string>
   <string name="receive_warning">請僅向此地址傳送 %2$s 網路上的 %1$s。</string>
   <string name="buy_title">購買%1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">此裝置似乎具有 root 存取權限，這會顯著增加安全風險。在已取得 root 權限的裝置上使用此應用程式可能會使資產遭受未經授權的存取並可能造成損失。為了資金安全，我們強烈建議使用未取得 root 權限的裝置。</string>
   <string name="rootcheck_ignore">忽略</string>
   <string name="rootcheck_exit">退出</string>
+  <string name="qr_sign_title">QR 冷錢包簽名</string>
+  <string name="qr_sign_step">第 %1$d / %2$d 步</string>
+  <string name="qr_sign_instruction">請使用冷錢包掃描此 QR Code 以核對並簽名。</string>
+  <string name="qr_sign_scan_signature">掃描簽名 QR Code</string>
+  <string name="qr_sign_scan_instruction">請掃描冷錢包上顯示的簽名結果 QR Code。</string>
+  <string name="qr_sign_progress">已接收 %1$d / %2$d 幀</string>
 </resources>

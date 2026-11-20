@@ -29,6 +29,7 @@ import uniffi.gemstone.GemWalletSubtitle
 fun WalletsScreen(onAction: (WalletsAction.Navigation) -> Unit, onSelectWallet: () -> Unit, onBoard: () -> Unit) {
     val viewModel: WalletsViewModel = hiltViewModel()
     val sections by viewModel.sections.collectAsStateWithLifecycle()
+    val offlineWalletIds by viewModel.offlineWalletIds.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
     val snackbar = rememberSnackbarState(message = error, iconRes = R.drawable.ic_error, onShown = viewModel::clearError)
     val isSelected by viewModel.isSelected.collectAsStateWithLifecycle()
@@ -54,6 +55,7 @@ fun WalletsScreen(onAction: (WalletsAction.Navigation) -> Unit, onSelectWallet: 
 
     WalletsScene(
         sections = sections,
+        offlineWalletIds = offlineWalletIds,
         snackbar = snackbar,
         onAction = { action ->
             when (action) {

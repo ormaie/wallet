@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = З активів вашого гаманця
 wallet_transfer_from_another_wallet = Переказати з іншого гаманця
 wallet_portfolio_title = Портфоліо
 wallet_import_already_imported_message = Цей гаманець вже імпортовано.
+wallet_import_qr_wallet = Імпортувати QR-гаманець
+wallet_import_qr_description = Зіскануйте QR-код синхронізації з AirGap Vault або BitTool Signer
+wallet_scan_another_qr = Зісканувати інший QR
+wallet_offline = Офлайн
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Схоже, на вашому пристрої вик
 rootcheck_body = Схоже, ваш пристрій має root-доступ, що може значно збільшити ризики для безпеки. Використання цієї програми на пристрої з root-доступом може наражати ваші активи на несанкціонований доступ і потенційну втрату. Для безпеки ваших коштів ми наполегливо рекомендуємо використовувати пристрій без root-доступу.
 rootcheck_ignore = Ігнорувати
 rootcheck_exit = Вийти
+
+# QR
+
+qr_sign_title = Підписати за допомогою QR-коду
+qr_sign_step = Крок %d з %d
+qr_sign_instruction = Зіскануйте цей QR-код холодним гаманцем для перевірки та підпису.
+qr_sign_scan_signature = Зісканувати підпис
+qr_sign_scan_instruction = Зіскануйте QR-код підпису на екрані вашого холодного гаманця.
+qr_sign_progress = Отримано %d / %d частин

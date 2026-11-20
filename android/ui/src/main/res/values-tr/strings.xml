@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Başka bir cüzdandan aktar</string>
   <string name="wallet_portfolio_title">Portföy</string>
   <string name="wallet_import_already_imported_message">Bu cüzdan zaten içe aktarıldı.</string>
+  <string name="wallet_import_qr_wallet">QR Cüzdanı İçe Aktar</string>
+  <string name="wallet_import_qr_description">AirGap Vault veya BitTool Signer uygulamasından eşitleme QR kodunu tarayın</string>
+  <string name="wallet_scan_another_qr">Başka Bir QR Tara</string>
+  <string name="wallet_offline">Çevrimdışı</string>
   <string name="wallets_title">Cüzdanlar</string>
   <string name="receive_warning">Bu sizin adresiniz — yalnızca %1$s varlığını %2$s ağında gönderin.</string>
   <string name="buy_title">%1$s satın al</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Cihazınızın root erişimi var gibi görünüyor, bu da güvenlik risklerini önemli ölçüde artırabilir. Bu uygulamayı root\'lu bir cihazda kullanmak varlıklarınızı yetkisiz erişime ve olası kayba maruz bırakabilir. Fonlarınızın güvenliği için root\'suz bir cihaz kullanmanızı şiddetle öneririz.</string>
   <string name="rootcheck_ignore">Yoksay</string>
   <string name="rootcheck_exit">Çıkış</string>
+  <string name="qr_sign_title">QR Kod ile İmzala</string>
+  <string name="qr_sign_step">Adım %1$d / %2$d</string>
+  <string name="qr_sign_instruction">İncelemek ve imzalamak için bu QR kodu soğuk cüzdanınızla tarayın.</string>
+  <string name="qr_sign_scan_signature">İmzayı Tara</string>
+  <string name="qr_sign_scan_instruction">Soğuk cüzdanınızda gösterilen imza QR kodunu tarayın.</string>
+  <string name="qr_sign_progress">%1$d / %2$d parça alındı</string>
 </resources>

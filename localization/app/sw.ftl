@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Kutoka kwenye mali za pochi yako
 wallet_transfer_from_another_wallet = Hamisha kutoka pochi nyingine
 wallet_portfolio_title = Kwingineko
 wallet_import_already_imported_message = Pochi hii tayari imeingizwa.
+wallet_import_qr_wallet = Ingiza Pochi ya QR
+wallet_import_qr_description = Changanua msimbo wa QR wa kusawazisha kutoka AirGap Vault au BitTool Signer
+wallet_scan_another_qr = Changanua QR Nyingine
+wallet_offline = Nje ya mtandao
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Kifaa chako kinaonekana kimefanyiwa jailbreak. Hii in
 rootcheck_body = Kifaa chako kinaonekana kuwa na ufikiaji wa mizizi, ambayo inaweza kuongeza hatari za usalama kwa kiasi kikubwa. Kutumia programu hii kwenye kifaa kilichozinduliwa kunaweza kufichua mali yako kwa ufikiaji usioidhinishwa na uwezekano wa hasara. Kwa usalama wa pesa zako, tunapendekeza sana kutumia kifaa kisicho na mizizi.
 rootcheck_ignore = Puuza
 rootcheck_exit = Toka
+
+# QR
+
+qr_sign_title = Saini kwa Msimbo wa QR
+qr_sign_step = Hatua ya %d kati ya %d
+qr_sign_instruction = Changanua msimbo huu wa QR kwa pochi yako baridi ili kukagua na kusaini.
+qr_sign_scan_signature = Changanua Saini
+qr_sign_scan_instruction = Changanua msimbo wa QR wa saini unaoonyeshwa kwenye pochi yako baridi.
+qr_sign_progress = Imepokelewa sehemu %d / %d

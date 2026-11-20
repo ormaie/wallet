@@ -110,7 +110,7 @@ pub use swap::quote::GemSwapQuoteService;
 pub use swap::{GemSwapPair, GemSwapPairSuggestion, GemSwapService, GemSwapStore};
 pub use transaction_state::{GemPendingTransaction, GemTransactionStateService, GemTransactionStateStore, GemTransactionStatusService};
 pub use transactions::GemTransactionsService;
-pub use wallet::{GemKeystoreAuthentication, GemKeystorePassword, GemWalletImportResult, GemWalletImportType, GemWalletService, GemWalletStore};
+pub use wallet::{GemKeystoreAuthentication, GemKeystorePassword, GemQrPairingPreview, GemQrPairingSession, GemWalletImportResult, GemWalletImportType, GemWalletService, GemWalletStore};
 pub use wallet_configuration::GemWalletConfigurationService;
 pub use wallet_connect::{GemSessionProposal, GemWalletConnectResponse, GemWalletConnectService, GemWalletConnectSigner};
 pub use wallet_home::GemWalletHomeService;

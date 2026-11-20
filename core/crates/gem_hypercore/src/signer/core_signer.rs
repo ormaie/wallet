@@ -33,6 +33,257 @@ use crate::{
 
 type SignerResult<T> = Result<T, SignerError>;
 
+const ETHEREUM_RECOVERY_OFFSET: u8 = 27;
+const SIGNATURE_MIN_LEN: usize = 65;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HyperCoreSignStep {
+    Ready(String),
+    RequiresUserTypedData {
+        typed_data_json: String,
+        action_json: String,
+        timestamp: u64,
+    },
+}
+
+pub fn build_hypercore_sign_steps(input: &SignerInput) -> SignerResult<Vec<HyperCoreSignStep>> {
+    match &input.input_type {
+        TransactionInputType::Transfer { asset } => {
+            let amount = input_amount(input)?;
+            if asset.id.is_native() {
+                Ok(vec![build_send_asset_step(&amount, &input.destination_address, HYPERCORE_CORE_HYPE_TOKEN_ID)?])
+            } else {
+                let token_id = spot_token_id_for_asset_id(&asset.id).ok_or_else(|| SignerError::InvalidInput(format!("Invalid spot token ID: {}", asset.id)))?;
+                Ok(vec![build_send_asset_step(&amount, &input.destination_address, &token_id)?])
+            }
+        }
+        TransactionInputType::Deposit { asset } => {
+            if asset.id != HYPERCORE_SPOT_USDC.id {
+                return Err(SignerError::InvalidInput(format!("Unsupported HyperCore deposit asset: {}", asset.id)));
+            }
+            let decimals = HYPERCORE_PERPETUAL_USDC.decimals;
+            let value = &input.value / BigUint::from(10u32).pow(asset.decimals - decimals);
+            let amount = BigNumberFormatter::plain_value(&value, decimals).map_err(|err| SignerError::InvalidInput(err.to_string()))?;
+            let nonce = HyperCoreSigner::timestamp_ms();
+            Ok(vec![build_user_serialized_step(
+                UsdClassTransfer::new(amount, true, nonce),
+                nonce,
+                usd_class_transfer_typed_data,
+                "usd class transfer",
+            )?])
+        }
+        TransactionInputType::Withdrawal { asset } => {
+            let fee = BigUint::try_from(&input.fee.fee).map_err(|err| SignerError::InvalidInput(err.to_string()))?;
+            let amount = BigNumberFormatter::plain_value(&(&input.value + fee), asset.decimals).map_err(|err| SignerError::InvalidInput(err.to_string()))?;
+            let timestamp = HyperCoreSigner::timestamp_ms();
+            Ok(vec![build_user_serialized_step(
+                WithdrawalRequest::new(amount, timestamp, input.destination_address.clone()),
+                timestamp,
+                withdrawal_request_typed_data,
+                "withdrawal",
+            )?])
+        }
+        TransactionInputType::Swap { from_asset, to_asset, swap_data } => {
+            if is_spot_swap(from_asset.chain(), to_asset.chain()) {
+                let hl_order = input.metadata.get_hyperliquid_order()?;
+                let agent_key = Zeroizing::new(decode_hex(hl_order.agent_private_key.key()).map_err(|_| SignerError::InvalidInput("Invalid agent private key".to_string()))?);
+                let builder = get_builder(BUILDER_ADDRESS, hl_order.builder_fee_bps as i32).ok();
+
+                let mut order: PlaceOrder = serde_json::from_slice(swap_data.data.data.as_bytes())?;
+                order.builder = builder;
+
+                let mut timestamp_incrementer = NumberIncrementer::new(HyperCoreSigner::timestamp_ms());
+                let mut steps = build_approval_steps(hl_order, &input.sender_address, agent_key.as_slice(), &mut timestamp_incrementer)?;
+                steps.push(HyperCoreSignStep::Ready(
+                    HyperCoreSigner.sign_place_order(order, timestamp_incrementer.next_val(), agent_key.as_slice())?,
+                ));
+                return Ok(steps);
+            }
+
+            Ok(vec![build_typed_action_step(&swap_data.data.data)?])
+        }
+        TransactionInputType::Stake { stake_type, .. } => {
+            let mut nonce_incrementer = NumberIncrementer::new(HyperCoreSigner::timestamp_ms());
+            match stake_type {
+                StakeType::Stake(validator) => {
+                    let wei = BigNumberFormatter::value_as_u64(&input.value, 0).map_err(|err| SignerError::InvalidInput(err.to_string()))?;
+                    let deposit_nonce = nonce_incrementer.next_val();
+                    let deposit_step = build_user_serialized_step(CDeposit::new(wei, deposit_nonce), deposit_nonce, c_deposit_typed_data, "c deposit")?;
+                    let delegate_nonce = nonce_incrementer.next_val();
+                    let delegate_step = build_user_serialized_step(
+                        TokenDelegate::new(validator.id.clone(), wei, false, delegate_nonce),
+                        delegate_nonce,
+                        token_delegate_typed_data,
+                        "token delegate",
+                    )?;
+                    Ok(vec![deposit_step, delegate_step])
+                }
+                StakeType::Unstake(delegation) => {
+                    let wei = BigNumberFormatter::value_as_u64(&input.value, 0).map_err(|err| SignerError::InvalidInput(err.to_string()))?;
+                    let undelegate_nonce = nonce_incrementer.next_val();
+                    let undelegate_step = build_user_serialized_step(
+                        TokenDelegate::new(delegation.validator.id.clone(), wei, true, undelegate_nonce),
+                        undelegate_nonce,
+                        token_delegate_typed_data,
+                        "token delegate",
+                    )?;
+                    let withdraw_nonce = nonce_incrementer.next_val();
+                    let withdraw_step = build_user_serialized_step(CWithdraw::new(wei, withdraw_nonce), withdraw_nonce, c_withdraw_typed_data, "c withdraw")?;
+                    Ok(vec![undelegate_step, withdraw_step])
+                }
+                StakeType::Redelegate(_) | StakeType::Rewards(_) | StakeType::Withdraw(_) | StakeType::Freeze(_) | StakeType::Unfreeze(_) => {
+                    Err(SignerError::SigningError("Stake type not supported".to_string()))
+                }
+            }
+        }
+        TransactionInputType::Perpetual { perpetual_type, .. } => {
+            let order = input.metadata.get_hyperliquid_order()?;
+            let agent_key = Zeroizing::new(decode_hex(order.agent_private_key.key()).map_err(|_| SignerError::InvalidInput("Invalid agent private key".to_string()))?);
+            let builder = get_builder(BUILDER_ADDRESS, order.builder_fee_bps as i32).ok();
+            let mut timestamp_incrementer = NumberIncrementer::new(HyperCoreSigner::timestamp_ms());
+
+            let mut steps = build_approval_steps(order, &input.sender_address, agent_key.as_slice(), &mut timestamp_incrementer)?;
+            for signed in HyperCoreSigner.sign_market_message(perpetual_type, agent_key.as_slice(), builder.as_ref(), &mut timestamp_incrementer)? {
+                steps.push(HyperCoreSignStep::Ready(signed));
+            }
+            Ok(steps)
+        }
+        TransactionInputType::TransferNft { .. }
+        | TransactionInputType::TokenApprove { .. }
+        | TransactionInputType::Account { .. }
+        | TransactionInputType::Generic { .. }
+        | TransactionInputType::Payment { .. }
+        | TransactionInputType::Earn { .. } => Err(SignerError::SigningError("Unsupported HyperCore transaction input type".to_string())),
+    }
+}
+
+pub fn complete_hypercore_user_step(typed_data_json: &str, action_json: &str, timestamp: u64, signature_bytes: &[u8], expected_sender: &str) -> SignerResult<String> {
+    let expected = expected_sender.trim();
+    if expected.is_empty() {
+        return Err(SignerError::InvalidInput("Missing expected sender address".to_string()));
+    }
+    let normalized = normalize_hypercore_signature(signature_bytes)?;
+    let digest = hash_typed_data(typed_data_json).map_err(|err| SignerError::InvalidInput(format!("Failed to hash typed data: {err}")))?;
+    let recovered = Signer::recover_ethereum_address(&digest, &normalized)?;
+    if !recovered.eq_ignore_ascii_case(expected) {
+        return Err(SignerError::InvalidInput("HyperCore signature does not match sender address".to_string()));
+    }
+    HyperCoreSigner.build_signed_request(hex::encode(normalized), action_json, timestamp)
+}
+
+fn build_send_asset_step(amount: &str, destination: &str, token: &str) -> SignerResult<HyperCoreSignStep> {
+    let nonce = HyperCoreSigner::timestamp_ms();
+    let send_asset = SendAsset::spot(amount.to_string(), destination.to_string(), token.to_string(), nonce);
+    build_user_serialized_step(send_asset, nonce, send_asset_typed_data, "send asset")
+}
+
+fn build_approval_steps(
+    order: &HyperliquidOrder,
+    sender_address: &str,
+    agent_key: &[u8],
+    timestamp_incrementer: &mut NumberIncrementer,
+) -> SignerResult<Vec<HyperCoreSignStep>> {
+    let mut steps = Vec::new();
+
+    if order.approve_referral_required {
+        let timestamp = timestamp_incrementer.next_val();
+        steps.push(build_user_serialized_step(
+            SetReferrer::new(REFERRAL_CODE.to_string()),
+            timestamp,
+            |value| set_referrer_typed_data(value, timestamp),
+            "set referrer",
+        )?);
+    }
+    if order.approve_agent_required {
+        let timestamp = timestamp_incrementer.next_val();
+        steps.push(build_user_serialized_step(
+            ApproveAgent::new(order.agent_address.clone(), order.agent_name.clone(), timestamp),
+            timestamp,
+            approve_agent_typed_data,
+            "approve agent",
+        )?);
+    }
+    if order.approve_builder_required {
+        let timestamp = timestamp_incrementer.next_val();
+        steps.push(build_user_serialized_step(
+            ApproveBuilderFee::new(fee_rate(order.builder_fee_bps), BUILDER_ADDRESS.to_string(), timestamp),
+            timestamp,
+            approve_builder_fee_typed_data,
+            "approve builder fee",
+        )?);
+    }
+    if let Some(switch) = order.unified_account_switch {
+        let nonce = timestamp_incrementer.next_val();
+        match switch {
+            UnifiedAccountSwitch::Agent => {
+                steps.push(HyperCoreSignStep::Ready(HyperCoreSigner.sign_serialized_action(
+                    AgentSetAbstraction::unified_account(),
+                    nonce,
+                    agent_key,
+                    |value| agent_set_abstraction_typed_data(value, nonce),
+                    "agent set abstraction",
+                )?));
+            }
+            UnifiedAccountSwitch::User => {
+                steps.push(build_user_serialized_step(
+                    UserSetAbstraction::unified_account(sender_address, nonce),
+                    nonce,
+                    user_set_abstraction_typed_data,
+                    "user set abstraction",
+                )?);
+            }
+        }
+    }
+
+    Ok(steps)
+}
+
+fn build_typed_action_step(typed_data_json: &str) -> SignerResult<HyperCoreSignStep> {
+    let typed_data: Value = serde_json::from_slice(typed_data_json.as_bytes()).map_err(|err| SignerError::InvalidInput(format!("Invalid typed data JSON: {err}")))?;
+    let message = typed_data.get("message").ok_or_else(|| SignerError::InvalidInput("Typed data missing message field".to_string()))?;
+    let timestamp = serde_json::from_value::<TimestampField>(message.clone()).map_err(|err| SignerError::InvalidInput(format!("Failed to parse time or nonce: {err}")))?;
+    let action_json = serde_json::to_string(message).map_err(|err| SignerError::InvalidInput(format!("Failed to serialize action payload: {err}")))?;
+    Ok(HyperCoreSignStep::RequiresUserTypedData {
+        typed_data_json: typed_data_json.to_string(),
+        action_json,
+        timestamp: timestamp.value,
+    })
+}
+
+fn build_user_serialized_step<T, F>(value: T, timestamp: u64, typed_data_fn: F, action_name: &'static str) -> SignerResult<HyperCoreSignStep>
+where
+    T: Serialize,
+    F: FnOnce(T) -> Result<String, String>,
+{
+    let action_json = serde_json::to_string(&value).map_err(|err| SignerError::InvalidInput(format!("Failed to serialize {action_name} action: {err}")))?;
+    let typed_data_json = typed_data_fn(value).map_err(|err| SignerError::InvalidInput(format!("Failed to build {action_name} typed data: {err}")))?;
+    Ok(HyperCoreSignStep::RequiresUserTypedData {
+        typed_data_json,
+        action_json,
+        timestamp,
+    })
+}
+
+fn normalize_hypercore_signature(signature_bytes: &[u8]) -> SignerResult<[u8; SIGNATURE_MIN_LEN]> {
+    if signature_bytes.len() < SIGNATURE_MIN_LEN || signature_bytes.len() > SIGNATURE_MIN_LEN + 7 {
+        return Err(SignerError::InvalidInput("Invalid HyperCore signature length".to_string()));
+    }
+    let mut v_value = 0u64;
+    for byte in &signature_bytes[SIGNATURE_MIN_LEN - 1..] {
+        v_value = (v_value << 8) | (*byte as u64);
+    }
+    let recovery = match v_value {
+        0 | 1 => v_value as u8,
+        27 | 28 => (v_value - 27) as u8,
+        v if v >= 35 => ((v - 35) % 2) as u8,
+        _ => return Err(SignerError::InvalidInput("Invalid HyperCore signature recovery id".to_string())),
+    };
+    let mut normalized = [0u8; SIGNATURE_MIN_LEN];
+    normalized[..SIGNATURE_MIN_LEN - 1].copy_from_slice(&signature_bytes[..SIGNATURE_MIN_LEN - 1]);
+    normalized[SIGNATURE_MIN_LEN - 1] = recovery + ETHEREUM_RECOVERY_OFFSET;
+    Ok(normalized)
+}
+
 #[derive(Default)]
 pub struct HyperCoreSigner;
 
@@ -758,5 +1009,36 @@ mod tests {
 
         assert_eq!(signed["action"]["type"], "withdraw3");
         assert_eq!(signed["action"]["amount"], "2", "hyperliquid keeps 1 USDC of the signed amount, so the 1 USDC the confirm showed arrives");
+    }
+
+    #[test]
+    fn test_external_hypercore_user_step_matches_usd_class_transfer_fixture() {
+        let nonce = 1759100000000;
+        let step = build_user_serialized_step(
+            UsdClassTransfer::new("1.5".to_string(), true, nonce),
+            nonce,
+            usd_class_transfer_typed_data,
+            "usd class transfer",
+        )
+        .unwrap();
+        let HyperCoreSignStep::RequiresUserTypedData {
+            typed_data_json,
+            action_json,
+            timestamp,
+        } = step
+        else {
+            panic!("expected user typed data step");
+        };
+        let digest = hash_typed_data(&typed_data_json).unwrap();
+        let mut raw_sig = Signer::sign_ethereum_digest(&digest, &TEST_PRIVATE_KEY).unwrap();
+        raw_sig[64] -= ETHEREUM_RECOVERY_OFFSET;
+
+        let signed = complete_hypercore_user_step(&typed_data_json, &action_json, timestamp, &raw_sig, TEST_PRIVATE_KEY_ETHEREUM_ADDRESS).unwrap();
+        let expected: serde_json::Value = serde_json::from_str(include_str!("../../testdata/hl_action_usd_class_transfer.json")).unwrap();
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&signed).unwrap(), expected);
+        assert_eq!(
+            complete_hypercore_user_step(&typed_data_json, &action_json, timestamp, &raw_sig, "   "),
+            Err(SignerError::InvalidInput("Missing expected sender address".to_string()))
+        );
     }
 }

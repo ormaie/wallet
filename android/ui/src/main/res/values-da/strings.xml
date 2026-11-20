@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Overfør fra en anden wallet</string>
   <string name="wallet_portfolio_title">Portefølje</string>
   <string name="wallet_import_already_imported_message">Denne tegnebog er allerede blevet importeret.</string>
+  <string name="wallet_import_qr_wallet">Importer QR-wallet</string>
+  <string name="wallet_import_qr_description">Scan synkroniserings-QR-koden fra AirGap Vault eller BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Scan en anden QR-kode</string>
+  <string name="wallet_offline">Offline</string>
   <string name="wallets_title">Tegnebøger</string>
   <string name="receive_warning">Dette er din adresse — kun forsendelse %1$s på %2$s netværk.</string>
   <string name="buy_title">Køb %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Din enhed ser ud til at have root-adgang, hvilket kan øge sikkerhedsrisiciene betydeligt. Brug af denne app på en rootet enhed kan udsætte dine aktiver for uautoriseret adgang og potentielt tab. Af hensyn til dine penges sikkerhed anbefaler vi kraftigt at bruge en enhed, der ikke er rootet.</string>
   <string name="rootcheck_ignore">Ignorer</string>
   <string name="rootcheck_exit">Afslut</string>
+  <string name="qr_sign_title">Underskriv med QR-kode</string>
+  <string name="qr_sign_step">Trin %1$d af %2$d</string>
+  <string name="qr_sign_instruction">Scan denne QR-kode med din kolde wallet for at gennemgå og underskrive.</string>
+  <string name="qr_sign_scan_signature">Scan signatur</string>
+  <string name="qr_sign_scan_instruction">Scan signatur-QR-koden vist på din kolde wallet.</string>
+  <string name="qr_sign_progress">Modtaget %1$d / %2$d dele</string>
 </resources>

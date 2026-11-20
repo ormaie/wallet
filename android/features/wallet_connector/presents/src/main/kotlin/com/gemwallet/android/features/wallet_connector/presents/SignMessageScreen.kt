@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gemwallet.android.application.wallet_connect.WalletConnectPendingRequest
+import com.gemwallet.android.features.qr_scanner.presents.QrSignBottomSheet
 import com.gemwallet.android.features.wallet_connector.viewmodels.SignMessageViewModel
 import com.wallet.core.primitives.ChainAddress
 
@@ -13,6 +14,7 @@ fun SignMessageScreen(request: WalletConnectPendingRequest.SignMessage, onSigned
     val viewModel = hiltViewModel<SignMessageViewModel, SignMessageViewModel.Factory> { it.create(request) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val buttonState by viewModel.buttonState.collectAsStateWithLifecycle()
+    val qrSignState by viewModel.qrSignState.collectAsStateWithLifecycle()
 
     SignMessageScene(
         state = uiState,
@@ -24,4 +26,10 @@ fun SignMessageScreen(request: WalletConnectPendingRequest.SignMessage, onSigned
             is WalletConnectReviewAction.OpenAddress -> onOpenAddress(action.address)
         }
     }
+
+    QrSignBottomSheet(
+        state = qrSignState,
+        onScanFrame = viewModel::onQrSignFrame,
+        onDismiss = viewModel::dismissQrSign,
+    )
 }

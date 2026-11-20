@@ -6,6 +6,7 @@ use primitives::{AddressName, AssetId, ChainAddress, PaymentVerification, Perpet
 
 use super::error::GemConfirmErrorInfo;
 use super::header::{self, GemConfirmHeader};
+use super::qr::{GemQrSignSession, input_requires_qr_sign};
 use super::rules::{asset_pick_needs_reload, preload_simulation};
 use super::{
     ConfirmState, ConfirmSwapQuote, GemConfirmDetails, GemConfirmError, GemConfirmFeeLoad, GemConfirmFeeRow, GemConfirmInput, GemConfirmLoad, GemConfirmLoadOptions, GemConfirmRowContent, GemConfirmRowLink, GemConfirmScreen,
@@ -35,8 +36,13 @@ pub struct GemConfirmation {
 
 impl GemConfirmation {
     pub(super) fn new(service: Arc<GemConfirmTransferService>, wallet: Wallet, transfer: GemTransferData, simulation: Option<SimulationResult>) -> Self {
+        let authentication = if service.is_qr_signer(&wallet.id) {
+            GemKeystoreAuthentication::None
+        } else {
+            service.authentication()
+        };
         Self {
-            authentication: service.authentication(),
+            authentication,
             service,
             wallet,
             transfer: Mutex::new(transfer),
@@ -45,6 +51,31 @@ impl GemConfirmation {
             latest_load: AtomicU64::new(0),
             created_at: Instant::now(),
         }
+    }
+
+    fn build_send_input(&self) -> Result<SendInput, GemConfirmError> {
+        let Some(ConfirmState {
+            load: GemConfirmLoad { fee: Some(fee), .. },
+            confirm_data: Some(confirm_data),
+            swap,
+        }) = self.stored().clone()
+        else {
+            return Err(GemConfirmError::Load {
+                msg: "confirm input is not loaded".to_string(),
+            });
+        };
+        let amount = match fee.amount {
+            GemTransferAmountResult::Amount { amount } => amount,
+            GemTransferAmountResult::Error { error } => return Err(error),
+        };
+        Ok(SendInput {
+            wallet: self.wallet.clone(),
+            simulation: self.simulation.clone().or_else(|| confirm_data.simulation.clone()),
+            confirm: confirm_data,
+            value: amount.value,
+            network_fee: amount.network_fee,
+            swap_quote: swap.and_then(|swap| swap.quote),
+        })
     }
 
     fn stored(&self) -> MutexGuard<'_, Option<ConfirmState>> {
@@ -203,29 +234,27 @@ impl GemConfirmation {
         super::error::confirm_error_info(error, prices, self.service.get_currency(), transfer.input_asset().id, fee_asset_id)
     }
 
-    pub async fn submit(&self) -> Result<GemSubmitResult, GemConfirmError> {
-        let Some(ConfirmState {
-            load: GemConfirmLoad { fee: Some(fee), .. },
-            confirm_data: Some(confirm_data),
-            swap,
-        }) = self.stored().clone()
-        else {
+    pub fn requires_qr_sign(&self) -> bool {
+        if !self.service.is_qr_signer(&self.wallet.id) {
+            return false;
+        }
+        match self.build_send_input() {
+            Ok(input) => input_requires_qr_sign(&input),
+            Err(_) => true,
+        }
+    }
+
+    pub fn prepare_qr_sign(&self) -> Result<Arc<GemQrSignSession>, GemConfirmError> {
+        if !self.service.is_qr_signer(&self.wallet.id) {
             return Err(GemConfirmError::Load {
-                msg: "confirm input is not loaded".to_string(),
+                msg: "wallet is not a QR cold wallet".to_string(),
             });
-        };
-        let amount = match fee.amount {
-            GemTransferAmountResult::Amount { amount } => amount,
-            GemTransferAmountResult::Error { error } => return Err(error),
-        };
-        let input = SendInput {
-            wallet: self.wallet.clone(),
-            simulation: self.simulation.clone().or_else(|| confirm_data.simulation.clone()),
-            confirm: confirm_data,
-            value: amount.value,
-            network_fee: amount.network_fee,
-            swap_quote: swap.and_then(|swap| swap.quote),
-        };
+        }
+        GemQrSignSession::prepare(self.service.clone(), self.build_send_input()?)
+    }
+
+    pub async fn submit(&self) -> Result<GemSubmitResult, GemConfirmError> {
+        let input = self.build_send_input()?;
         Box::pin(self.service.submit(input)).await
     }
 

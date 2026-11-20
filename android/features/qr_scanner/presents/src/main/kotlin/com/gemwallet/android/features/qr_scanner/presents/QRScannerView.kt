@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -38,18 +40,20 @@ private val FINDER_CORNER_RADIUS = 25.dp
 private val FINDER_CORNER_LENGTH = 25.dp
 private val FINDER_STROKE_WIDTH = space4
 private const val FINDER_DIM_ALPHA = 0.33f
+private const val REPEAT_COOLDOWN_NS = 1_500_000_000L
 
 @ExperimentalGetImage
 @Composable
-fun QRScannerView(onCameraUnavailable: () -> Unit, listener: (String) -> Unit) {
+fun QRScannerView(onCameraUnavailable: () -> Unit, continuous: Boolean = false, listener: (String) -> Unit) {
     val localContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val currentListener by rememberUpdatedState(listener)
     val preview = remember { androidx.camera.core.Preview.Builder().build() }
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     DisposableEffect(Unit) {
         onDispose { analysisExecutor.shutdown() }
     }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(continuous) {
         try {
             val provider = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 androidx.camera.lifecycle.ProcessCameraProvider.getInstance(localContext).get()
@@ -72,9 +76,11 @@ fun QRScannerView(onCameraUnavailable: () -> Unit, listener: (String) -> Unit) {
                 .also { imageAnalysis ->
                     imageAnalysis.setAnalyzer(
                         analysisExecutor,
-                        QRCodeAnalyzer { text ->
-                            imageAnalysis.clearAnalyzer()
-                            mainExecutor.execute { listener(text) }
+                        QRCodeAnalyzer(continuous = continuous) { text ->
+                            if (!continuous) {
+                                imageAnalysis.clearAnalyzer()
+                            }
+                            mainExecutor.execute { currentListener(text) }
                         },
                     )
                 }
@@ -105,12 +111,23 @@ fun QRScannerView(onCameraUnavailable: () -> Unit, listener: (String) -> Unit) {
     }
 }
 
-private class QRCodeAnalyzer(val callback: (String) -> Unit) : androidx.camera.core.ImageAnalysis.Analyzer {
+private class QRCodeAnalyzer(private val continuous: Boolean, val callback: (String) -> Unit) : androidx.camera.core.ImageAnalysis.Analyzer {
+    private var lastDelivered: String? = null
+    private var lastDeliveredAtNs: Long = 0L
 
     override fun analyze(imageProxy: androidx.camera.core.ImageProxy) {
         imageProxy.use {
             val plane = it.planes.first()
-            QRImageDecoder.decode(plane.buffer.toByteArray(), plane.rowStride, it.width, it.height)?.let(callback)
+            val decoded = QRImageDecoder.decode(plane.buffer.toByteArray(), plane.rowStride, it.width, it.height) ?: return
+            if (continuous) {
+                val now = System.nanoTime()
+                if (decoded == lastDelivered && now - lastDeliveredAtNs < REPEAT_COOLDOWN_NS) {
+                    return
+                }
+                lastDelivered = decoded
+                lastDeliveredAtNs = now
+            }
+            callback(decoded)
         }
     }
 }

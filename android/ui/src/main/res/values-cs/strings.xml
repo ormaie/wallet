@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Převod z jiné peněženky</string>
   <string name="wallet_portfolio_title">Portfolio</string>
   <string name="wallet_import_already_imported_message">Tato peněženka již byla importována.</string>
+  <string name="wallet_import_qr_wallet">Importovat QR peněženku</string>
+  <string name="wallet_import_qr_description">Naskenujte synchronizační QR kód z AirGap Vault nebo BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Naskenovat další QR kód</string>
+  <string name="wallet_offline">Offline</string>
   <string name="wallets_title">Peněženky</string>
   <string name="receive_warning">Toto je vaše adresa – pouze pro odeslání %1$s na %2$s síť.</string>
   <string name="buy_title">Koupit %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Zdá se, že vaše zařízení má přístup root, což může výrazně zvýšit bezpečnostní rizika. Používání této aplikace na zakořeněném zařízení může vystavit váš majetek neoprávněnému přístupu a potenciální ztrátě. Pro bezpečnost vašich finančních prostředků důrazně doporučujeme používat nerootované zařízení.</string>
   <string name="rootcheck_ignore">Ignorovat</string>
   <string name="rootcheck_exit">Výstup</string>
+  <string name="qr_sign_title">Podepsat pomocí QR kódu</string>
+  <string name="qr_sign_step">Krok %1$d z %2$d</string>
+  <string name="qr_sign_instruction">Naskenujte tento QR kód svou offline peněženkou pro kontrolu a podpis.</string>
+  <string name="qr_sign_scan_signature">Naskenovat podpis</string>
+  <string name="qr_sign_scan_instruction">Naskenujte QR kód podpisu zobrazený na vaší offline peněžence.</string>
+  <string name="qr_sign_progress">Přijato %1$d / %2$d částí</string>
 </resources>

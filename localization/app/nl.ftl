@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Vanuit je wallet-assets
 wallet_transfer_from_another_wallet = Overzetten vanuit een andere wallet
 wallet_portfolio_title = Portefeuille
 wallet_import_already_imported_message = Deze portemonnee is al geïmporteerd.
+wallet_import_qr_wallet = QR-wallet importeren
+wallet_import_qr_description = Scan de synchronisatie-QR-code van AirGap Vault of BitTool Signer
+wallet_scan_another_qr = Nog een QR scannen
+wallet_offline = Offline
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Uw apparaat lijkt gejailbreakt te zijn. Dit kan uw po
 rootcheck_body = Het lijkt erop dat uw apparaat root-toegang heeft, wat de beveiligingsrisico's aanzienlijk kan vergroten. Als u deze app op een geroot apparaat gebruikt, kunnen uw bezittingen worden blootgesteld aan ongeoorloofde toegang en mogelijk verlies. Voor de veiligheid van uw geld raden wij u ten zeerste aan een niet-geroot apparaat te gebruiken.
 rootcheck_ignore = Negeer
 rootcheck_exit = Afsluiten
+
+# QR
+
+qr_sign_title = Ondertekenen met QR-code
+qr_sign_step = Stap %d van %d
+qr_sign_instruction = Scan deze QR-code met je cold wallet om te controleren en te ondertekenen.
+qr_sign_scan_signature = Handtekening scannen
+qr_sign_scan_instruction = Scan de handtekening-QR-code op je cold wallet.
+qr_sign_progress = %d / %d delen ontvangen

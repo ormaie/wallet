@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Transferă din alt portofel</string>
   <string name="wallet_portfolio_title">Portofoliu</string>
   <string name="wallet_import_already_imported_message">Acest portofel a fost deja importat.</string>
+  <string name="wallet_import_qr_wallet">Importă portofel QR</string>
+  <string name="wallet_import_qr_description">Scanează codul QR de sincronizare din AirGap Vault sau BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Scanează alt cod QR</string>
+  <string name="wallet_offline">Offline</string>
   <string name="wallets_title">Portofele</string>
   <string name="receive_warning">Aceasta este adresa dvs. — trimiteți doar %1$s în rețeaua %2$s.</string>
   <string name="buy_title">Cumpără %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Dispozitivul dvs. pare să aibă acces root, ceea ce poate crește semnificativ riscurile de securitate. Utilizarea acestei aplicații pe un dispozitiv cu acces root poate expune activele dvs. la acces neautorizat și la o potențială pierdere. Pentru siguranța fondurilor dvs., vă recomandăm insistent să utilizați un dispozitiv care nu este rootat.</string>
   <string name="rootcheck_ignore">Ignoră</string>
   <string name="rootcheck_exit">Ieșire</string>
+  <string name="qr_sign_title">Semnează cu cod QR</string>
+  <string name="qr_sign_step">Pasul %1$d din %2$d</string>
+  <string name="qr_sign_instruction">Scanează acest cod QR cu portofelul tău rece pentru a verifica și semna.</string>
+  <string name="qr_sign_scan_signature">Scanează semnătura</string>
+  <string name="qr_sign_scan_instruction">Scanează codul QR al semnăturii afișat pe portofelul tău rece.</string>
+  <string name="qr_sign_progress">Primite %1$d / %2$d părți</string>
 </resources>

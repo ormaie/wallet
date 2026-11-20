@@ -16,16 +16,25 @@ sealed interface ImportWalletRoute : NavKey {
     data object MulticoinWallet : ImportWalletRoute
 
     @Serializable
+    data object QrWallet : ImportWalletRoute
+
+    @Serializable
     data class ChainWallet(val kind: GemWalletImportKind, val chain: Chain) : ImportWalletRoute
 }
 
-fun EntryProviderScope<NavKey>.importWalletScreen(onCancel: () -> Unit, onImported: () -> Unit, onSelectType: (ImportType) -> Unit) {
+fun EntryProviderScope<NavKey>.importWalletScreen(onCancel: () -> Unit, onImported: () -> Unit, onSelectType: (ImportType) -> Unit, onSelectQrWallet: () -> Unit = {}) {
     entry<ImportWalletTypeRoute> {
-        ImportWalletTypeScreen(onClose = onCancel, onSelect = onSelectType)
+        ImportWalletTypeScreen(onClose = onCancel, onSelect = onSelectType, onSelectQrWallet = onSelectQrWallet)
     }
     entry<ImportWalletRoute.MulticoinWallet> {
         ImportWalletScreen(
             importType = ImportType(GemWalletImportKind.PHRASE),
+            onCancel = onCancel,
+            onImported = onImported,
+        )
+    }
+    entry<ImportWalletRoute.QrWallet> {
+        ImportQrWalletScreen(
             onCancel = onCancel,
             onImported = onImported,
         )

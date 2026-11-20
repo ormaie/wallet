@@ -24,6 +24,7 @@ import com.gemwallet.android.ui.localization.broadcastLabel
 import com.gemwallet.android.ui.localization.label
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.models.ButtonState
+import com.gemwallet.android.ui.models.QrSignSheetState
 import com.gemwallet.android.ui.models.ToastMessage
 import com.gemwallet.android.ui.models.ToastPresenter
 import com.gemwallet.android.ui.models.buttonState
@@ -73,6 +74,9 @@ import uniffi.gemstone.GemInfoAction
 import uniffi.gemstone.GemKeystoreAuthentication
 import uniffi.gemstone.GemListRow
 import uniffi.gemstone.GemNetworkFeeScreen
+import uniffi.gemstone.GemQrSignOutcome
+import uniffi.gemstone.GemQrSignSession
+import uniffi.gemstone.GemQrSignStep
 import uniffi.gemstone.GemRefreshKind
 import uniffi.gemstone.GemSubmitResult
 import uniffi.gemstone.GemTransferData
@@ -266,6 +270,10 @@ class ConfirmTransferViewModel @Inject constructor(
     private val executeError = MutableStateFlow<String?>(null)
     val executeErrorText: StateFlow<String?> = executeError.asStateFlow()
 
+    private var activeQrSignSession: GemQrSignSession? = null
+    private val _qrSignState = MutableStateFlow<QrSignSheetState?>(null)
+    val qrSignState: StateFlow<QrSignSheetState?> = _qrSignState.asStateFlow()
+
     val buttonLabel: StateFlow<String> = button.map { it.kind.label(context) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, context.getString(R.string.transfer_confirm))
 
@@ -309,28 +317,98 @@ class ConfirmTransferViewModel @Inject constructor(
         val session = confirmation.value ?: return@launch
 
         try {
-            val result = withContext(ioDispatcher) { session.submit() }
-            val message = when (result) {
-                is GemSubmitResult.Signed -> result.message
-                is GemSubmitResult.Sent -> result.message
+            if (withContext(ioDispatcher) { session.requiresQrSign() }) {
+                val qrSession = withContext(ioDispatcher) { session.prepareQrSign() }
+                val step = withContext(ioDispatcher) { qrSession.currentStep() }
+                    ?: throw GemConfirmException.Broadcast(msg = "QR signing step unavailable")
+                activeQrSignSession = qrSession
+                _qrSignState.value = step.toSheetState()
+                return@launch
             }
-            message?.let { toastPresenter.emitToast(ToastMessage(it.text(context), it.iconRes())) }
-            _sentTransactionHash.value = checkNotNull(result.transactionId())
+            val result = withContext(ioDispatcher) { session.submit() }
+            completeSubmit(result)
         } catch (error: CancellationException) {
             throw error
         } catch (_: GemConfirmException.Cancelled) {
             screen.update { it.onExecuteCancelled() }
         } catch (error: Throwable) {
-            val confirmError = error.toConfirmError()
-            screen.update { it.onExecuteFailed(confirmError) }
-            executeError.value = confirmError.broadcastLabel(context)
+            failExecute(error)
         }
+    }
+
+    fun onQrSignFrame(payload: String) = viewModelScope.launch {
+        val qrSession = activeQrSignSession ?: return@launch
+        val outcome = try {
+            withContext(ioDispatcher) { qrSession.receiveFrame(payload) }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            val confirmError = error.toConfirmError()
+            _qrSignState.update { it?.copy(errorMessage = confirmError.broadcastLabel(context)) }
+            return@launch
+        }
+
+        when (outcome) {
+            is GemQrSignOutcome.Progress -> {
+                _qrSignState.update {
+                    it?.copy(
+                        receivedParts = outcome.received.toInt(),
+                        expectedParts = outcome.expected.toInt(),
+                        errorMessage = null,
+                    )
+                }
+            }
+            is GemQrSignOutcome.NextStep -> {
+                _qrSignState.value = outcome.step.toSheetState()
+            }
+            GemQrSignOutcome.ReadyToSubmit -> {
+                activeQrSignSession = null
+                _qrSignState.value = null
+                try {
+                    val result = withContext(ioDispatcher) { qrSession.submit() }
+                    completeSubmit(result)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: GemConfirmException.Cancelled) {
+                    screen.update { it.onExecuteCancelled() }
+                } catch (error: Throwable) {
+                    failExecute(error)
+                }
+            }
+        }
+    }
+
+    fun dismissQrSign() {
+        activeQrSignSession = null
+        _qrSignState.value = null
+        cancelExecute()
+    }
+
+    private fun completeSubmit(result: GemSubmitResult) {
+        val message = when (result) {
+            is GemSubmitResult.Signed -> result.message
+            is GemSubmitResult.Sent -> result.message
+        }
+        message?.let { toastPresenter.emitToast(ToastMessage(it.text(context), it.iconRes())) }
+        _sentTransactionHash.value = checkNotNull(result.transactionId())
+    }
+
+    private fun failExecute(error: Throwable) {
+        val confirmError = error.toConfirmError()
+        screen.update { it.onExecuteFailed(confirmError) }
+        executeError.value = confirmError.broadcastLabel(context)
     }
 
     fun onSentHandled() {
         _sentTransactionHash.value = null
     }
 }
+
+private fun GemQrSignStep.toSheetState() = QrSignSheetState(
+    urFrames = urFrames,
+    stepIndex = stepIndex.toInt(),
+    totalSteps = totalSteps.toInt(),
+)
 
 private val loadingButton = GemConfirmButton(GemConfirmButtonKind.CONFIRM, GemButtonState.LOADING, GemKeystoreAuthentication.NONE)
 

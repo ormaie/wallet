@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">从另一个钱包转入</string>
   <string name="wallet_portfolio_title">投资组合</string>
   <string name="wallet_import_already_imported_message">此钱包已导入。</string>
+  <string name="wallet_import_qr_wallet">导入二维码冷钱包</string>
+  <string name="wallet_import_qr_description">扫描 AirGap Vault 或 BitTool Signer 的同步二维码</string>
+  <string name="wallet_scan_another_qr">继续扫描其他二维码</string>
+  <string name="wallet_offline">离线</string>
   <string name="wallets_title">钱包</string>
   <string name="receive_warning">请仅向此地址发送 %2$s 网络上的 %1$s。</string>
   <string name="buy_title">购买%1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">检测到设备已获取 root 权限，可能显著增加安全风险。在已 root 的设备上使用此应用可能导致资产遭到未经授权的访问并造成损失。为保障资金安全，强烈建议使用非 root 设备。</string>
   <string name="rootcheck_ignore">忽略</string>
   <string name="rootcheck_exit">退出</string>
+  <string name="qr_sign_title">二维码冷钱包签名</string>
+  <string name="qr_sign_step">第 %1$d / %2$d 步</string>
+  <string name="qr_sign_instruction">请使用冷钱包扫描此二维码以核对并签名。</string>
+  <string name="qr_sign_scan_signature">扫描签名二维码</string>
+  <string name="qr_sign_scan_instruction">请扫描冷钱包上显示的签名结果二维码。</string>
+  <string name="qr_sign_progress">已接收 %1$d / %2$d 帧</string>
 </resources>

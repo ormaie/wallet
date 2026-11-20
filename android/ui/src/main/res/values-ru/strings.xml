@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Переведите из другого кошелька</string>
   <string name="wallet_portfolio_title">Портфель</string>
   <string name="wallet_import_already_imported_message">Этот кошелек уже импортирован.</string>
+  <string name="wallet_import_qr_wallet">Импорт QR-кошелька</string>
+  <string name="wallet_import_qr_description">Отсканируйте QR-код синхронизации из AirGap Vault или BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Сканировать другой QR</string>
+  <string name="wallet_offline">Офлайн</string>
   <string name="wallets_title">Кошельки</string>
   <string name="receive_warning">Это ваш адрес — отправляйте только %1$s в сети %2$s.</string>
   <string name="buy_title">Купить %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Похоже, что у вашего устройства есть root-доступ, что может значительно повысить риски безопасности. Использование этого приложения на root-устройстве может подвергнуть ваши активы несанкционированному доступу и потенциальной потере. Для безопасности ваших средств мы настоятельно рекомендуем использовать не root-устройство.</string>
   <string name="rootcheck_ignore">Игнорировать</string>
   <string name="rootcheck_exit">Выход</string>
+  <string name="qr_sign_title">Подписать через QR-код</string>
+  <string name="qr_sign_step">Шаг %1$d из %2$d</string>
+  <string name="qr_sign_instruction">Отсканируйте этот QR-код холодным кошельком для проверки и подписи.</string>
+  <string name="qr_sign_scan_signature">Сканировать подпись</string>
+  <string name="qr_sign_scan_instruction">Отсканируйте QR-код подписи на экране холодного кошелька.</string>
+  <string name="qr_sign_progress">Получено %1$d / %2$d частей</string>
 </resources>

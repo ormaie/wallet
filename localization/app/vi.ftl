@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Từ tài sản trong ví của bạn
 wallet_transfer_from_another_wallet = Chuyển từ ví khác
 wallet_portfolio_title = Danh mục đầu tư
 wallet_import_already_imported_message = Ví này đã được nhập khẩu.
+wallet_import_qr_wallet = Nhập ví QR
+wallet_import_qr_description = Quét mã QR đồng bộ từ AirGap Vault hoặc BitTool Signer
+wallet_scan_another_qr = Quét mã QR khác
+wallet_offline = Ngoại tuyến
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Thiết bị của bạn có vẻ đã bị jailbreak
 rootcheck_body = Thiết bị của bạn có vẻ như có quyền truy cập gốc, điều này có thể làm tăng đáng kể rủi ro bảo mật. Sử dụng ứng dụng này trên thiết bị đã root có thể khiến tài sản của bạn bị truy cập trái phép và có khả năng mất mát. Để đảm bảo an toàn cho tiền của bạn, chúng tôi đặc biệt khuyên bạn nên sử dụng thiết bị không root.
 rootcheck_ignore = Bỏ qua
 rootcheck_exit = Thoát
+
+# QR
+
+qr_sign_title = Ký bằng mã QR
+qr_sign_step = Bước %d / %d
+qr_sign_instruction = Quét mã QR này bằng ví lạnh của bạn để kiểm tra và ký.
+qr_sign_scan_signature = Quét chữ ký
+qr_sign_scan_instruction = Quét mã QR chữ ký hiển thị trên ví lạnh của bạn.
+qr_sign_progress = Đã nhận %d / %d phần

@@ -17,7 +17,7 @@ pub(crate) struct WalletConnectRequest {
     pub(crate) transaction: WalletConnectTransaction,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub(crate) struct WalletConnectTransaction {
     #[serde(skip_serializing_if = "Option::is_none")]
     raw_data: Option<Value>,

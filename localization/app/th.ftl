@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = จากสินทรัพย์ในก�
 wallet_transfer_from_another_wallet = โอนจากกระเป๋าอื่น
 wallet_portfolio_title = พอร์ตโฟลิโอ
 wallet_import_already_imported_message = กระเป๋าสตางค์ใบนี้ถูกนำเข้าแล้ว
+wallet_import_qr_wallet = นำเข้ากระเป๋าเงิน QR
+wallet_import_qr_description = สแกนคิวอาร์โค้ดซิงค์จาก AirGap Vault หรือ BitTool Signer
+wallet_scan_another_qr = สแกน QR อื่นเพิ่มเติม
+wallet_offline = ออฟไลน์
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = อุปกรณ์ของคุณดูเห�
 rootcheck_body = อุปกรณ์ของคุณดูเหมือนจะมีสิทธิ์เข้าถึงรูท ซึ่งอาจเพิ่มความเสี่ยงด้านความปลอดภัยได้อย่างมาก การใช้แอปนี้บนอุปกรณ์ที่รูทแล้วอาจทำให้ทรัพย์สินของคุณถูกเข้าถึงโดยไม่ได้รับอนุญาตและอาจสูญหายได้ เพื่อความปลอดภัยของเงินของคุณ เราขอแนะนำอย่างยิ่งให้ใช้อุปกรณ์ที่ไม่ได้รับการรูท
 rootcheck_ignore = ไม่สนใจ
 rootcheck_exit = ออก
+
+# QR
+
+qr_sign_title = ลงนามด้วยคิวอาร์โค้ด
+qr_sign_step = ขั้นตอนที่ %d จาก %d
+qr_sign_instruction = สแกนคิวอาร์โค้ดนี้ด้วยกระเป๋าเงินออฟไลน์ของคุณเพื่อตรวจสอบและลงนาม
+qr_sign_scan_signature = สแกนลายเซ็น
+qr_sign_scan_instruction = สแกนคิวอาร์โค้ดลายเซ็นที่แสดงบนกระเป๋าเงินออฟไลน์ของคุณ
+qr_sign_progress = ได้รับแล้ว %d / %d ส่วน

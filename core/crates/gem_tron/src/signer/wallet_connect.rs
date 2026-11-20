@@ -24,10 +24,23 @@ impl WalletConnectPayload {
         self.transaction.validate().map(|(hash, _)| hash)
     }
 
+    pub(crate) fn validated_raw_data(&self) -> Result<([u8; 32], Vec<u8>), SignerError> {
+        let (transaction_hash, decoded) = self.transaction.validate()?;
+        let encoded = match &self.transaction.raw_data_hex {
+            Some(raw_data) => raw_data.clone(),
+            None => decoded.encode()?,
+        };
+        Ok((transaction_hash, encoded))
+    }
+
     pub(crate) fn into_output(self, transaction_hash: [u8; 32], signature_hex: String) -> Result<String, SignerError> {
+        self.encode_output(transaction_hash, signature_hex)
+    }
+
+    pub(crate) fn encode_output(&self, transaction_hash: [u8; 32], signature_hex: String) -> Result<String, SignerError> {
         match self.output_type {
             TransferDataOutputType::Signature => Ok(signature_hex),
-            TransferDataOutputType::EncodedTransaction => self.transaction.into_signed_json(hex::encode(transaction_hash), signature_hex),
+            TransferDataOutputType::EncodedTransaction => self.transaction.clone().into_signed_json(hex::encode(transaction_hash), signature_hex),
         }
     }
 }

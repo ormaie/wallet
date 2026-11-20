@@ -17,6 +17,7 @@ import uniffi.gemstone.GemLocalizedText
 import uniffi.gemstone.GemTransactionHeader
 
 internal fun GemConfirmation.stubViewState(): GemConfirmation = apply {
+    every { requiresQrSign() } returns false
     every { viewState(any()) } answers {
         val screen = firstArg<GemConfirmScreen>()
         GemConfirmViewState(

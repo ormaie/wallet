@@ -116,6 +116,10 @@ wallet_from_your_wallet_assets = Fra dine wallet-aktiver
 wallet_transfer_from_another_wallet = Overfør fra en anden wallet
 wallet_portfolio_title = Portefølje
 wallet_import_already_imported_message = Denne tegnebog er allerede blevet importeret.
+wallet_import_qr_wallet = Importer QR-wallet
+wallet_import_qr_description = Scan synkroniserings-QR-koden fra AirGap Vault eller BitTool Signer
+wallet_scan_another_qr = Scan en anden QR-kode
+wallet_offline = Offline
 
 # Wallets
 
@@ -815,3 +819,12 @@ rootcheck_jailbreak_body = Din enhed ser ud til at være jailbroken. Det kan bri
 rootcheck_body = Din enhed ser ud til at have root-adgang, hvilket kan øge sikkerhedsrisiciene betydeligt. Brug af denne app på en rootet enhed kan udsætte dine aktiver for uautoriseret adgang og potentielt tab. Af hensyn til dine penges sikkerhed anbefaler vi kraftigt at bruge en enhed, der ikke er rootet.
 rootcheck_ignore = Ignorer
 rootcheck_exit = Afslut
+
+# QR
+
+qr_sign_title = Underskriv med QR-kode
+qr_sign_step = Trin %d af %d
+qr_sign_instruction = Scan denne QR-kode med din kolde wallet for at gennemgå og underskrive.
+qr_sign_scan_signature = Scan signatur
+qr_sign_scan_instruction = Scan signatur-QR-koden vist på din kolde wallet.
+qr_sign_progress = Modtaget %d / %d dele

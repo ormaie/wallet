@@ -107,6 +107,10 @@
   <string name="wallet_transfer_from_another_wallet">Trasferisci da un altro portafoglio</string>
   <string name="wallet_portfolio_title">Portafoglio</string>
   <string name="wallet_import_already_imported_message">Questo portafoglio è già stato importato.</string>
+  <string name="wallet_import_qr_wallet">Importa portafoglio QR</string>
+  <string name="wallet_import_qr_description">Scansiona il codice QR di sincronizzazione da AirGap Vault o BitTool Signer</string>
+  <string name="wallet_scan_another_qr">Scansiona un altro QR</string>
+  <string name="wallet_offline">Offline</string>
   <string name="wallets_title">Portafogli</string>
   <string name="receive_warning">Questo è il tuo indirizzo: invia solo %1$s sulla rete %2$s.</string>
   <string name="buy_title">Acquista %1$s</string>
@@ -642,4 +646,10 @@
   <string name="rootcheck_body">Il tuo dispositivo sembra avere accesso root, il che può aumentare significativamente i rischi per la sicurezza. L\'utilizzo di questa app su un dispositivo rooted potrebbe esporre i tuoi asset ad accessi non autorizzati e potenziali perdite. Per la sicurezza dei tuoi fondi, ti consigliamo vivamente di utilizzare un dispositivo non rooted.</string>
   <string name="rootcheck_ignore">Ignora</string>
   <string name="rootcheck_exit">Esci</string>
+  <string name="qr_sign_title">Firma con codice QR</string>
+  <string name="qr_sign_step">Passaggio %1$d di %2$d</string>
+  <string name="qr_sign_instruction">Scansiona questo codice QR con il tuo cold wallet per verificare e firmare.</string>
+  <string name="qr_sign_scan_signature">Scansiona firma</string>
+  <string name="qr_sign_scan_instruction">Scansiona il codice QR della firma mostrato sul tuo cold wallet.</string>
+  <string name="qr_sign_progress">Ricevute %1$d / %2$d parti</string>
 </resources>

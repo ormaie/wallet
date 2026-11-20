@@ -302,6 +302,7 @@ fun WalletNavGraph(
                 onCancel = onCancel,
                 onImported = onWalletReady,
                 onSelectType = navigator::openImportWallet,
+                onSelectQrWallet = navigator::openImportQrWallet,
             )
 
             enableAuthenticationScreen(

@@ -19,6 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,13 +60,30 @@ private val HINT_HORIZONTAL_PADDING = paddingLarge
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
 @Composable
-fun QRScannerScene(scanType: QRScanType, isCameraGranted: Boolean, permissionAction: EmptyAction, onCancel: () -> Unit, titleContent: @Composable () -> Unit = { QRScannerTitle() }, onResult: (String) -> Unit) {
+fun QRScannerScene(
+    scanType: QRScanType,
+    isCameraGranted: Boolean,
+    permissionAction: EmptyAction,
+    onCancel: () -> Unit,
+    titleContent: @Composable () -> Unit = { QRScannerTitle() },
+    continuous: Boolean = false,
+    hintText: String? = null,
+    progressText: String? = null,
+    errorMessage: String? = null,
+    onResult: (String) -> Unit,
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
     val decodingError = stringResource(id = R.string.errors_decoding_qr)
     var toastMessage by remember { mutableStateOf<String?>(null) }
     var isCameraUnavailable by remember { mutableStateOf(false) }
+    LaunchedEffect(errorMessage) {
+        if (!errorMessage.isNullOrEmpty()) {
+            haptic.performHapticFeedback(HapticFeedbackType.Reject)
+            toastMessage = errorMessage
+        }
+    }
     val snackbar = rememberSnackbarState(
         message = toastMessage,
         iconRes = R.drawable.ic_error,
@@ -141,8 +159,8 @@ fun QRScannerScene(scanType: QRScanType, isCameraGranted: Boolean, permissionAct
             )
 
             else -> Box(modifier = Modifier.fillMaxSize()) {
-                QRScannerView(onCameraUnavailable = { isCameraUnavailable = true }, listener = onResult)
-                ScannerHint(hint = stringResource(id = scanType.stringRes()))
+                QRScannerView(onCameraUnavailable = { isCameraUnavailable = true }, continuous = continuous, listener = onResult)
+                ScannerHint(hint = progressText ?: hintText ?: stringResource(id = scanType.stringRes()))
             }
         }
     }
