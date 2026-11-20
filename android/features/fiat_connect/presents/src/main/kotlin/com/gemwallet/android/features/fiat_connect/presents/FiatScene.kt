@@ -128,6 +128,7 @@ internal fun FiatScene(
             trailing = {
                 FiatSuggestionRow(
                     suggestedAmounts = suggestedAmounts,
+                    selectedAmount = amount.text.toString(),
                     onLotSelect = { onAction(FiatAction.SelectAmount(it)) },
                 )
             },
@@ -189,11 +190,17 @@ internal fun FiatScene(
 }
 
 @Composable
-private fun FiatSuggestionRow(suggestedAmounts: List<GemFiatSuggestedAmount>, onLotSelect: (GemFiatSuggestedAmount) -> Unit) {
+private fun FiatSuggestionRow(suggestedAmounts: List<GemFiatSuggestedAmount>, selectedAmount: String, onLotSelect: (GemFiatSuggestedAmount) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(paddingSmall),
     ) {
-        suggestedAmounts.forEach { suggestion -> LotButton(suggestion, onLotSelect) }
+        suggestedAmounts.forEach { suggestion ->
+            LotButton(
+                fiatSuggestion = suggestion,
+                isSelected = selectedAmount == suggestion.amount.toString(),
+                onLotClick = onLotSelect,
+            )
+        }
     }
 }

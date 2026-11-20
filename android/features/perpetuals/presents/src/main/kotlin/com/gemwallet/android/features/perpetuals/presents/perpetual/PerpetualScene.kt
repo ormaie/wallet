@@ -1,5 +1,6 @@
 package com.gemwallet.android.features.perpetuals.presents.perpetual
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -15,7 +16,6 @@ import com.gemwallet.android.features.perpetuals.presents.components.positionPro
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.LoadOnListEnd
 import com.gemwallet.android.ui.components.chart.CandleChartSection
-import com.gemwallet.android.ui.components.clickable
 import com.gemwallet.android.ui.components.list_item.AssetListItem
 import com.gemwallet.android.ui.components.list_item.DaySectionedList
 import com.gemwallet.android.ui.components.list_item.GemListRowView

@@ -61,7 +61,7 @@ fun ContactEditorScene(state: ContactEditorUIState, snackbar: SnackbarHostState?
                     ContactAvatar(
                         image = state.avatar,
                         size = extraLargeIconSize,
-                        modifier = Modifier.clickable { onAction(ContactEditorAction.SelectAvatar) },
+                        onClick = { onAction(ContactEditorAction.SelectAvatar) },
                         onRemove = if (state.hasAvatar) {
                             { onAction(ContactEditorAction.RemoveAvatar) }
                         } else {

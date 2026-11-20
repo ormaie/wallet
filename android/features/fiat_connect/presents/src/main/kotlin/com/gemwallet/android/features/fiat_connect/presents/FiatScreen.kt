@@ -1,6 +1,8 @@
 package com.gemwallet.android.features.fiat_connect.presents
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -30,7 +32,6 @@ import com.gemwallet.android.ui.ObserveStartedState
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.InfoBottomSheet
 import com.gemwallet.android.ui.components.TabsBar
-import com.gemwallet.android.ui.components.clickable
 import com.gemwallet.android.ui.components.infoSheet
 import com.gemwallet.android.ui.components.screen.LoadingScene
 import com.gemwallet.android.ui.components.screen.showSnackbar
@@ -40,7 +41,6 @@ import com.gemwallet.android.ui.localization.titleRes
 import com.gemwallet.android.ui.models.actions.CancelAction
 import com.gemwallet.android.ui.theme.iconSize
 import com.gemwallet.android.ui.theme.paddingSmall
-import com.gemwallet.android.ui.theme.space6
 import com.wallet.core.primitives.Asset
 import com.wallet.core.primitives.FiatQuoteType
 import kotlinx.coroutines.launch
@@ -125,20 +125,29 @@ private fun FiatTitle(asset: Asset, type: FiatQuoteType, showsTypePicker: Boolea
 }
 
 @Composable
-fun LotButton(fiatSuggestion: GemFiatSuggestedAmount, onLotClick: (GemFiatSuggestedAmount) -> Unit) {
+fun LotButton(fiatSuggestion: GemFiatSuggestedAmount, isSelected: Boolean = false, onLotClick: (GemFiatSuggestedAmount) -> Unit) {
+    val containerColor by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
+        label = "lot_container",
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+        label = "lot_content",
+    )
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(paddingSmall))
+            .background(containerColor)
             .clickable { onLotClick(fiatSuggestion) }
             .testTag("fiat_preset_${fiatSuggestion.amount}")
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             .heightIn(min = iconSize)
-            .padding(horizontal = space6),
+            .padding(horizontal = paddingSmall),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = fiatSuggestion.value.text(),
-            color = MaterialTheme.colorScheme.onSurface,
+            color = contentColor,
+            maxLines = 1,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.W500),
         )
     }

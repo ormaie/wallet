@@ -15,71 +15,89 @@ import com.gemwallet.android.ui.format.rowDateFormatter
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.models.ChartUIState
 import com.gemwallet.android.ui.models.StateViewType
-import com.gemwallet.android.ui.models.dataOrNull
 import com.wallet.core.primitives.ChartPeriod
 import uniffi.gemstone.GemChartData
+import uniffi.gemstone.GemChartHeader
 import uniffi.gemstone.GemChartPhase
 import java.time.ZoneId
 
 @Composable
 fun ChartSection(state: ChartUIState, onPeriodSelect: (ChartPeriod) -> Unit, onZoom: (Float, Float) -> Unit, onPan: (Float) -> Unit) {
     val context = LocalContext.current
-    val lineState: StateViewType<GemChartData> = when (val phase = state.phase) {
+    val dateFormatter = remember(context) { context.rowDateFormatter() }
+    val viewState: StateViewType<GemChartPhase> = when (val phase = state.phase) {
         GemChartPhase.Loading -> StateViewType.Loading
-
-        is GemChartPhase.Data -> StateViewType.Data(phase.data)
-
-        is GemChartPhase.Candles -> return CandleChartSection(
-            state = StateViewType.Data(phase.chart),
-            period = state.period,
-            onPeriodSelect = onPeriodSelect,
-            onZoom = onZoom,
-            onPan = onPan,
-            periods = state.periods,
-        )
-
+        is GemChartPhase.Data -> StateViewType.Data(phase)
+        is GemChartPhase.Candles -> StateViewType.Data(phase)
         GemChartPhase.NoData -> StateViewType.NoData
-
         is GemChartPhase.Failed -> StateViewType.Error(phase.error.errorText().text(context))
     }
-    LineChartSection(lineState, state.period, onPeriodSelect, onZoom, onPan, state.periods)
-}
 
-@Composable
-private fun LineChartSection(state: StateViewType<GemChartData>, period: ChartPeriod, onPeriodSelect: (ChartPeriod) -> Unit, onZoom: (Float, Float) -> Unit, onPan: (Float) -> Unit, periods: List<ChartPeriod>) {
-    key(period) {
-        var selectedIndex by remember { mutableStateOf<Int?>(null) }
-        val context = LocalContext.current
-        val dateFormatter = remember(context) { context.rowDateFormatter() }
+    val isCandles = state.phase is GemChartPhase.Candles
+    var selectedIndex by remember(state.period, isCandles) { mutableStateOf<Int?>(null) }
+    val locale = LocalConfiguration.current.locales[0]
+    val zoneId = ZoneId.systemDefault()
 
-        val chart = state.dataOrNull
-        val selection = remember(chart, selectedIndex) { selectedIndex?.let { chart?.selection(it) } }
-        val date = chart?.let { data -> selection?.let { dateFormatter.chartDate(it.date, data.dateStyle, ZoneId.systemDefault(), LocalConfiguration.current.locales[0]) } }
+    val header: GemChartHeader?
+    val headerDate: String?
+    when (val phase = state.phase) {
+        is GemChartPhase.Data -> {
+            val safeIndex = selectedIndex?.takeIf { it in phase.data.values.indices }
+            val selection = remember(phase.data, safeIndex) { safeIndex?.let { phase.data.selection(it) } }
+            header = selection?.header ?: phase.data.header
+            headerDate = selection?.let { dateFormatter.chartDate(it.date, phase.data.dateStyle, zoneId, locale) }
+        }
 
-        ChartStateView(
-            state = state,
-            header = selection?.header ?: chart?.header,
-            date = date,
-            period = period,
-            onPeriodSelect = onPeriodSelect,
-            periods = periods,
-        ) { model ->
-            val points = remember(model) { model.linePoints() }
-            val minLabel = remember(model) { model.bounds.low.text() }
-            val maxLabel = remember(model) { model.bounds.high.text() }
-            GemLineChart(
-                points = points,
-                bounds = model.bounds,
-                isZoomed = model.isZoomed,
-                lineColor = MaterialTheme.colorScheme.primary,
-                indexAt = { fraction -> model.indexAt(fraction.toDouble()) },
+        is GemChartPhase.Candles -> {
+            val safeIndex = selectedIndex?.takeIf { it in phase.chart.candles.indices }
+            val selection = remember(phase.chart, safeIndex) { safeIndex?.let { phase.chart.selection(it) } }
+            header = selection?.header ?: phase.chart.header
+            headerDate = selection?.let { dateFormatter.chartDate(it.date, phase.chart.dateStyle, zoneId, locale) }
+        }
+
+        else -> {
+            header = null
+            headerDate = null
+        }
+    }
+
+    ChartStateView(
+        state = viewState,
+        header = header,
+        date = headerDate,
+        period = state.period,
+        onPeriodSelect = onPeriodSelect,
+        periods = state.periods,
+    ) { phase ->
+        when (phase) {
+            is GemChartPhase.Data -> key(state.period) {
+                val points = remember(phase.data) { phase.data.linePoints() }
+                val minLabel = remember(phase.data) { phase.data.bounds.low.text() }
+                val maxLabel = remember(phase.data) { phase.data.bounds.high.text() }
+                GemLineChart(
+                    points = points,
+                    bounds = phase.data.bounds,
+                    isZoomed = phase.data.isZoomed,
+                    lineColor = MaterialTheme.colorScheme.primary,
+                    indexAt = { fraction -> phase.data.indexAt(fraction.toDouble()) },
+                    selectedIndex = selectedIndex?.takeIf { it in phase.data.values.indices },
+                    onSelectionChanged = { selectedIndex = it },
+                    onZoom = onZoom,
+                    onPan = onPan,
+                    minLabel = minLabel,
+                    maxLabel = maxLabel,
+                )
+            }
+
+            is GemChartPhase.Candles -> CandleChartBody(
+                chart = phase.chart,
                 selectedIndex = selectedIndex,
                 onSelectionChanged = { selectedIndex = it },
                 onZoom = onZoom,
                 onPan = onPan,
-                minLabel = minLabel,
-                maxLabel = maxLabel,
             )
+
+            else -> Unit
         }
     }
 }

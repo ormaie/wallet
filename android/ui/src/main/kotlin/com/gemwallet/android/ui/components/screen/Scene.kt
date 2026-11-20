@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,6 +71,7 @@ fun Scene(
     },
     mainActionWidth: MainActionWidth = MainActionWidth.Constrained,
     snackbar: SnackbarHostState? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
     content: @Composable ColumnScope.(PaddingValues) -> Unit,
 ) {
     Scene(
@@ -83,6 +85,7 @@ fun Scene(
         mainActionPadding = mainActionPadding,
         mainActionWidth = mainActionWidth,
         snackbar = snackbar,
+        containerColor = containerColor,
         content = content,
     )
 }
@@ -110,19 +113,22 @@ fun Scene(
     mainActionWidth: MainActionWidth = MainActionWidth.Constrained,
     snackbar: SnackbarHostState? = null,
     progress: (() -> Float)? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
     content: @Composable ColumnScope.(PaddingValues) -> Unit,
 ) {
     BackHandler(backHandle) {
         onClose?.invoke()
     }
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = containerColor,
+        contentColor = MaterialTheme.colorScheme.onSurface,
         topBar = {
             Box(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 CenterAlignedTopAppBar(
                     title = titleContent,
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = containerColor),
                     navigationIcon = {
                         if (onClose != null) {
                             IconButton(onClick = onClose) {
@@ -158,7 +164,7 @@ fun Scene(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surface),
+                            .background(containerColor),
                         contentAlignment = Alignment.Center,
                     ) {
                         Box(

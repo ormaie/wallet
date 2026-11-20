@@ -351,10 +351,11 @@ fun GemPriceAlertToggle.symbol(): ListItemSymbol = when (this) {
     GemPriceAlertToggle.DISABLED -> ListItemSymbol.NotificationsOutlined
 }
 
-fun GemSecurityReminderItem.emoji(): String = when (this) {
-    is GemSecurityReminderItem.KeepSafe -> Emoji.lock
-    is GemSecurityReminderItem.DoNotShare -> Emoji.warning
-    is GemSecurityReminderItem.NoRecovery -> Emoji.gem
+@Composable
+fun GemSecurityReminderItem.accentColor(): Color = when (this) {
+    is GemSecurityReminderItem.KeepSafe -> MaterialTheme.colorScheme.primary
+    is GemSecurityReminderItem.DoNotShare -> pendingColor
+    is GemSecurityReminderItem.NoRecovery -> MaterialTheme.colorScheme.error
 }
 
 @Composable

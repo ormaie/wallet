@@ -1,5 +1,6 @@
 package com.gemwallet.android.features.perpetuals.presents.perpetuals
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.TextFieldState
@@ -23,7 +24,6 @@ import com.gemwallet.android.features.perpetuals.viewmodels.models.PerpetualPosi
 import com.gemwallet.android.model.text
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.SearchBar
-import com.gemwallet.android.ui.components.clickable
 import com.gemwallet.android.ui.components.empty.EmptyContentView
 import com.gemwallet.android.ui.components.list_head.AssetHeadActions
 import com.gemwallet.android.ui.components.list_head.ValueListHead

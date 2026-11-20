@@ -126,9 +126,8 @@ internal fun SupportMessageBubble(row: GemSupportMessageRow, onImageClick: (Stri
                     Surface(
                         color = bubbleColor,
                         shape = RoundedCornerShape(messageBubbleCornerRadius),
-                        modifier = contentModifier,
                     ) {
-                        Column {
+                        Column(modifier = contentModifier) {
                             if (hasText) {
                                 MessageText(
                                     text = row.content.text,

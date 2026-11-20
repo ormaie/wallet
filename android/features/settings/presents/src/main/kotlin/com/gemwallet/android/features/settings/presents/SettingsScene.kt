@@ -3,6 +3,7 @@
 package com.gemwallet.android.features.settings.presents
 
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +17,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import com.gemwallet.android.features.settings.viewmodels.models.settingsAction
 import com.gemwallet.android.ui.R
-import com.gemwallet.android.ui.components.clickable
 import com.gemwallet.android.ui.components.list_item.GemListRowView
 import com.gemwallet.android.ui.components.list_item.rows
 import com.gemwallet.android.ui.components.screen.Scene
@@ -42,7 +42,7 @@ fun SettingsScene(sections: List<GemGroup>, onAction: (SettingsAction) -> Unit, 
                     GemListRowView(
                         row = row,
                         listPosition = ListPosition.getPosition(index, section.rows.size),
-                        modifier = Modifier.clickable { action?.let(onAction) },
+                        modifier = if (action != null) Modifier.clickable { onAction(action) } else Modifier,
                     )
                 }
             }

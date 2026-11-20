@@ -2,12 +2,15 @@ package com.gemwallet.android.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -15,6 +18,8 @@ import com.gemwallet.android.AppUrl
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.open
 import com.gemwallet.android.ui.theme.Spacer8
+import com.gemwallet.android.ui.theme.paddingHalfSmall
+import com.gemwallet.android.ui.theme.space2
 import uniffi.gemstone.DocsUrl
 
 @Composable
@@ -30,9 +35,12 @@ fun RootWarningDialog(onCancel: () -> Unit, onIgnore: () -> Unit) {
                 Text(text = stringResource(R.string.rootcheck_body))
                 Spacer8()
                 Text(
-                    modifier = Modifier.clickable {
-                        uriHandler.open(context, AppUrl.docs(DocsUrl.RootedDevice))
-                    },
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(paddingHalfSmall))
+                        .clickable {
+                            uriHandler.open(context, AppUrl.docs(DocsUrl.RootedDevice))
+                        }
+                        .padding(horizontal = paddingHalfSmall, vertical = space2),
                     text = stringResource(R.string.common_learn_more),
                     color = MaterialTheme.colorScheme.primary,
                 )

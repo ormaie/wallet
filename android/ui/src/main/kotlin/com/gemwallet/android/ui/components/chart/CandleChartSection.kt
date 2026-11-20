@@ -32,13 +32,10 @@ fun CandleChartSection(state: StateViewType<GemCandleChart>, period: ChartPeriod
     val data = chart?.candles.orEmpty()
     var selectedIndex by remember(period) { mutableStateOf<Int?>(null) }
     val safeSelectedIndex = selectedIndex?.takeIf { it in data.indices }
-    val isSelectedRightHalf = chart != null && safeSelectedIndex != null && (data[safeSelectedIndex].date - chart.start) * 2 > chart.end - chart.start
-
     val selection = remember(chart, safeSelectedIndex) { safeSelectedIndex?.let { chart?.selection(it) } }
     val context = LocalContext.current
     val dateFormatter = remember(context) { context.rowDateFormatter() }
     val headerDate = chart?.let { data -> selection?.let { dateFormatter.chartDate(it.date, data.dateStyle, ZoneId.systemDefault(), LocalConfiguration.current.locales[0]) } }
-    val tooltip = remember(chart, safeSelectedIndex) { safeSelectedIndex?.let { chart?.tooltip(it) } }
 
     ChartStateView(
         state = state,
@@ -48,22 +45,41 @@ fun CandleChartSection(state: StateViewType<GemCandleChart>, period: ChartPeriod
         onPeriodSelect = onPeriodSelect,
         periods = periods,
         modifier = modifier,
-    ) { _ ->
-        if (chart != null) {
-            GemCandlestickChart(
-                chart = chart,
-                selectedIndex = safeSelectedIndex,
-                onSelectionChanged = { selectedIndex = it },
-                onZoom = onZoom,
-                onPan = onPan,
-            )
-            TooltipOverlay(
-                visible = tooltip != null,
-                tooltip = tooltip,
-                alignToStart = isSelectedRightHalf,
-            )
-        }
+    ) { model ->
+        CandleChartBody(
+            chart = model,
+            selectedIndex = safeSelectedIndex,
+            onSelectionChanged = { selectedIndex = it },
+            onZoom = onZoom,
+            onPan = onPan,
+        )
     }
+}
+
+@Composable
+internal fun BoxScope.CandleChartBody(
+    chart: GemCandleChart,
+    selectedIndex: Int?,
+    onSelectionChanged: (Int?) -> Unit,
+    onZoom: (Float, Float) -> Unit,
+    onPan: (Float) -> Unit,
+) {
+    val safeSelectedIndex = selectedIndex?.takeIf { it in chart.candles.indices }
+    val isSelectedRightHalf = safeSelectedIndex != null && (chart.candles[safeSelectedIndex].date - chart.start) * 2 > chart.end - chart.start
+    val tooltip = remember(chart, safeSelectedIndex) { safeSelectedIndex?.let { chart.tooltip(it) } }
+
+    GemCandlestickChart(
+        chart = chart,
+        selectedIndex = safeSelectedIndex,
+        onSelectionChanged = onSelectionChanged,
+        onZoom = onZoom,
+        onPan = onPan,
+    )
+    TooltipOverlay(
+        visible = tooltip != null,
+        tooltip = tooltip,
+        alignToStart = isSelectedRightHalf,
+    )
 }
 
 @Composable

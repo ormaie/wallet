@@ -1,5 +1,6 @@
 package com.gemwallet.android.features.perpetuals.presents
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -12,7 +13,6 @@ import com.gemwallet.android.domains.balance.hiddenWhen
 import com.gemwallet.android.features.perpetuals.viewmodels.PerpetualsPreviewViewModel
 import com.gemwallet.android.model.text
 import com.gemwallet.android.ui.R
-import com.gemwallet.android.ui.components.clickable
 import com.gemwallet.android.ui.components.list_item.AssetListItem
 import com.gemwallet.android.ui.components.list_item.ListItem
 import com.gemwallet.android.ui.components.list_item.ListItemModel

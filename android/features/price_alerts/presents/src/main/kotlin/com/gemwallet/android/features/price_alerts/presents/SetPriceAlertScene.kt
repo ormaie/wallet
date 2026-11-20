@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -39,7 +40,6 @@ import com.gemwallet.android.ext.toPrimitives
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.TabsBar
 import com.gemwallet.android.ui.components.buttons.MainActionButton
-import com.gemwallet.android.ui.components.clickable
 import com.gemwallet.android.ui.components.fields.AmountInputTransformation
 import com.gemwallet.android.ui.components.fields.requestFocusIfAttached
 import com.gemwallet.android.ui.components.list_item.AssetListItem
@@ -152,29 +152,33 @@ internal fun SetPriceAlertScene(
                     Box(Modifier.weight(1f)) {
                         val directionButton = input.directionButton
                         if (directionButton != null) {
-                            Icon(
-                                modifier = Modifier.align(Alignment.CenterEnd).clickable {
+                            IconButton(
+                                modifier = Modifier.align(Alignment.CenterEnd),
+                                onClick = {
                                     val direction = when (direction) {
                                         PriceAlertDirection.Up -> PriceAlertDirection.Down
                                         PriceAlertDirection.Down -> PriceAlertDirection.Up
                                     }
                                     onAction(SetPriceAlertAction.SelectDirection(direction))
                                 },
-                                imageVector = when (directionButton) {
-                                    uniffi.gemstone.PriceAlertDirection.UP -> AppIcons.ArrowCircleUp
-                                    uniffi.gemstone.PriceAlertDirection.DOWN -> AppIcons.ArrowCircleDown
-                                },
-                                contentDescription = stringResource(
-                                    when (directionButton) {
-                                        uniffi.gemstone.PriceAlertDirection.UP -> R.string.price_alerts_direction_increases_by
-                                        uniffi.gemstone.PriceAlertDirection.DOWN -> R.string.price_alerts_direction_decreases_by
+                            ) {
+                                Icon(
+                                    imageVector = when (directionButton) {
+                                        uniffi.gemstone.PriceAlertDirection.UP -> AppIcons.ArrowCircleUp
+                                        uniffi.gemstone.PriceAlertDirection.DOWN -> AppIcons.ArrowCircleDown
                                     },
-                                ),
-                                tint = when (directionButton) {
-                                    uniffi.gemstone.PriceAlertDirection.UP -> MaterialTheme.colorScheme.tertiary
-                                    uniffi.gemstone.PriceAlertDirection.DOWN -> MaterialTheme.colorScheme.error
-                                },
-                            )
+                                    contentDescription = stringResource(
+                                        when (directionButton) {
+                                            uniffi.gemstone.PriceAlertDirection.UP -> R.string.price_alerts_direction_increases_by
+                                            uniffi.gemstone.PriceAlertDirection.DOWN -> R.string.price_alerts_direction_decreases_by
+                                        },
+                                    ),
+                                    tint = when (directionButton) {
+                                        uniffi.gemstone.PriceAlertDirection.UP -> MaterialTheme.colorScheme.tertiary
+                                        uniffi.gemstone.PriceAlertDirection.DOWN -> MaterialTheme.colorScheme.error
+                                    },
+                                )
+                            }
                         } else if (input.placement == GemAmountSymbolPlacement.LEADING) {
                             Text(
                                 modifier = Modifier.align(Alignment.CenterEnd),
