@@ -106,12 +106,12 @@ impl GemStakeService {
         }
     }
 
-    pub async fn refresh(&self, chain: Chain, delegations: Vec<Delegation>) -> GemLoadState {
-        GemLoadState::refreshed(self.sync(chain).await, !delegations.is_empty())
+    pub async fn refresh(&self, chain: Chain) -> GemLoadState {
+        GemLoadState::of(&self.sync(chain).await)
     }
 
-    pub async fn refresh_earn(&self, asset_id: AssetId, has_rows: bool) -> GemLoadState {
-        GemLoadState::refreshed(self.sync_earn(asset_id).await, has_rows)
+    pub async fn refresh_earn(&self, asset_id: AssetId) -> GemLoadState {
+        GemLoadState::of(&self.sync_earn(asset_id).await)
     }
 
     pub fn earn_view(&self, input: GemEarnInput) -> GemEarnView {
@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[test]
-    fn test_delegations_on_inactive_validators_become_inactive() {
+    fn test_only_active_delegations_on_inactive_validators_become_inactive() {
         let validators: HashMap<_, _> = [(
             "v".to_string(),
             DelegationValidator {
@@ -275,9 +275,25 @@ mod tests {
             },
         )]
         .into();
-        let delegations = delegations_with_state(vec![DelegationBase::mock_with_validator("v"), DelegationBase::mock_with_validator("other")], &validators);
-        assert_eq!(delegations[0].state, DelegationState::Inactive);
-        assert_eq!(delegations[1].state, DelegationState::Active);
+        let delegations = delegations_with_state(
+            vec![
+                DelegationBase::mock_with_validator("v"),
+                DelegationBase {
+                    state: DelegationState::Pending,
+                    ..DelegationBase::mock_with_validator("v")
+                },
+                DelegationBase {
+                    state: DelegationState::AwaitingWithdrawal,
+                    ..DelegationBase::mock_with_validator("v")
+                },
+                DelegationBase::mock_with_validator("other"),
+            ],
+            &validators,
+        );
+        assert_eq!(
+            delegations.iter().map(|delegation| delegation.state).collect::<Vec<_>>(),
+            vec![DelegationState::Inactive, DelegationState::Pending, DelegationState::AwaitingWithdrawal, DelegationState::Active]
+        );
     }
 
     #[test]

@@ -71,13 +71,11 @@ import com.gemwallet.android.ui.style.icon
 import com.gemwallet.android.ui.theme.paddingDefault
 import com.wallet.core.primitives.AssetId
 import com.wallet.core.primitives.ChainAddress
-import uniffi.gemstone.GemConfirmAction
 import uniffi.gemstone.GemConfirmDetails
 import uniffi.gemstone.GemConfirmRowContent
 import uniffi.gemstone.GemConfirmRowLink
 import uniffi.gemstone.GemConfirmSection
 import uniffi.gemstone.GemInfoTopic
-import uniffi.gemstone.GemKeystoreAuthentication
 import uniffi.gemstone.SimulationResult
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -171,24 +169,7 @@ fun ConfirmTransferScreen(
                 state = buttonState,
                 icon = button.icon.icon(),
                 onClick = {
-                    when (viewModel.action()) {
-                        GemConfirmAction.EXECUTE -> when (button.icon) {
-                            GemKeystoreAuthentication.NONE -> {
-                                viewModel.startExecute()
-                                viewModel.submit()
-                            }
-                            GemKeystoreAuthentication.BIOMETRICS,
-                            GemKeystoreAuthentication.PASSCODE,
-                            -> {
-                                viewModel.startExecute()
-                                context.requestAuth(AuthRequest.Confirmation, onCancel = viewModel::cancelExecute, onSuccess = viewModel::submit)
-                            }
-                        }
-
-                        GemConfirmAction.LOAD -> viewModel.load()
-
-                        null -> Unit
-                    }
+                    viewModel.confirm { onCancel, onSuccess -> context.requestAuth(AuthRequest.Confirmation, onCancel, onSuccess) }
                 },
             )
         },

@@ -8,6 +8,7 @@ import com.gemwallet.android.application.wallet_connect.ActiveWalletConnectReque
 import com.gemwallet.android.application.wallet_connect.cases.ApproveWalletConnectAuthentication
 import com.gemwallet.android.ext.errorText
 import com.gemwallet.android.ext.listItem
+import com.gemwallet.android.ext.requireChain
 import com.gemwallet.android.ext.runCatchingCancellable
 import com.gemwallet.android.ext.toGem
 import com.gemwallet.android.ext.toPrimitives
@@ -18,7 +19,6 @@ import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.models.ButtonState
 import com.gemwallet.android.ui.models.QrSignSheetState
 import com.gemwallet.android.ui.models.buttonState
-import com.wallet.core.primitives.Account
 import com.wallet.core.primitives.Chain
 import com.wallet.core.primitives.Wallet
 import com.wallet.core.primitives.WalletId
@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import uniffi.gemstone.GemAuthenticationPreview
 import uniffi.gemstone.GemConnectionRow
 import uniffi.gemstone.GemGroup
 import uniffi.gemstone.GemListRow
@@ -45,12 +46,9 @@ import uniffi.gemstone.GemWalletConnectAuthentication
 import uniffi.gemstone.GemWalletConnectException
 import uniffi.gemstone.GemWalletConnectServiceInterface
 import uniffi.gemstone.GemWalletSection
-import uniffi.gemstone.SignDigestType
-import uniffi.gemstone.SignMessage
 import uniffi.gemstone.WalletConnectionSessionProposal
 import uniffi.gemstone.WalletConnectionVerificationStatus
 import uniffi.gemstone.applicationConnectionRow
-import uniffi.gemstone.authenticationSections
 import uniffi.gemstone.walletSections
 import javax.inject.Inject
 
@@ -111,7 +109,7 @@ class AuthRequestViewModel @Inject constructor(
         val wallet = current.availableWallets.firstOrNull { it.id == walletId } ?: return
         val request = phase.value.request ?: return
         val approval = runCatching {
-            buildApproval(request, wallet)
+            approval(request, current.proposal, wallet, current.verificationStatus)
         }.getOrElse { err ->
             _state.update { AuthRequestUIState.Error(err.errorText().text(context)) }
             return
@@ -119,7 +117,6 @@ class AuthRequestViewModel @Inject constructor(
 
         _state.update {
             current.copy(
-                sections = reviewSections(current.proposal, wallet, approval, current.verificationStatus),
                 selectedWallet = wallet,
                 approval = approval,
             )
@@ -136,9 +133,10 @@ class AuthRequestViewModel @Inject constructor(
         _state.update { AuthRequestUIState.Approving(current) }
 
         viewModelScope.launch(ioDispatcher) {
+            val message = approval.preview.message
             if (signMessageService.requiresQrSign(approval.wallet.id.id)) {
                 val prepared = runCatchingCancellable {
-                    val session = signMessageService.prepareQrSign(approval.wallet.toGem(), approval.signMessage)
+                    val session = signMessageService.prepareQrSign(approval.wallet.toGem(), message)
                     session to session.urFrames()
                 }.getOrElse { err ->
                     if (phase.compareAndSet(AuthRequestPhase.Signing(request), AuthRequestPhase.Waiting(request))) {
@@ -150,7 +148,7 @@ class AuthRequestViewModel @Inject constructor(
                 _qrSignState.value = QrSignSheetState(urFrames = prepared.second)
                 return@launch
             }
-            val signature = runCatchingCancellable { signMessageService.sign(approval.wallet.id.id, approval.signMessage) }.getOrElse { err ->
+            val signature = runCatchingCancellable { signMessageService.sign(approval.wallet.id.id, message) }.getOrElse { err ->
                 if (phase.compareAndSet(AuthRequestPhase.Signing(request), AuthRequestPhase.Waiting(request))) {
                     _state.update { AuthRequestUIState.Error(err.errorText().text(context)) }
                 }
@@ -267,11 +265,10 @@ class AuthRequestViewModel @Inject constructor(
         )
         val selectedWallet = prepared.proposal.defaultWallet.toPrimitives()
         val availableWallets = prepared.proposal.wallets.map { it.toPrimitives() }
-        val approval = buildApproval(request, selectedWallet)
+        val approval = approval(request, prepared.proposal, selectedWallet, prepared.verificationStatus)
         return AuthRequestUIState.Request(
             texts = ReviewTexts(context),
             peer = applicationConnectionRow(prepared.proposal.metadata),
-            sections = reviewSections(prepared.proposal, selectedWallet, approval, prepared.verificationStatus),
             proposal = prepared.proposal,
             verificationStatus = prepared.verificationStatus,
             availableWallets = availableWallets,
@@ -281,38 +278,10 @@ class AuthRequestViewModel @Inject constructor(
         )
     }
 
-    private fun reviewSections(proposal: WalletConnectionSessionProposal, wallet: Wallet, approval: AuthApproval, status: WalletConnectionVerificationStatus): List<GemGroup> =
-        authenticationSections(proposal, wallet.toGem().id, approval.chain.string, status)
-
-    private fun buildApproval(request: GemWalletConnectAuthentication, wallet: Wallet): AuthApproval {
-        val authMessage = approveWalletConnectAuthentication.authMessage(request, wallet)
-        val account = authMessage.account.toPrimitives()
-        val message = authMessage.message
-        val signMessage = SignMessage(
-            chain = account.chain.string,
-            signType = SignDigestType.SIWE,
-            data = message.toByteArray(),
-        )
-        val payloadPreview = payloadPreview(signMessage)
-
-        return AuthApproval(
-            wallet = wallet,
-            account = account,
-            message = message,
-            signMessage = signMessage,
-            title = payloadPreview.title,
-            primaryPayloadFields = payloadPreview.primaryFields,
-            secondaryPayloadFields = payloadPreview.secondaryFields,
-        )
+    private fun approval(request: GemWalletConnectAuthentication, proposal: WalletConnectionSessionProposal, wallet: Wallet, status: WalletConnectionVerificationStatus): AuthApproval {
+        val message = approveWalletConnectAuthentication.authMessage(request, wallet)
+        return AuthApproval(wallet, signMessageService.authenticationPreview(message, proposal, wallet.toGem().id, status))
     }
-
-    private fun payloadPreview(signMessage: SignMessage): AuthPayloadPreview = signMessageService.payloadPreview(signMessage)?.let { preview ->
-        AuthPayloadPreview(
-            title = preview.title,
-            primaryFields = preview.primary,
-            secondaryFields = preview.secondary,
-        )
-    } ?: AuthPayloadPreview()
 }
 
 private sealed interface AuthRequestPhase {
@@ -341,28 +310,27 @@ sealed interface AuthRequestUIState {
         AuthRequestUIState,
         WalletConnectReviewModel {
         val peer: GemConnectionRow
-        val sections: List<GemGroup>
         val availableWallets: List<Wallet>
         val availableWalletSections: List<GemWalletSection>
         val selectedWallet: Wallet
         val approval: AuthApproval
         val texts: ReviewTexts
+        val sections: List<GemGroup> get() = approval.preview.sections
 
         override val viewFullMessageListItem: ListItemModel get() = ListItemModel(title = texts.viewFullMessage)
 
         override val icon: String? get() = peer.iconUrl
         override val name: String get() = peer.title
         override val uri: String get() = peer.host.orEmpty()
-        override val chain: Chain get() = approval.chain
-        override val primaryPayloadFields: List<GemListRow> get() = approval.primaryPayloadFields
-        override val secondaryPayloadFields: List<GemListRow> get() = approval.secondaryPayloadFields
-        override val title: GemLocalizedText get() = approval.title
-        override val message: String get() = approval.message
+        override val chain: Chain get() = approval.preview.message.chain.requireChain()
+        override val primaryPayloadFields: List<GemListRow> get() = approval.preview.primaryFields
+        override val secondaryPayloadFields: List<GemListRow> get() = approval.preview.secondaryFields
+        override val title: GemLocalizedText get() = approval.preview.title
+        override val message: String get() = approval.preview.text
     }
 
     data class Request(
         override val peer: GemConnectionRow,
-        override val sections: List<GemGroup>,
         val proposal: WalletConnectionSessionProposal,
         val verificationStatus: WalletConnectionVerificationStatus,
         override val availableWallets: List<Wallet>,
@@ -374,7 +342,6 @@ sealed interface AuthRequestUIState {
 
     data class Approving(private val request: Request) : Content {
         override val peer: GemConnectionRow get() = request.peer
-        override val sections: List<GemGroup> get() = request.sections
         override val availableWallets: List<Wallet> get() = request.availableWallets
         override val availableWalletSections: List<GemWalletSection> get() = request.availableWalletSections
         override val selectedWallet: Wallet get() = request.selectedWallet
@@ -383,9 +350,7 @@ sealed interface AuthRequestUIState {
     }
 }
 
-data class AuthApproval(val wallet: Wallet, val account: Account, val message: String, val signMessage: SignMessage, val title: GemLocalizedText, val primaryPayloadFields: List<GemListRow>, val secondaryPayloadFields: List<GemListRow>) {
-    val chain: Chain get() = account.chain
-}
+data class AuthApproval(val wallet: Wallet, val preview: GemAuthenticationPreview)
 
 private data class ActiveAuthQrSession(
     val request: GemWalletConnectAuthentication,
@@ -393,5 +358,3 @@ private data class ActiveAuthQrSession(
     val approval: AuthApproval,
     val session: GemQrMessageSignSession,
 )
-
-private data class AuthPayloadPreview(val title: GemLocalizedText = GemLocalizedText.ReviewRequest, val primaryFields: List<GemListRow> = emptyList(), val secondaryFields: List<GemListRow> = emptyList())

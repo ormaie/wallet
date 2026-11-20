@@ -442,7 +442,7 @@ Rows divide into three families. Getting the family right is most of the design 
 
 **1. Plain rows — one shared `GemListRow`.** A title from a fixed vocabulary plus a value, an amount, a link, a web page, a switch, a picker, an icon, an address, a loading placeholder or an error. One type, one renderer per app, no per-screen code. This is the default; reach for it first.
 
-A row that acts carries what the act needs, and Core decides it: `Url` says whether the page opens in the app or hands off to the system (`GemUrlTarget`), `Link` names an in-app destination, `Toggle` carries its state and `Picker` the selected value. `Wallet` carries `SelectWallet` only when there is another wallet to pick, so the WalletConnect review screens draw their whole details section from `connection_proposal` and `authentication_sections` and decide nothing about whether the wallet can change. What the app keeps is two maps keyed by the shared `GemListRowTitle` — one to a destination, one to an action — plus the callbacks the builder takes (`onSelect`, `onToggle`). A screen never re-titles or re-icons a row; a value only the device knows (an app version, a wallet count, the biometry name, a localized period) is passed *into* Core, which decides whether the row exists and what it holds.
+A row that acts carries what the act needs, and Core decides it: `Url` says whether the page opens in the app or hands off to the system (`GemUrlTarget`), `Link` names an in-app destination, `Toggle` carries its state and `Picker` the selected value. `Wallet` carries `SelectWallet` only when there is another wallet to pick, so the WalletConnect review screens draw their whole details section from `connection_proposal` and `authentication_preview` and decide nothing about whether the wallet can change. What the app keeps is two maps keyed by the shared `GemListRowTitle` — one to a destination, one to an action — plus the callbacks the builder takes (`onSelect`, `onToggle`). A screen never re-titles or re-icons a row; a value only the device knows (an app version, a wallet count, the biometry name, a localized period) is passed *into* Core, which decides whether the row exists and what it holds.
 
 **2. Shared rich rows — one record per family, reused by every list that draws that family.** An asset row and a transaction row are heavy (an icon with a badge, a title that may be the asset or its network, a subtitle that may be a price, a network name or a counterparty, a two-line trailing value) and they appear on many screens, so each is one record that all of those screens read:
 
@@ -1989,7 +1989,7 @@ The table locates the existing owners and consumers; it is not proof that a scre
 | `GemServiceStatus` | — | `ServiceStatusSceneViewModel` | `ServiceStatusViewModel` |
 | `GemSettingsService` | — | `SettingsSceneViewModel`, `PreferencesSceneViewModel`, `SecuritySceneViewModel` | `SettingsViewModel`, `PreferencesViewModel`, `SecurityViewModel` |
 | `GemSignMessageService` | — | `SignMessageSceneViewModel` | `SignMessageViewModel`, `AuthRequestViewModel` |
-| `GemStakeService` | — | `StakeSceneViewModel`, `DelegationSceneViewModel`, `EarnSceneViewModel` | `StakeViewModel`, `DelegationViewModel`, `EarnViewModel` |
+| `GemStakeService` | — | `StakeSceneViewModel`, `DelegationSceneViewModel`, `EarnSceneViewModel`, `ValidatorSelectSceneViewModel` | `StakeViewModel`, `DelegationViewModel`, `EarnViewModel`, `AmountStakeProvider` |
 | `GemSupportService` | — | `SupportChatSceneViewModel` (+ `SupportMessagesQuery`) | `SupportChatViewModel` (+ `SupportMessagesQuery`); sends go through `SupportMessagesCoordinator` behind `SendSupportMessage` |
 | `GemSwapQuoteService` | `GemSwapSession` | `SwapSceneViewModel` | `SwapViewModel` |
 | `GemTransactionDetailsService` | — | `TransactionSceneViewModel` | `TransactionViewModel` (with `WalletQuery`, `TransactionQuery`) |
@@ -2027,7 +2027,6 @@ These primarily serve Core composition or native lifecycle integration. Reuse th
 | `GemConnectionService` | iOS `ConnectionStatusObserver`, Android `ConnectionStatusObserver`, whose refresh intervals view models observe through the `ObserveRefreshInterval` port |
 | `GemWalletConnectClient` | iOS `WalletConnectorService`, Android `WalletConnectCoordinator` behind `PairWalletConnect`, `SyncWalletConnectSessions`, `DisconnectWalletConnection`, `ApproveWalletConnection`, `ApproveWalletConnectAuthentication` and `RespondWalletConnectRequest` — the WalletConnect relay protocol behind the connection screens, not a screen |
 | `GemPerpetualStreamService` | `HyperliquidObserverService` on both apps; Android view models subscribe through its `PerpetualObserver` port |
-| `GemPushNotificationService` | iOS `NavigationRouter`, Android notification routing |
 | `GemTransactionStateService` | composed by `confirm`; tracked off-thread by the `TransactionStatusService` port on both apps |
 | `GemSecurityService` | iOS `BiometryAuthenticationService` (used by `LockSceneViewModel`), Android `LockTimer` |
 
