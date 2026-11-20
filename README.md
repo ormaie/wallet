@@ -1,126 +1,48 @@
-# Gem Wallet
+# Gem Wallet (Android Fork)
 
-[![Core CI](https://github.com/gemwalletcom/wallet/actions/workflows/core-ci.yml/badge.svg)](https://github.com/gemwalletcom/wallet/actions/workflows/core-ci.yml)
-[![iOS CI](https://github.com/gemwalletcom/wallet/actions/workflows/ios-ci.yml/badge.svg)](https://github.com/gemwalletcom/wallet/actions/workflows/ios-ci.yml)
-[![Android CI](https://github.com/gemwalletcom/wallet/actions/workflows/android-ci.yml/badge.svg)](https://github.com/gemwalletcom/wallet/actions/workflows/android-ci.yml)
-[![License](https://badgen.net/github/license/gemwalletcom/wallet)](https://github.com/gemwalletcom/wallet/blob/main/LICENSE)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/gemwalletcom/wallet/badge)](https://scorecard.dev/viewer/?uri=github.com/gemwalletcom/wallet)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16038/badge)](https://www.bestpractices.dev/projects/16038)
-[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-blue)](https://deepwiki.com/gemwalletcom/wallet)
-[![Gem Wallet Discord](https://img.shields.io/discord/974531300394434630?style=plastic)](https://discord.gg/aWkq5sj7SY)
-[![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/GemWallet)](https://x.com/GemWallet)
+[![Core CI](https://github.com/ormaie/wallet/actions/workflows/core-ci.yml/badge.svg)](https://github.com/ormaie/wallet/actions/workflows/core-ci.yml)
+[![Android CI](https://github.com/ormaie/wallet/actions/workflows/android-ci.yml/badge.svg)](https://github.com/ormaie/wallet/actions/workflows/android-ci.yml)
+[![Repo Checks](https://github.com/ormaie/wallet/actions/workflows/repo-checks.yml/badge.svg)](https://github.com/ormaie/wallet/actions/workflows/repo-checks.yml)
+[![License](https://badgen.net/github/license/ormaie/wallet)](https://github.com/ormaie/wallet/blob/main/LICENSE)
 
-Gem Wallet is an open-source mobile wallet for iOS and Android. This repository is the monorepo for both apps and the shared Rust core they build against.
+An Android-only fork of [gemwalletcom/wallet](https://github.com/gemwalletcom/wallet) built on the shared Rust core, adding **BC-UR air-gapped QR cold wallet signing**, Jdenticon/Blockies wallet avatars, and Android UI refinements.
 
-## Install
+## Download
 
-- [App Store](https://apps.apple.com/app/apple-store/id6448712670?ct=github&mt=8)
-- [Google Play](https://play.google.com/store/apps/details?id=com.gemwallet.android&utm_campaign=github&utm_source=referral&utm_medium=github)
-- [F-Droid](https://f-droid.org/en/packages/com.gemwallet.android/)
-- [Android APK releases](https://github.com/gemwalletcom/wallet/releases/latest)
+Grab `gem-wallet-universal-release-apk` from the latest [Android CI](https://github.com/ormaie/wallet/actions/workflows/android-ci.yml) run, or build from source below.
 
-## Features
+## Air-Gapped Cold Wallet Support
 
-- Open source, self-custodial wallet with multi-chain support
-- Native iOS and Android apps with shared Rust-based blockchain functionality
-- Swaps, staking, WalletConnect, fiat on/off ramp, alerts, and market data
+Pair offline signers (**AirGap Vault**, **BitTool Signer**) via single-frame or animated `UR:...` fountain codes (`crypto-hdkey`, `crypto-account`, `crypto-multi-accounts`, `bittool-signer-wallet`) so private keys never leave the offline device.
 
-## Repository
+| Network | UR Request / Response | Supported Flows |
+| --- | --- | --- |
+| EVM chains | `eth-sign-request` / `eth-signature` | EIP-1559 transfers, EIP-712 typed data, personal messages, Permit2 + swaps |
+| HyperCore | `eth-sign-request` / `eth-signature` | Multi-step EIP-712 action signing |
+| Bitcoin | `crypto-psbt` / `crypto-psbt` | PSBT construction and signed transaction extraction |
+| Solana | `sol-sign-request` / `sol-signature` | Transactions and off-chain messages |
+| TRON | `tron-sign-request` / `tron-signature` | Transactions and personal messages |
 
-- `ios/`: SwiftUI application, packages, tests, and iOS-only submodules
-- `android/`: Kotlin/Compose application and Android build tooling
-- `core/`: shared Rust source used by both mobile apps
+## Layout & Development
 
-## Getting Started
-
-1. Clone the repository with iOS submodules:
+- `android/` — Kotlin / Jetpack Compose app
+- `core/` — Rust blockchain engine and UniFFI bindings (`gemstone`)
 
 ```bash
-git clone --recursive https://github.com/gemwalletcom/wallet.git
+git clone https://github.com/ormaie/wallet.git
 cd wallet
+
+just install        # install Rust toolchain, Android targets, NDK, and JDK
+just build          # assemble debug APK
+just test           # run Android unit tests
+just core test      # run Rust workspace unit tests
+just sync-upstream  # merge gemwalletcom/wallet:main while stripping iOS paths
 ```
 
-2. If needed, initialize iOS submodules later:
+To build a signed release APK locally, run `just android release-apk`.
 
-```bash
-just setup-git
-```
+## Security & License
 
-To install dependencies for both apps on macOS, with Homebrew, Xcode, and Android Studio's SDK command-line tools available:
+Upstream third-party security audits ([CertiK](https://static.gemwallet.com/audits/Gem-Wallet-CertiK-Security-Audit-April-2026.pdf), [Cure53](https://static.gemwallet.com/audits/Gem-Wallet-Cure53-Audit-Report-October-2026.pdf)) cover the `gemwalletcom/wallet` baseline only and do not cover custom modules added in this fork.
 
-```bash
-just install
-```
-
-This installs the shared Rust toolchain once, then iOS tools and targets, followed by Android's JDK, targets, and NDK. The JDK installer may prompt for a password. For a single platform, run `just core install-rust`, followed by its install command below.
-
-### iOS
-
-> [!NOTE]
-> iOS builds require macOS. Apple silicon is the default supported environment for Gemstone builds.
-
-```bash
-cd ios
-just install
-just spm-resolve
-just build-for-testing
-```
-
-`just install` also creates the local Gemstone UniFFI Swift/header sources that SwiftPM needs for package resolution. Xcode builds the Gemstone Rust static library automatically after that. Intel Macs are not supported for iOS Gemstone builds.
-
-### Android
-
-```bash
-cd android
-just install
-just build-test
-```
-
-## Developer Shortcuts
-
-The repo root exposes monorepo commands plus module access to each platform:
-
-```bash
-just install
-just build
-just generate
-just localize
-just bump patch
-just bump minor
-just bump major
-just ios install
-just ios build
-just ios build-for-testing
-just ios test-without-building
-just android install
-just android build
-just android build-test
-just android test
-```
-
-Platform-specific commands remain available through the [`ios`](ios/justfile) and [`android`](android/justfile) just modules.
-
-## Security
-
-Gem Wallet is self-custodial, and keeping user funds safe is our highest priority. See the [Security Overview](https://gemwallet.com/security/) for our practices around key material, signing, and secure storage.
-
-- [Responsible Disclosure](https://gemwallet.com/security/bug-bounty/) — report security vulnerabilities responsibly
-- [CertiK Audit (April 2026)](https://static.gemwallet.com/audits/Gem-Wallet-CertiK-Security-Audit-April-2026.pdf) — April 2026 third-party audit report
-- [Cure53 Audit (October 2026)](https://static.gemwallet.com/audits/Gem-Wallet-Cure53-Audit-Report-October-2026.pdf) - October 2026 third-party audit report
-
-## Contributing
-
-- Browse [GitHub Issues](https://github.com/gemwalletcom/wallet/issues)
-- Follow the public [Roadmap](https://github.com/orgs/gemwalletcom/projects/4)
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
-
-## Community
-
-- Website: [gemwallet.com](https://gemwallet.com)
-- Chat: [Discord](https://discord.gg/aWkq5sj7SY), [Telegram](https://t.me/GemWallet)
-- Updates: [X](https://x.com/GemWallet)
-
-## License
-
-Gem Wallet is open-sourced software licensed under the [GPL-3.0](LICENSE).
+Licensed under [GPL-3.0](LICENSE).

@@ -2,7 +2,7 @@
 
 Maestro (`docs.maestro.dev`) drives a real UI flow against a booted simulator or emulator. Use it for user journeys that must behave the same on iOS and Android. One YAML flow runs on both platforms; the same flow logic switches apps by `appId`.
 
-Maestro complements, does not replace, the native UI layers: `ios/GemUITestsAppTests` (XCUITest, run in CI by `.github/workflows/ios-ui-tests.yml`) and Android Compose tests (Robolectric `integration` tests) stay platform-native. Do not port those into Maestro.
+Maestro complements, does not replace, Android Compose tests (Robolectric `integration` tests), which stay platform-native. Do not port those into Maestro.
 
 ## When to Use What
 
@@ -13,7 +13,7 @@ Decide in one glance:
 | Cross-platform user journey (import, receive, send, swap), navigation between screens, or E2E regression across both apps | **Maestro flow** |
 | Behavior that must stay identical on iOS and Android — parity-sensitive UI, shared state transitions | **Maestro flow** (one flow, both `appId`s) |
 | Pure logic: mappers, formatters, validators, display models, ViewModel state | **Unit test** — see [Quality Checks](quality-checks.md) |
-| Platform-specific mechanics: permission dialogs, deep links, XCUITest interruption monitors, Compose semantics | **Native UI test** — `ios/GemUITestsAppTests` (XCUITest), Android Compose `integration` test |
+| Platform-specific mechanics: permission dialogs, deep links, Compose semantics | **Native UI test** — Android Compose `integration` test |
 | Static screen with no interaction, visual polish/spacing, single-platform micro-interaction, copy/localization-only | **Not worth a flow** |
 
 A Maestro flow earns its cost only when the journey is reachable, cross-platform, and regression-prone. If a unit test can assert the same rule, write the unit test. Reach for a flow when the change needs it or when asked — it is not an automatic step on every UI change.
@@ -79,7 +79,7 @@ Run it per platform with `-e APP_ID=com.gemwallet.ios` / `-e APP_ID=com.gemwalle
 ### Deterministic state
 
 - `launchApp: { clearState: true }` for regression flows. On Android this is `pm clear` (wipes app data → onboarding); on iOS it is a fresh reinstall. Expect the onboarding or lock screen after it.
-- **Never mainnet funds or real keys.** Use a dedicated test seed only (there is already one at `ios/GemUITestsAppTests/Types/UITestKitConstants.swift`).
+- **Never mainnet funds or real keys.** Use a dedicated test seed only (defined in `scripts/maestro-smoke.sh`).
 - Assert with `assertVisible` / `assertNotVisible` / `takeScreenshot`. **Never `sleep`.** For async work use `extendedWaitUntil` or `waitForAnimationToEnd`, keyed to a visible id — not a fixed delay.
 
 ### Biometrics

@@ -18,7 +18,7 @@ Use when versioning, tagging, committing for review, rebasing, publishing, or tr
   just bump 3.1.2
   ```
 - `just bump` commits the version, creates a signed tag, and pushes both atomically. A tag ruleset restricts this to repository admins, so a non-admin's push is rejected as a whole. Hand the bump commit to an admin to push the tag or create the GitHub release at that commit; `release_on_tag.yml` creates the release once the tag lands
-- Unrelated staged, unstaged, and untracked changes are preserved and excluded from the bump commit. The four version files (`ios/Gem.xcodeproj/project.xcproj`, `android/app/build.gradle.kts`, `core/Cargo.toml`, and `core/Cargo.lock`) must be clean before bumping.
+- Unrelated staged, unstaged, and untracked changes are preserved and excluded from the bump commit. The three version files (`android/app/build.gradle.kts`, `core/Cargo.toml`, and `core/Cargo.lock`) must be clean before bumping.
 
 ## Commits
 
@@ -33,7 +33,6 @@ Use when versioning, tagging, committing for review, rebasing, publishing, or tr
 
 - Store builds check out the release tag, so confirm it exists remotely before starting a build. `release_on_tag.yml` creates the GitHub release with generated notes when the tag is pushed, as a pre-release: internal builds stay pre-releases, and a production release becomes the latest release once its universal APK is attached, which is what the README's APK link and the APK update check read.
 - Android: `android/reproducible/docker.sh <channel>...` builds the checked-out commit in a pinned Linux container and returns unsigned files: the Play AAB for `google`, an APK for every other channel (see `android/skills/release-and-verification.md`). The release pipeline signs them; F-Droid rebuilds the `fdroid` channel on its own servers through `android/reproducible/fdroid/`.
-- iOS: `just generate-stone` builds the Rust static libraries and UniFFI sources the archive links, then the `Gem` scheme is archived in the Release configuration from `ios/Gem.xcodeproj`.
 - When two releases with near-identical source differ in binary size or behavior, suspect the build machine's Rust toolchain and cargo cache state before source: archive both tags locally on one machine and compare.
 
 ## Publication Boundaries

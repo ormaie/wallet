@@ -659,6 +659,9 @@ mod tests {
     fn test_generated_record_mappers_match_the_committed_files() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         for (platform, directory) in [(Platform::IOS, root.join("../ios/Packages")), (Platform::Android, root.join("../android/gemcore/src/main/kotlin/com/wallet/core"))] {
+            if !directory.exists() {
+                continue;
+            }
             let generator = Generator::load(&root, platform, &directory);
             let path = generator.path(&directory);
             assert_eq!(fs::read_to_string(&path).unwrap_or_default(), generator.render(), "{} is out of date; run just generate-models", path.display());

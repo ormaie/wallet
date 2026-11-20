@@ -2,11 +2,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-IOS_FILE="$ROOT_DIR/ios/Gem.xcodeproj/project.xcproj"
 ANDROID_FILE="$ROOT_DIR/android/app/build.gradle.kts"
 CORE_FILE="$ROOT_DIR/core/Cargo.toml"
 CORE_LOCK_FILE="$ROOT_DIR/core/Cargo.lock"
-VERSION_FILES=("$IOS_FILE" "$ANDROID_FILE" "$CORE_FILE" "$CORE_LOCK_FILE")
+VERSION_FILES=("$ANDROID_FILE" "$CORE_FILE" "$CORE_LOCK_FILE")
 TARGET="${1:-patch}"
 REMOTE_NAME="${BUMP_REMOTE:-origin}"
 BRANCH_NAME="${BUMP_BRANCH:-main}"
@@ -54,39 +53,40 @@ resolve_version() {
   esac
 }
 
+in_place_sed() {
+  if sed --version >/dev/null 2>&1; then
+    sed -i "$@"
+  else
+    sed -i '' "$@"
+  fi
+}
+
 verify_latest_branch
 
-current_ios_version=$(grep -oE "\"MARKETING_VERSION\": \"[0-9]+\.[0-9]+\.[0-9]+\"" "$IOS_FILE" | head -n1 | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
 current_android_version=$(grep 'versionName = "' "$ANDROID_FILE" | sed 's/.*versionName = "//' | sed 's/".*//')
 current_core_version=$(grep -oE '^version = "[0-9]+\.[0-9]+\.[0-9]+"' "$CORE_FILE" | head -n1 | sed 's/version = "//; s/"//')
 
-[[ -n "$current_ios_version" && -n "$current_android_version" && -n "$current_core_version" ]] || fail "Unable to read current versions from iOS, Android, or Core."
-[[ "$current_ios_version" == "$current_android_version" ]] || fail "iOS version ($current_ios_version) and Android version ($current_android_version) differ."
-[[ "$current_core_version" == "$current_ios_version" ]] || fail "Core version ($current_core_version) and app version ($current_ios_version) differ."
+[[ -n "$current_android_version" && -n "$current_core_version" ]] || fail "Unable to read current versions from Android or Core."
+[[ "$current_core_version" == "$current_android_version" ]] || fail "Core version ($current_core_version) and Android version ($current_android_version) differ."
 
-current_version="$current_ios_version"
+current_version="$current_android_version"
 new_version="$(resolve_version "$TARGET")"
 new_core_version="$new_version"
 
-current_ios_build=$(grep -oE "\"CURRENT_PROJECT_VERSION\": \"[0-9]+\"" "$IOS_FILE" | head -n1 | grep -oE "[0-9]+")
 current_android_build=$(grep "versionCode = " "$ANDROID_FILE" | sed 's/.*versionCode = //' | sed 's/[^0-9].*//')
-
-new_ios_build=$((current_ios_build + 1))
 new_android_build=$((current_android_build + 1))
 
 git rev-parse -q --verify "refs/tags/$new_version" >/dev/null && fail "Tag $new_version already exists."
 
-sed -i '' "s/\"MARKETING_VERSION\": \"$current_version\"/\"MARKETING_VERSION\": \"$new_version\"/g" "$IOS_FILE"
-sed -i '' "s/\"CURRENT_PROJECT_VERSION\": \"$current_ios_build\"/\"CURRENT_PROJECT_VERSION\": \"$new_ios_build\"/g" "$IOS_FILE"
-sed -i '' "s/versionName = \"$current_version\"/versionName = \"$new_version\"/" "$ANDROID_FILE"
-sed -i '' "s/versionCode = $current_android_build/versionCode = $new_android_build/" "$ANDROID_FILE"
-sed -i '' "s/^version = \"$current_core_version\"/version = \"$new_core_version\"/" "$CORE_FILE"
+in_place_sed "s/versionName = \"$current_version\"/versionName = \"$new_version\"/" "$ANDROID_FILE"
+in_place_sed "s/versionCode = $current_android_build/versionCode = $new_android_build/" "$ANDROID_FILE"
+in_place_sed "s/^version = \"$current_core_version\"/version = \"$new_core_version\"/" "$CORE_FILE"
 cargo metadata --manifest-path "$CORE_FILE" --format-version 1 >/dev/null
 core_versions="$(cargo metadata --manifest-path "$CORE_FILE" --format-version 1 --no-deps | grep -oE '"version":"[^"]+"' | sort -u)"
 [[ "$core_versions" == "\"version\":\"$new_core_version\"" ]] || fail "Core workspace packages do not all use version $new_core_version: $core_versions"
 
-git commit --only -S -m "Bump to $new_version (iOS $new_ios_build, Android $new_android_build)" -- "${VERSION_FILES[@]}"
+git commit --only -S -m "Bump to $new_version (Android $new_android_build)" -- "${VERSION_FILES[@]}"
 git tag -s "$new_version" -m "$new_version"
 git push --atomic "$REMOTE_NAME" "HEAD:$BRANCH_REF" "refs/tags/$new_version:refs/tags/$new_version"
 
-echo "✅ Bumped to $new_version (iOS $new_ios_build, Android $new_android_build)"
+echo "✅ Bumped to $new_version (Android $new_android_build)"

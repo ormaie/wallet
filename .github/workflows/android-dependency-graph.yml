@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   submit:
+    if: github.repository == 'gemwalletcom/wallet'
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -8,7 +8,6 @@ on:
       - "core/**"
       - "rust-toolchain.toml"
       - "localization/**"
-      - ".gitmodules"
       - ".github/actions/**"
       - ".github/workflows/android-ci.yml"
   pull_request:
@@ -18,9 +17,9 @@ on:
       - "core/**"
       - "rust-toolchain.toml"
       - "localization/**"
-      - ".gitmodules"
       - ".github/actions/**"
       - ".github/workflows/android-ci.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -62,3 +61,73 @@ jobs:
 
       - name: Build app and run unit and integration tests
         run: just test-all -x :gemstone:buildCargoNdk
+
+  build_apk:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Android CI
+        uses: ./.github/actions/setup-android-ci
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+      - name: Install Android toolchains
+        run: |
+          just install-toolchains
+          just install-ndk
+
+      - name: Build unsigned universal release APK
+        env:
+          BUILD_MODE: release
+        run: ./gradlew :app:assembleUniversalRelease -Pchannel=universal -PuseLegacyPackaging=true
+
+      - name: Decode signing keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > "${RUNNER_TEMP}/release.keystore"
+          chmod 600 "${RUNNER_TEMP}/release.keystore"
+
+      - name: Sign universal release APK
+        env:
+          ANDROID_KEYSTORE_ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_ALIAS"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          APKSIGNER="$(find "${ANDROID_HOME:?}/build-tools" -maxdepth 2 -name apksigner -type f | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          UNSIGNED_APK="app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk"
+          SIGNED_APK="app/build/outputs/apk/universal/release/app-universal-release.apk"
+          "$APKSIGNER" sign \
+            --ks "${RUNNER_TEMP}/release.keystore" \
+            --ks-key-alias "$ANDROID_KEYSTORE_ALIAS" \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --key-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --v1-signing-enabled false \
+            --v2-signing-enabled true \
+            --out "$SIGNED_APK" \
+            "$UNSIGNED_APK"
+          "$APKSIGNER" verify "$SIGNED_APK"
+
+      - name: Remove signing keystore
+        if: always()
+        run: rm -f "${RUNNER_TEMP}/release.keystore"
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gem-wallet-universal-release-apk
+          path: android/app/build/outputs/apk/universal/release/app-universal-release.apk
+          if-no-files-found: error

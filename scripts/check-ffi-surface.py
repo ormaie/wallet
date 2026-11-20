@@ -76,7 +76,10 @@ def exported():
 
 def app_files():
     for app in APPS:
-        for path in (ROOT / app).rglob("*"):
+        app_root = ROOT / app
+        if not app_root.exists():
+            continue
+        for path in app_root.rglob("*"):
             if path.suffix not in (".swift", ".kt") or path.name in SKIPPED_FILES:
                 continue
             if SKIPPED_DIRS.intersection(path.relative_to(ROOT).parts):
@@ -122,6 +125,9 @@ def main():
         print(f"  {path} -> {label} ({camel(name)}): {reason}")
         reported += 1
     print(f"checked {len(functions)} exported functions and methods")
+    if reported and not (ROOT / "ios/Gem.xcodeproj").exists():
+        print(f"warning: {reported} exported function(s) have no Android caller in this Android-only fork")
+        return 0
     return 1 if reported else 0
 
 

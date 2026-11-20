@@ -32,16 +32,19 @@ EXPECTED = {
 def stray_mappers():
     found = set()
     for app, names in MAPPER_NAMES.items():
+        app_root = ROOT.joinpath(app)
+        if not app_root.exists():
+            continue
         for name in names:
-            for path in ROOT.joinpath(app).rglob(name):
+            for path in app_root.rglob(name):
                 if not any(part in str(path) for part in SKIP):
                     found.add(path)
     return sorted(found - EXPECTED)
 
 
 def english_by_key():
-    text = (ROOT / "localization/app/en.ftl").read_text()
-    return dict(re.findall(r"^([a-z0-9_]+) = (.*)$", text, re.M))
+    text = (ROOT / "localization/app/en.ftl").read_text(encoding="utf-8")
+    return dict(re.findall(r"^([A-Za-z0-9_]+) = (.*)$", text, re.M))
 
 
 def key_by_swift_path():
@@ -108,8 +111,14 @@ def main():
     for path in strays:
         print(f"  {path.relative_to(ROOT)} is a second mapper; its mappings belong in the one mapper file of that app")
     english = english_by_key()
-    swift = swift_mappings(key_by_swift_path())
     kotlin = kotlin_mappings()
+    if not SWIFT_MAPPER.exists():
+        missing = sorted({key for keys in kotlin.values() for key in keys if key not in english})
+        for key in missing:
+            print(f"  Android mapper references missing localization key: {key}")
+        print(f"checked {len(kotlin)} Android mapper variants against en.ftl")
+        return 1 if strays or missing else 0
+    swift = swift_mappings(key_by_swift_path())
     shared = sorted(set(swift) & set(kotlin))
     divergent = [
         (core_type, case, swift[(core_type, case)], kotlin[(core_type, case)])

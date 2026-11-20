@@ -119,7 +119,7 @@ jobs:
 
   publish:
     needs: [lint, unit_test, check_schema]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.repository == 'gemwalletcom/wallet'
     permissions:
       contents: read
       packages: write

@@ -11,9 +11,7 @@ Use this skill for shared localization flow and generated output locations.
 - Fluent comments are supported (`#`, `##`, `###`) and ignored by generation; put source context comments in English `en.ftl`
 - Add new keys in the matching prefix section (`common_*` under `# Common`, `wallet_*` under `# Wallet`, etc.)
 - Add each new app key to every language file, translated for the context where the string is used
-- iOS InfoPlist localization source lives in `localization/InfoPlist/*.ftl`
-- iOS localization output lives under `ios/Packages/Localization/`: one `.xcstrings` String Catalog per table (app, InfoPlist) plus the typed accessor `Localized.swift`, all written by the generator
 - Android localization output lives under `android/ui/src/main/res/`
 - Treat generated localization outputs as generated artifacts, not hand-edited source
-- Never resolve merge conflicts in generated localization outputs by hand: rebase, keep your side of the tree, run `just localize`, and commit the regenerated files
+- Never resolve merge conflicts in generated localization outputs by hand: rebase or merge, keep your `.ftl` changes, run `just localize`, and commit the regenerated files
 - Core/backend localization is separate; see [core/skills/localization.md](../core/skills/localization.md)

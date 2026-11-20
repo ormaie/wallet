@@ -399,9 +399,12 @@ mod tests {
     fn test_the_checked_in_app_constants_are_current() {
         let core = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let constants = Constants::load(&core);
-        let swift = fs::read_to_string(core.join("../ios/Packages").join(SWIFT_PATH)).expect("GemConstants.swift is missing; run just generate-models");
+        let ios_packages = core.join("../ios/Packages");
+        if ios_packages.exists() {
+            let swift = fs::read_to_string(ios_packages.join(SWIFT_PATH)).expect("GemConstants.swift is missing; run just generate-models");
+            assert_eq!(swift, constants.swift(), "GemConstants.swift is stale; run just generate-models");
+        }
         let kotlin = fs::read_to_string(core.join("../android/gemcore/src/main/kotlin/com/wallet/core").join(KOTLIN_PATH)).expect("GemConstants.kt is missing; run just generate-models");
-        assert_eq!(swift, constants.swift(), "GemConstants.swift is stale; run just generate-models");
         assert_eq!(kotlin, constants.kotlin(), "GemConstants.kt is stale; run just generate-models");
     }
 }

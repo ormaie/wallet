@@ -6,12 +6,12 @@ Use the root `justfile` to drive common repo workflows.
 
 ```bash
 just                    # list all commands
-just install            # install shared tools, then iOS and Android dependencies
-just build              # build both iOS and Android
-just clean              # clean iOS, Android, and Rust build caches
-just generate           # regenerate models + bindings for both platforms
-just localize           # update localization for both platforms
-just run-ios            # build, install, and run iOS
+just install            # install Rust and Android dependencies
+just build              # build Android app
+just clean              # clean Android and Rust build caches
+just generate           # regenerate Android models + Gemstone bindings
+just localize           # update Android localization from localization/app/*.ftl
+just sync-upstream      # fetch upstream/main, merge, and strip iOS paths automatically
 just start-emulator     # start the Android emulator
 just run-android        # build, install, and run Android
 just bump patch         # bump the repo patch version
@@ -22,12 +22,11 @@ just bump major         # bump the repo major version
 ## Platform Entry Points
 
 ```bash
-just ios build          # build iOS only
-just ios test           # run iOS unit tests
-just ios test-ui        # run iOS integration/UI tests
-just android build      # build Android only
+just android build          # build Android
 just android start-emulator # start the Android emulator
-just android test       # run Android tests
+just android test           # run Android unit tests
+just core test              # run Core unit tests
+just core lint              # run Core clippy lints
 ```
 
 Load the platform guide before dropping into platform-specific commands or tooling details.

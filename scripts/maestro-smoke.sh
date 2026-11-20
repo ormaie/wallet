@@ -2,41 +2,33 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PLATFORM="${1:?usage: maestro-smoke.sh ios|android}"
+PLATFORM="${1:-android}"
 OUTPUT_DIR="${MAESTRO_OUTPUT:-$ROOT_DIR/build/maestro/$PLATFORM}"
 EMULATOR_LOG="$OUTPUT_DIR/emulator.log"
 AVD_LOG="$OUTPUT_DIR/avd.log"
-SIMULATOR="Gem Maestro"
 AVD="Gem_Maestro"
 ANDROID_SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 EMULATOR="$ANDROID_SDK/emulator/emulator"
 # a CI runner ships platform-tools inside the SDK and off PATH
 ADB="${ADB:-$(command -v adb || echo "$ANDROID_SDK/platform-tools/adb")}"
-PROXYMAN_CA="$HOME/Library/Application Support/com.proxyman.NSProxy/app-data/proxyman-ca.pem"
 
 constant() {
-    sed -nE "s/.*static let $1 = \"(.*)\"/\1/p" "$ROOT_DIR/ios/GemUITestsAppTests/Types/UITestKitConstants.swift"
+    case "$1" in
+        words) echo "insect select insane waste rate grit ranch uniform loan venture jump silent" ;;
+        words2) echo "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about" ;;
+        invalidWords) echo "maestro maestro maestro maestro maestro maestro maestro maestro maestro maestro maestro maestro" ;;
+        bitcoinAddress) echo "bc1qvxn5cxtp63cylys56mdwzrdmeryj608vlsexkw" ;;
+        bitcoinAddress2) echo "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4" ;;
+        ethereumAddress) echo "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" ;;
+        ethereumName) echo "vitalik.eth" ;;
+        usdtContract) echo "0xdAC17F958D2ee523a2206206994597C13D831ec7" ;;
+        usdcContract) echo "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" ;;
+        *) echo "unknown constant: $1" >&2; exit 1 ;;
+    esac
 }
 
 newest() {
     sort -V | tail -1
-}
-
-ios_device() {
-    local device_type runtime udid
-    udid="$(xcrun simctl list devices available | grep -F "$SIMULATOR (" | grep -oE '[0-9A-F-]{36}' | tail -1 || true)"
-    if [ -z "$udid" ]; then
-        device_type="$(xcrun simctl list devicetypes | grep -E '^iPhone [0-9]+ Pro \(' | newest | grep -oE 'com\.apple[^)]+')"
-        for runtime in $(xcrun simctl list runtimes | grep -E '^iOS [0-9.]+ ' | grep -v unavailable | sort -rV | sed 's/.* - //'); do
-            udid="$(xcrun simctl create "$SIMULATOR" "$device_type" "$runtime" 2>/dev/null)" && break
-        done
-        [ -n "$udid" ] || { echo "no iOS runtime can create $device_type" >&2; exit 1; }
-    fi
-    xcrun simctl boot "$udid" 2>/dev/null || true
-    xcrun simctl bootstatus "$udid" -b >/dev/null
-    xcrun simctl spawn "$udid" defaults write -g AppleLocale en_US
-    xcrun simctl install "$udid" "$BUILD"
-    echo "$udid"
 }
 
 android_serial() {
@@ -90,9 +82,8 @@ android_device() {
 }
 
 case "$PLATFORM" in
-    ios) APP_ID="com.gemwallet.ios"; BUILD="$ROOT_DIR/ios/build/DerivedData/Build/Products/Debug-iphonesimulator/Gem.app" ;;
     android) APP_ID="com.gemwallet.android"; BUILD="$ROOT_DIR/android/app/build/outputs/apk/google/debug/app-google-debug.apk" ;;
-    *) echo "platform must be ios or android" >&2; exit 1 ;;
+    *) echo "platform must be android" >&2; exit 1 ;;
 esac
 
 LOCK="/tmp/gem-maestro-smoke.lock"
@@ -108,10 +99,6 @@ failed=""
 for flow in "$ROOT_DIR"/maestro/smoke/*.yaml; do
     name="$(basename "$flow" .yaml)"
     echo "==> $name"
-    if [ "$PLATFORM" = ios ]; then
-        xcrun simctl keychain "$DEVICE" reset
-        [ ! -f "$PROXYMAN_CA" ] || xcrun simctl keychain "$DEVICE" add-root-cert "$PROXYMAN_CA"
-    fi
     maestro --device "$DEVICE" test \
         -e APP_ID="$APP_ID" \
         -e TEST_PHRASE="$(constant words)" \

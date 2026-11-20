@@ -63,6 +63,8 @@ def main():
                     failures.append(f"{doc.relative_to(ROOT)} -> #{fragment} is not a heading here")
                 continue
             path = (doc.parent / path_part).resolve()
+            if not (ROOT / "ios/Gem.xcodeproj").exists() and path.is_relative_to((ROOT / "ios").resolve()):
+                continue
             if not path.exists():
                 failures.append(f"{doc.relative_to(ROOT)} -> {path_part} does not exist")
                 continue

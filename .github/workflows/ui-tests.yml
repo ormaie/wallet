@@ -1,19 +1,10 @@
 name: UI Tests
 
-run-name: "UI Tests: ${{ inputs.platform }} (${{ inputs.suite }})"
+run-name: "UI Tests: android (${{ inputs.suite }})"
 
 on:
   workflow_dispatch:
     inputs:
-      platform:
-        description: 'Platform to test'
-        required: false
-        type: choice
-        options:
-          - both
-          - ios
-          - android
-        default: both
       suite:
         description: 'Which suite to run'
         required: false
@@ -28,7 +19,7 @@ on:
       platform:
         required: false
         type: string
-        default: both
+        default: android
       suite:
         required: false
         type: string
@@ -43,63 +34,10 @@ concurrency:
 
 env:
   MAESTRO_CLI_NO_ANALYTICS: 1
-  SIMULATOR_OS: "27.0"
 
 jobs:
-  ios:
-    if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
-    runs-on: xcode-27
-    # the ios recipes live in ios/justfile; only the root justfile has maestro-smoke
-    defaults:
-      run:
-        working-directory: ios
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-          submodules: true
-
-      - name: Setup iOS CI
-        uses: ./.github/actions/setup-ios-ci
-
-      - name: Install dependencies
-        run: just install-toolchains
-
-      - name: Build Core
-        run: just generate-stone
-        env:
-          GEMSTONE_IOS_TARGETS: "aarch64-apple-ios-sim"
-
-      - name: Resolve SPM Dependencies
-        run: just spm-resolve
-
-      - name: Build for Testing
-        run: just build-for-testing-integration
-
-      - name: Native UI Tests
-        if: ${{ inputs.suite != 'maestro' }}
-        run: just test-integration-without-building
-
-      - name: Setup Maestro
-        if: ${{ inputs.suite != 'native' }}
-        uses: ./.github/actions/setup-maestro
-
-      - name: Maestro flows
-        if: ${{ inputs.suite != 'native' }}
-        working-directory: .
-        run: just maestro-smoke ios
-
-      - name: Upload Maestro artifacts
-        if: ${{ failure() && inputs.suite != 'native' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: maestro-ios
-          path: build/maestro/ios
-          if-no-files-found: ignore
-
   android:
-    if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
+    if: ${{ inputs.platform != 'ios' }}
     runs-on: ubuntu-latest
     # the android recipes live in android/justfile; only the root justfile has maestro-smoke
     defaults:

@@ -10,29 +10,28 @@ The user's task defines scope and authorization. Shared rules apply to both agen
 
 `task-workflow.md`, `cross-platform-awareness.md`, and `engineering-principles.md` apply to every task. The rest are load-on-demand; the one-line description tells you when.
 
-- [Task Workflow](skills/task-workflow.md) — Scope, investigation, cross-stack order (Core → bindings → iOS/Android), verification, cleanup rounds, handoff, and guide maintenance
-- [Cross-Platform Awareness](skills/cross-platform-awareness.md) — Rules for changes that can affect both apps
+- [Task Workflow](skills/task-workflow.md) — Scope, investigation, cross-stack order (Core → bindings → Android), verification, cleanup rounds, handoff, and guide maintenance
+- [Cross-Platform Awareness](skills/cross-platform-awareness.md) — Rules for changes spanning Core and Android in this Android-only fork
 - [Engineering Principles](skills/engineering-principles.md) — Ownership, reuse, minimal abstractions, and test intent
 - [Project Overview](skills/project-overview.md) — Repo layout, layer architecture, and ownership boundaries
-- [Development Commands](skills/development-commands.md) — Root build, generate, localization, and platform entrypoint commands
+- [Development Commands](skills/development-commands.md) — Root build, generate, localization, upstream sync, and platform entrypoint commands
 - [Quality Checks](skills/quality-checks.md) — Iteration and closing check matrices per change type
-- [Code Review](skills/code-review.md) — Review checklist for correctness, conventions, parity, and adversarial security hardening
+- [Code Review](skills/code-review.md) — Review checklist for correctness, conventions, and adversarial security hardening
 - [Security](skills/security.md) — Wallet-critical security rules for key material, signing, auth, and transaction handling
-- [Localization](skills/localization.md) — Fluent sources, generation, and generated output locations for both apps
+- [Localization](skills/localization.md) — Fluent sources, generation, and generated output locations for Android
 - [Translation Review](.agents/skills/translation-review/SKILL.md) — Context, approved terminology, compact labels, and scheduled localization audits
-- [Maestro UI Testing](skills/testing-maestro.md) — When to use Maestro flows vs unit or native UI tests, and cross-platform authoring rules
+- [Maestro UI Testing](skills/testing-maestro.md) — When to use Maestro flows vs unit or native UI tests, and authoring rules
 - [Release Process](skills/release-process.md) — Branching, versioning, commits, publication boundaries, store builds, and removing or disabling support
 - [Guidance Refresh](.agents/skills/guidance-refresh/SKILL.md) — How lessons become shared guidance, budgets, skill format, and the local sweep each teammate runs
 
 ## Platform Guides
 
-Read the relevant platform guide(s) before editing code in that area:
+This fork maintains **Core and Android only** (`ios/` has been removed; upstream iOS changes are stripped automatically via `just sync-upstream`). Never create or restore `ios/` files. Read the relevant platform guide(s) before editing code in that area:
 
-- [iOS](ios/AGENTS.md) — SwiftUI, MVVM, SPM modules, testing conventions
 - [Android](android/AGENTS.md) — Kotlin, Compose, Hilt, Gradle workflow
 - [Core](core/AGENTS.md) — Rust crates, UniFFI, generated models, clippy, defensive programming
 
-If a task spans platforms, read every affected guide. Generation and parity requirements live in [Cross-Platform Awareness](skills/cross-platform-awareness.md); verification commands live in [Quality Checks](skills/quality-checks.md).
+If a task spans Core and Android, read both guides. Generation and integration requirements live in [Cross-Platform Awareness](skills/cross-platform-awareness.md); verification commands live in [Quality Checks](skills/quality-checks.md).
 
 ## Design Docs
 
