@@ -346,6 +346,7 @@ A haptic is the short vibration that confirms what the user's finger just did, o
 | A value is copied | Success, with its toast | |
 | The user taps the wallet balance to hide or show it | Tap | |
 | The user taps the arrow between Pay and Receive on [Swap](product/swap.md) | Tap | |
+| The user switches to another bottom navigation tab | Tap | re-tapping the selected tab scrolls to the top without a haptic |
 | The user slides along the price chart, a portfolio chart or a candlestick chart | Tick each time the point under the finger changes, not when it first shows | the first point shows on its own; a tick marks each step after it |
 | The user taps a word that is not the next one on "Confirm", in [Onboarding](product/onboarding.md) | Error, and the word nudges once | |
 | A scanned QR code cannot be read | Error, with its toast | |

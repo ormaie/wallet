@@ -73,10 +73,12 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -231,6 +233,7 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         bottomBar = {
+            val haptic = LocalHapticFeedback.current
             FloatingBottomNavigationBar(
                 items = navItems,
                 selectedRoute = currentTab.value,
@@ -241,6 +244,7 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                     if (route == currentTab.value) {
                         scrollTabToTop(route)
                     } else {
+                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                         currentTab.value = route
                     }
                 },
