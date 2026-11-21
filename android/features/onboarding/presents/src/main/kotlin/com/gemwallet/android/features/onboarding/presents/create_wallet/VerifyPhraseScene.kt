@@ -37,6 +37,7 @@ import uniffi.gemstone.GemButtonState
 import uniffi.gemstone.GemVerifyPhraseChoice
 import uniffi.gemstone.GemVerifyPhraseViewState
 
+private const val DescriptionMinLines = 2
 private val sectionSpacing = 20.dp
 private val choicesVerticalPadding = 20.dp
 
@@ -70,7 +71,10 @@ internal fun VerifyPhraseScene(state: GemVerifyPhraseViewState, choices: List<St
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            CenteredDescriptionText(stringResource(R.string.secret_phrase_confirm_quick_test_title))
+            CenteredDescriptionText(
+                text = stringResource(R.string.secret_phrase_confirm_quick_test_title),
+                minLines = DescriptionMinLines,
+            )
             Spacer(modifier = Modifier.height(sectionSpacing))
             PhraseLayout(
                 words = words,

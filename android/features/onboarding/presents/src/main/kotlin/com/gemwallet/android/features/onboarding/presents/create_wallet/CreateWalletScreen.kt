@@ -80,6 +80,7 @@ private const val CopyFeedbackDurationMs = 1_500L
 private const val CopyFeedbackAnimationMs = 180
 private const val CopyIconInitialScale = 0.6f
 private const val CopySuccessBackgroundAlpha = 0.12f
+private const val DescriptionMinLines = 2
 private val sectionSpacing = 20.dp
 private val copyButtonMinWidth = 112.dp
 private val copyButtonIconSize = 18.dp
@@ -209,7 +210,10 @@ internal fun CreateWalletScene(words: List<String>, dataError: String?, onAction
             if (dataError != null) {
                 Text(text = dataError)
             } else {
-                CenteredDescriptionText(stringResource(id = R.string.secret_phrase_save_phrase_safely))
+                CenteredDescriptionText(
+                    text = stringResource(id = R.string.secret_phrase_save_phrase_safely),
+                    minLines = DescriptionMinLines,
+                )
                 Spacer(modifier = Modifier.height(sectionSpacing))
                 PhraseLayout(
                     words = words,

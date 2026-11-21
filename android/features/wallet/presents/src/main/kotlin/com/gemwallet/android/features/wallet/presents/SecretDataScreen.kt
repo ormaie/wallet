@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +35,7 @@ import com.gemwallet.android.ui.components.screen.PhraseLayout
 import com.gemwallet.android.ui.components.screen.Scene
 import com.gemwallet.android.ui.components.sensitiveData
 import com.gemwallet.android.ui.localization.string
+import com.gemwallet.android.ui.theme.SceneSizing
 import com.gemwallet.android.ui.theme.adaptivePadding
 import com.gemwallet.android.ui.theme.alpha10
 import com.gemwallet.android.ui.theme.paddingDefault
@@ -128,7 +130,10 @@ fun SecretDataScreen(onCancel: () -> Unit, viewModel: SecretDataViewModel = hilt
                     }
                 }
 
-                is GemWalletSecret.Words -> PhraseLayout(words = secret.words)
+                is GemWalletSecret.Words -> PhraseLayout(
+                    words = secret.words,
+                    modifier = Modifier.widthIn(max = SceneSizing.contentMaxWidth),
+                )
             }
 
             CopyButton(
