@@ -1,4 +1,3 @@
-use chrono::Utc;
 use gem_hypercore::perpetual_formatter::usdc_value;
 use num_bigint::BigInt;
 use primitives::swap::{ApprovalData, SwapQuoteDataType};
@@ -7,7 +6,7 @@ use primitives::{
     TransactionInputType, TransactionNFTTransferMetadata, TransactionPaymentMetadata, TransactionPerpetualMetadata, TransactionResourceTypeMetadata, TransactionState, TransactionSwapMetadata, TransactionType,
     TransactionWalletConnectMetadata, TransferDataOutputAction, TransferDataOutputType,
 };
-use primitives::{OptionStringExt, SwapProvider};
+use primitives::{DateTime, OptionStringExt, SwapProvider};
 
 use super::model::{GemConfirmDestination, GemConfirmRow, GemConfirmTitle, GemPendingTransactionInput, GemRecentActivity, GemRecipient, GemTransferData, GemTransferOutput};
 use crate::config::chain::is_memo_supported;
@@ -133,7 +132,7 @@ impl TransferInput for TransactionInputType {
 
     fn shows_memo(&self) -> bool {
         match self {
-            Self::Transfer { .. } | Self::Deposit { .. } | Self::Withdrawal { .. } => is_memo_supported(self.get_asset().chain()),
+            Self::Transfer { .. } | Self::TransferNft { .. } | Self::Deposit { .. } | Self::Withdrawal { .. } => is_memo_supported(self.get_asset().chain()),
             _ => false,
         }
     }
@@ -597,7 +596,7 @@ impl GemPendingTransactionInput {
             value,
             memo,
             metadata,
-            Utc::now(),
+            DateTime::now(),
         );
         transaction.block_number = transaction_metadata_block_number(&self.metadata);
         transaction.sequence = self.sequence.map(|sequence| sequence.to_string());
@@ -906,6 +905,14 @@ mod tests {
     fn test_memo_row_only_for_sends_on_memo_chains() {
         assert!(TransactionInputType::Transfer { asset: Asset::from_chain(Chain::Cosmos) }.shows_memo());
         assert!(!TransactionInputType::Transfer { asset: Asset::from_chain(Chain::Ethereum) }.shows_memo());
+        let nft = |chain: Chain, nft_asset: NFTAsset| GemTransferData::mock(TransactionInputType::TransferNft { asset: Asset::from_chain(chain), nft_asset });
+        for (transfer, shows_memo) in [
+            (nft(Chain::Solana, NFTAsset::mock_solana("token", "collection")), true),
+            (nft(Chain::Ton, NFTAsset::mock_ton()), true),
+            (nft(Chain::Ethereum, NFTAsset::mock()), false),
+        ] {
+            assert_eq!(transfer.confirm_rows().contains(&GemConfirmRow::Memo), shows_memo, "{:?}", transfer.input_type.get_asset().chain());
+        }
         assert!(
             !TransactionInputType::Stake {
                 asset: Asset::from_chain(Chain::Cosmos),
