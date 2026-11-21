@@ -9,7 +9,7 @@ An Android-only fork of [gemwalletcom/wallet](https://github.com/gemwalletcom/wa
 
 ## Download
 
-Grab `gem-wallet-universal-release.apk` from the latest [Android CI](https://github.com/ormaie/wallet/actions/workflows/android-ci.yml) run, or build from source below.
+Download the signed `gem_wallet_universal_<version>.apk` (and `.sha256` checksum) from the latest [GitHub Release](https://github.com/ormaie/wallet/releases/latest). Unreleased `main` builds are also available as `gem-wallet-universal-release.apk` from [Android CI](https://github.com/ormaie/wallet/actions/workflows/android-ci.yml), or you can build from source below.
 
 ## Air-Gapped Cold Wallet Support
 
@@ -39,7 +39,7 @@ just core test      # run Rust workspace unit tests
 just sync-upstream  # merge gemwalletcom/wallet:main while stripping iOS paths
 ```
 
-To build a signed release APK locally, run `just android release-apk`.
+To build an unsigned universal release APK locally, run `android/reproducible/docker.sh universal` (or `BUILD_MODE=release ./gradlew :app:assembleUniversalRelease -Pchannel=universal -PuseLegacyPackaging=true` in `android/`).
 
 ## Security & License
 

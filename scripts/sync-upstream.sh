@@ -25,7 +25,7 @@ if ! git remote get-url "$UPSTREAM_REMOTE" >/dev/null 2>&1; then
   git remote add "$UPSTREAM_REMOTE" "$UPSTREAM_URL"
 fi
 
-git fetch "$UPSTREAM_REMOTE" "$UPSTREAM_BRANCH"
+git fetch --no-tags "$UPSTREAM_REMOTE" "$UPSTREAM_BRANCH"
 UPSTREAM_REF="$UPSTREAM_REMOTE/$UPSTREAM_BRANCH"
 
 if git merge-base --is-ancestor "$UPSTREAM_REF" HEAD; then
