@@ -9,7 +9,7 @@ An Android-only fork of [gemwalletcom/wallet](https://github.com/gemwalletcom/wa
 
 ## Download
 
-Grab `gem-wallet-universal-release-apk` from the latest [Android CI](https://github.com/ormaie/wallet/actions/workflows/android-ci.yml) run, or build from source below.
+Grab `gem-wallet-universal-release.apk` from the latest [Android CI](https://github.com/ormaie/wallet/actions/workflows/android-ci.yml) run, or build from source below.
 
 ## Air-Gapped Cold Wallet Support
 
