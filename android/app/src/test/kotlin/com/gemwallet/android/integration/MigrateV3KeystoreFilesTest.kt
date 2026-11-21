@@ -1,5 +1,6 @@
 package com.gemwallet.android.integration
 
+import android.app.Application
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -26,9 +27,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import java.io.File
 
 @RunWith(AndroidJUnit4::class)
+@Config(application = Application::class)
 class MigrateV3KeystoreFilesTest {
 
     private val context = ApplicationProvider.getApplicationContext<Context>()

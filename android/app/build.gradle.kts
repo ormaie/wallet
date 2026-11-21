@@ -184,6 +184,11 @@ android {
         checkGeneratedSources = true
         checkDependencies = false
     }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 dependencies {

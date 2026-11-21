@@ -3,6 +3,8 @@ package com.gemwallet.android.di
 import android.content.Context
 import com.gemwallet.android.application.device.cases.RequestPushToken
 import com.gemwallet.android.application.notifications.cases.ShowSystemNotification
+import com.gemwallet.android.data.services.store.queries.TransactionQuery
+import com.gemwallet.android.data.services.store.queries.WalletQuery
 import com.gemwallet.android.flavors.StoreRequestPushToken
 import com.gemwallet.android.flavors.isNotificationsAvailable
 import com.gemwallet.android.model.BuildInfo
@@ -34,7 +36,11 @@ object BuildInfoModule {
 
     @Provides
     @Singleton
-    fun provideShowSystemNotification(@ApplicationContext context: Context): ShowSystemNotification = ShowSystemNotificationImpl(context)
+    fun provideShowSystemNotification(
+        @ApplicationContext context: Context,
+        walletQuery: WalletQuery,
+        transactionQuery: TransactionQuery,
+    ): ShowSystemNotification = ShowSystemNotificationImpl(context, walletQuery, transactionQuery)
 
     @Provides
     @Singleton

@@ -42,8 +42,8 @@ class FCM : FirebaseMessagingService() {
         scope.launch {
             val type = message.data[PushNotificationField.Type.key]
             val rawData = message.data[PushNotificationField.Data.key]
-            val title = message.notification?.title
-            val subtitle = message.notification?.body
+            val title = message.notification?.title ?: message.data["title"]
+            val subtitle = message.notification?.body ?: message.data["body"] ?: message.data["message"]
             showSystemNotification.showNotification(title, subtitle, type, rawData)
         }
     }

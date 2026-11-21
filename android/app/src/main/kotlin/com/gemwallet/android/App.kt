@@ -10,6 +10,7 @@ import coil3.disk.directory
 import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import com.gemwallet.android.application.assets.cases.GetActiveAssetsInfo
+import com.gemwallet.android.application.notifications.cases.ShowSystemNotification
 import com.gemwallet.android.application.transactions.cases.GetTransactions
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.Dispatcher
@@ -31,8 +32,12 @@ class App :
     @Inject
     lateinit var getTransactions: GetTransactions
 
+    @Inject
+    lateinit var showSystemNotification: ShowSystemNotification
+
     override fun onCreate() {
         super.onCreate()
+        showSystemNotification.ensureChannels()
         ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleCoordinator)
     }
 

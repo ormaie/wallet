@@ -64,6 +64,10 @@
                 <data android:scheme="https" android:host="gemwallet.com" android:pathPattern="/..*/rewards/" />
             </intent-filter>
         </activity>
+        <receiver
+            android:name=".services.NotificationActionReceiver"
+            android:exported="false"
+            />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
