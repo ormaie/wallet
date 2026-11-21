@@ -226,6 +226,43 @@ class SwapViewModelTest {
     }
 
     @Test
+    fun `a delayed pair suggestion does not overwrite a user selection`() = runTest(testDispatcher) {
+        val suggestionGate = CompletableDeferred<GemSwapPairSuggestion?>()
+        coEvery { swapQuoteService.suggestPair(null) } coAnswers { suggestionGate.await() }
+        val savedState = SavedStateHandle()
+        val viewModel = createViewModel(savedState)
+        runCurrent()
+
+        pairSelection = GemSwapPairSelection(usdcAsset.id.toIdentifier(), solAsset.id.toIdentifier())
+        viewModel.onSelect(SwapItemType.Pay, usdcAsset.id)
+        suggestionGate.complete(
+            GemSwapPairSuggestion(
+                payAssetId = solAsset.id.toIdentifier(),
+                receiveAssetId = usdcAsset.id.toIdentifier(),
+            ),
+        )
+        advanceUntilIdle()
+
+        assertEquals(usdcAsset.id.toIdentifier(), savedState.get<String?>(RouteArgument.FromAssetId.key))
+        assertEquals(solAsset.id.toIdentifier(), savedState.get<String?>(RouteArgument.ToAssetId.key))
+    }
+
+    @Test
+    fun `opening and closing the slippage sheet keeps the saved slippage`() = runTest(testDispatcher) {
+        every { swapQuoteService.slippageBps() } returns 200u
+        val viewModel = createViewModel(swapSavedState())
+        assertEquals(200u, viewModel.selectedSlippage.value)
+        advanceUntilIdle()
+
+        viewModel.openSlippage()
+        viewModel.closeSlippage()
+        advanceUntilIdle()
+
+        assertEquals(200u, viewModel.selectedSlippage.value)
+        coVerify(exactly = 0) { swapQuoteService.setSlippageBps(any()) }
+    }
+
+    @Test
     fun `a typed slippage is saved when the sheet closes`() = runTest(testDispatcher) {
         val viewModel = createViewModel(swapSavedState())
         advanceUntilIdle()

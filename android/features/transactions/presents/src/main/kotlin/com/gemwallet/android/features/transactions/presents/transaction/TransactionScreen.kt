@@ -14,7 +14,6 @@ import com.gemwallet.android.features.transactions.viewmodels.TransactionViewMod
 import com.gemwallet.android.features.transactions.viewmodels.chain
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.screen.FatalStateScene
-import com.gemwallet.android.ui.components.screen.LoadingScene
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.shareText
@@ -34,37 +33,39 @@ fun TransactionScreen(onAction: (TransactionAction.Navigation) -> Unit, viewMode
     val model = transaction
     if (model == null) {
         when (val state = loadState) {
-            is GemLoadState.Error -> FatalStateScene(
-                title = stringResource(R.string.errors_error_occurred),
-                message = state.error.errorText().text(context),
-                onCancel = { onAction(TransactionAction.Close) },
-                onTryAgain = viewModel::load,
-            )
+            is GemLoadState.Error -> {
+                FatalStateScene(
+                    title = stringResource(R.string.errors_error_occurred),
+                    message = state.error.errorText().text(context),
+                    onCancel = { onAction(TransactionAction.Close) },
+                    onTryAgain = viewModel::load,
+                )
+                return
+            }
 
-            GemLoadState.Loading, GemLoadState.Data, GemLoadState.NoData -> LoadingScene(
-                title = "",
-                onCancel = { onAction(TransactionAction.Close) },
-            )
+            GemLoadState.Loading, GemLoadState.Data, GemLoadState.NoData -> Unit
         }
-        return
     }
 
     TransactionScene(
-        title = model.rows.title.string(context),
-        sections = model.sections,
-        headerAction = model.rows.headerAction,
-        chain = model.rows.chain(),
+        title = model?.rows?.title?.string(context).orEmpty(),
+        sections = model?.sections.orEmpty(),
+        headerAction = model?.rows?.headerAction,
+        chain = model?.rows?.chain(),
+        isLoading = model == null,
         onAction = {
             when (it) {
-                TransactionAction.Share -> onShare(model.rows.explorer.link, model.rows.explorer.name)
+                TransactionAction.Share -> model?.let { current -> onShare(current.rows.explorer.link, current.rows.explorer.name) }
                 TransactionAction.ShowFeeDetails -> isShowFeeDetails = true
                 is TransactionAction.Navigation -> onAction(it)
             }
         },
     )
 
-    FeeDetailsDialog(
-        isVisible = isShowFeeDetails,
-        feeRow = model.rows.feeRow,
-    ) { isShowFeeDetails = false }
+    model?.let { current ->
+        FeeDetailsDialog(
+            isVisible = isShowFeeDetails,
+            feeRow = current.rows.feeRow,
+        ) { isShowFeeDetails = false }
+    }
 }

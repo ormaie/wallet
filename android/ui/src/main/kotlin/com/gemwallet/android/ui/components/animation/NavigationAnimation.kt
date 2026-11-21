@@ -74,4 +74,4 @@ fun <T> AnimatedContentTransitionScope<T>.navigationSlideTransition(direction: A
 ) togetherWith slideOutOfContainer(
     towards = direction,
     animationSpec = tween(NavigationDurationMillis),
-)
+) using null

@@ -1,9 +1,11 @@
 package com.gemwallet.android.features.assets.presents.asset
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -11,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.gemwallet.android.domains.confirm.ConfirmTransferInput
 import com.gemwallet.android.ext.toAssetId
@@ -22,6 +25,7 @@ import com.gemwallet.android.features.assets.presents.asset.components.EmptyTran
 import com.gemwallet.android.features.assets.viewmodels.asset.models.AssetAction
 import com.gemwallet.android.features.assets.viewmodels.asset.models.detailsAction
 import com.gemwallet.android.features.assets.viewmodels.asset.models.navigation
+import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.LoadOnListEnd
 import com.gemwallet.android.ui.components.list_item.DaySectionedList
 import com.gemwallet.android.ui.components.list_item.GemListRowView
@@ -44,26 +48,21 @@ import uniffi.gemstone.GemTransactionRow
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AssetScene(
-    details: GemAssetDetails,
-    asset: Asset,
+    details: GemAssetDetails?,
+    asset: Asset?,
     transactions: DaySectionedList<GemTransactionRow>,
     transactionsPhase: GemListPhase?,
     isRefreshing: Boolean,
     snackBar: SnackbarHostState = remember { SnackbarHostState() },
     onAction: (AssetAction) -> Unit,
 ) {
-    val detailsState = details.state
-    val swapAction: () -> Unit = {
-        details.swapPair.payAssetId.toAssetId()?.let { payAssetId ->
-            onAction(AssetAction.Swap(fromAssetId = payAssetId, toAssetId = details.swapPair.receiveAssetId?.toAssetId()))
-        }
-    }
+    val title = details?.title ?: asset?.name ?: stringResource(R.string.common_loading)
 
     Scene(
         titleContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = details.title,
+                    text = title,
                     maxLines = 1,
                     overflow = TextOverflow.MiddleEllipsis,
                 )
@@ -71,14 +70,29 @@ internal fun AssetScene(
         },
         progress = null,
         actions = {
-            AssetDetailsMenu(
-                details = details,
-                onPriceAlert = { onAction(AssetAction.TogglePriceAlert) },
-            )
+            details?.let { currentDetails ->
+                AssetDetailsMenu(
+                    details = currentDetails,
+                    onPriceAlert = { onAction(AssetAction.TogglePriceAlert) },
+                )
+            }
         },
         onClose = { onAction(AssetAction.Close) },
         snackbar = snackBar,
     ) {
+        if (details == null || asset == null) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+            return@Scene
+        }
+
+        val detailsState = details.state
+        val swapAction: () -> Unit = {
+            details.swapPair.payAssetId.toAssetId()?.let { payAssetId ->
+                onAction(AssetAction.Swap(fromAssetId = payAssetId, toAssetId = details.swapPair.receiveAssetId?.toAssetId()))
+            }
+        }
         val transactionSections = rememberDateSections(transactions)
         val onTransactionClick: (TransactionId) -> Unit = { onAction(AssetAction.OpenTransaction(it)) }
         PullToRefreshBox(
@@ -109,7 +123,7 @@ internal fun AssetScene(
                 }
                 val network = details.networkDestination.navigation()
                 details.sections.forEach { section ->
-                    section.title.titleRes()?.let { title -> item { SubheaderItem(title) } }
+                    section.title.titleRes()?.let { sectionTitle -> item { SubheaderItem(sectionTitle) } }
                     itemsPositioned(section.rows) { position, row ->
                         AssetDetailRowItem(row = row, action = row.detailsAction(asset.id, network), listPosition = position, onAction = onAction)
                     }

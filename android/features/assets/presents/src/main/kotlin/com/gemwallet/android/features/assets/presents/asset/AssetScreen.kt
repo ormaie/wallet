@@ -4,14 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gemwallet.android.features.assets.viewmodels.asset.AssetViewModel
 import com.gemwallet.android.features.assets.viewmodels.asset.models.AssetAction
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.RefreshOnTimer
-import com.gemwallet.android.ui.components.screen.LoadingScene
 import com.gemwallet.android.ui.components.screen.ToastEffect
 import com.gemwallet.android.ui.components.screen.rememberSnackbarState
 import com.gemwallet.android.ui.open
@@ -33,45 +31,36 @@ fun AssetScreen(onAction: (AssetAction.Navigation) -> Unit) {
     val refreshIntervalMillis by viewModel.refreshIntervalMillis.collectAsStateWithLifecycle()
     RefreshOnTimer(refreshIntervalMillis, viewModel::refresh)
 
-    val currentDetails = details
-    val currentAsset = asset
-    if (currentDetails != null && currentAsset != null) {
-        AssetScene(
-            details = currentDetails,
-            asset = currentAsset,
-            transactions = transactions,
-            transactionsPhase = transactionsPhase,
-            isRefreshing = isRefreshing,
-            snackBar = snackBar,
-            onAction = { action ->
-                when (action) {
-                    AssetAction.Refresh -> viewModel.refresh()
+    AssetScene(
+        details = details,
+        asset = asset,
+        transactions = transactions,
+        transactionsPhase = transactionsPhase,
+        isRefreshing = isRefreshing,
+        snackBar = snackBar,
+        onAction = { action ->
+            when (action) {
+                AssetAction.Refresh -> viewModel.refresh()
 
-                    AssetAction.TransactionsEndReached -> viewModel.onTransactionsEndReached()
+                AssetAction.TransactionsEndReached -> viewModel.onTransactionsEndReached()
 
-                    AssetAction.Pin -> viewModel.pin()
+                AssetAction.Pin -> viewModel.pin()
 
-                    AssetAction.Add -> viewModel.add()
+                AssetAction.Add -> viewModel.add()
 
-                    AssetAction.TogglePriceAlert -> viewModel.togglePriceAlert()
+                AssetAction.TogglePriceAlert -> viewModel.togglePriceAlert()
 
-                    is AssetAction.CloseBanner -> viewModel.closeBanner(action.key)
+                is AssetAction.CloseBanner -> viewModel.closeBanner(action.key)
 
-                    is AssetAction.OpenUrl -> uriHandler.open(context, action.url)
+                is AssetAction.OpenUrl -> uriHandler.open(context, action.url)
 
-                    AssetAction.OpenPerpetuals -> {
-                        viewModel.enablePerpetuals()
-                        onAction(AssetAction.OpenPerpetuals)
-                    }
-
-                    is AssetAction.Navigation -> onAction(action)
+                AssetAction.OpenPerpetuals -> {
+                    viewModel.enablePerpetuals()
+                    onAction(AssetAction.OpenPerpetuals)
                 }
-            },
-        )
-    } else {
-        LoadingScene(
-            title = stringResource(R.string.common_loading),
-            onCancel = { onAction(AssetAction.Close) },
-        )
-    }
+
+                is AssetAction.Navigation -> onAction(action)
+            }
+        },
+    )
 }

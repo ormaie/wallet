@@ -131,15 +131,20 @@ fun ReceiveScreen(assetId: AssetId, closeIcon: Boolean = false, onCancel: () -> 
         LaunchedEffect(info.asset.id) {
             viewModel.setVisible()
         }
-        val assetState = remember(info.asset.id) { viewModel.assetState(info.asset) }
+        val assetState = remember(info.asset) { viewModel.assetState(info.asset) }
+        val warning = remember(assetState) { viewModel.warningText(assetState) }
+        val copyText = remember(info.asset.id, info.account.address) { viewModel.copyAddress(info) }
+        val chainRow = remember(networks.networks, info.asset.id) {
+            networks.networks.firstOrNull { it.assetId == info.asset.id.toIdentifier() }?.row ?: chainRow(info.asset.id.chain.string)
+        }
         ReceiveScene(
             closeIcon = closeIcon,
             assetInfo = info,
             header = assetState.asset,
-            warning = remember(assetState) { viewModel.warningText(assetState) },
-            shareText = viewModel.shareAddress(),
-            copyText = viewModel.copyAddress(),
-            chainRow = networks.networks.firstOrNull { it.assetId == info.asset.id.toIdentifier() }?.row ?: chainRow(info.asset.id.chain.string),
+            warning = warning,
+            shareText = viewModel.shareAddress(info),
+            copyText = copyText,
+            chainRow = chainRow,
             onSelectNetwork = if (networks.showsSelector) {
                 { isShowingNetworkSelector = true }
             } else {

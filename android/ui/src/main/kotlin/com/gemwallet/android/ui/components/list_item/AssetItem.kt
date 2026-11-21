@@ -1,7 +1,10 @@
 package com.gemwallet.android.ui.components.list_item
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.Transition
+import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -244,37 +247,76 @@ private const val COPY_FEEDBACK_DURATION_MS = 1_500L
 private const val COPY_ICON_ANIMATION_MS = 180
 private const val COPY_ICON_INITIAL_SCALE = 0.6f
 
+private class AssetCopyFeedbackState(
+    val transition: Transition<Boolean>,
+    val containerColor: Color,
+    val iconTint: Color,
+)
+
+@Composable
+private fun rememberAssetCopyFeedback(
+    copyTrigger: Int,
+    isCopied: Boolean,
+    onReset: (Int) -> Unit,
+    idleContainerColor: Color,
+    idleIconTint: Color,
+): AssetCopyFeedbackState {
+    LaunchedEffect(copyTrigger) {
+        delay(COPY_FEEDBACK_DURATION_MS)
+        onReset(copyTrigger)
+    }
+
+    val transitionState = remember { MutableTransitionState(false) }
+    transitionState.targetState = isCopied
+    val transition = rememberTransition(transitionState, label = "asset_copy_feedback")
+    val copiedContainerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = alpha20)
+    val copiedIconTint = MaterialTheme.colorScheme.tertiary
+
+    val containerColor by transition.animateColor(
+        transitionSpec = { tween(COPY_ICON_ANIMATION_MS) },
+        label = "asset_copy_container",
+    ) { copied ->
+        if (copied) copiedContainerColor else idleContainerColor
+    }
+    val iconTint by transition.animateColor(
+        transitionSpec = { tween(COPY_ICON_ANIMATION_MS) },
+        label = "asset_copy_tint",
+    ) { copied ->
+        if (copied) copiedIconTint else idleIconTint
+    }
+    return AssetCopyFeedbackState(
+        transition = transition,
+        containerColor = containerColor,
+        iconTint = iconTint,
+    )
+}
+
 @Composable
 private fun AssetCopyButton(onClick: () -> Unit) {
     var copyTrigger by remember { mutableIntStateOf(0) }
     var isCopied by remember { mutableStateOf(false) }
+    val idleContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = alpha60)
+    val idleIconTint = MaterialTheme.colorScheme.secondary
+    val copyDescription = stringResource(R.string.common_copy)
 
-    LaunchedEffect(copyTrigger) {
-        if (copyTrigger > 0) {
-            delay(COPY_FEEDBACK_DURATION_MS)
-            isCopied = false
-        }
+    val feedback = if (copyTrigger > 0) {
+        rememberAssetCopyFeedback(
+            copyTrigger = copyTrigger,
+            isCopied = isCopied,
+            onReset = { trigger ->
+                if (copyTrigger == trigger) {
+                    isCopied = false
+                }
+            },
+            idleContainerColor = idleContainerColor,
+            idleIconTint = idleIconTint,
+        )
+    } else {
+        null
     }
-
-    val containerColor by animateColorAsState(
-        targetValue = if (isCopied) {
-            MaterialTheme.colorScheme.tertiary.copy(alpha = alpha20)
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = alpha60)
-        },
-        animationSpec = tween(COPY_ICON_ANIMATION_MS),
-        label = "asset_copy_container",
-    )
-    val iconTint by animateColorAsState(
-        targetValue = if (isCopied) {
-            MaterialTheme.colorScheme.tertiary
-        } else {
-            MaterialTheme.colorScheme.secondary
-        },
-        animationSpec = tween(COPY_ICON_ANIMATION_MS),
-        label = "asset_copy_tint",
-    )
-    val description = stringResource(if (isCopied) R.string.common_copied_to_clipboard else R.string.common_copy)
+    val containerColor = feedback?.containerColor ?: idleContainerColor
+    val iconTint = feedback?.iconTint ?: idleIconTint
+    val description = if (isCopied) stringResource(R.string.common_copied_to_clipboard) else copyDescription
 
     Box(
         modifier = Modifier
@@ -283,7 +325,7 @@ private fun AssetCopyButton(onClick: () -> Unit) {
             .background(containerColor)
             .clickable(
                 role = Role.Button,
-                onClickLabel = stringResource(R.string.common_copy),
+                onClickLabel = copyDescription,
             ) {
                 isCopied = true
                 copyTrigger++
@@ -292,20 +334,27 @@ private fun AssetCopyButton(onClick: () -> Unit) {
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        AnimatedContent(
-            targetState = isCopied,
-            transitionSpec = {
-                (fadeIn(tween(COPY_ICON_ANIMATION_MS)) + scaleIn(tween(COPY_ICON_ANIMATION_MS), initialScale = COPY_ICON_INITIAL_SCALE))
-                    .togetherWith(fadeOut(tween(COPY_ICON_ANIMATION_MS)) + scaleOut(tween(COPY_ICON_ANIMATION_MS), targetScale = COPY_ICON_INITIAL_SCALE))
-            },
-            label = "asset_copy_icon",
-        ) { copied ->
+        if (feedback == null) {
             Icon(
-                imageVector = if (copied) AppIcons.Check else AppIcons.ContentCopyOutlined,
+                imageVector = AppIcons.ContentCopyOutlined,
                 contentDescription = null,
                 modifier = Modifier.size(compactIconSize),
                 tint = iconTint,
             )
+        } else {
+            feedback.transition.AnimatedContent(
+                transitionSpec = {
+                    (fadeIn(tween(COPY_ICON_ANIMATION_MS)) + scaleIn(tween(COPY_ICON_ANIMATION_MS), initialScale = COPY_ICON_INITIAL_SCALE))
+                        .togetherWith(fadeOut(tween(COPY_ICON_ANIMATION_MS)) + scaleOut(tween(COPY_ICON_ANIMATION_MS), targetScale = COPY_ICON_INITIAL_SCALE))
+                },
+            ) { copied ->
+                Icon(
+                    imageVector = if (copied) AppIcons.Check else AppIcons.ContentCopyOutlined,
+                    contentDescription = null,
+                    modifier = Modifier.size(compactIconSize),
+                    tint = iconTint,
+                )
+            }
         }
     }
 }

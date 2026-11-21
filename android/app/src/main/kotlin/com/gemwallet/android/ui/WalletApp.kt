@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
@@ -34,6 +35,7 @@ import com.gemwallet.android.ui.navigation.WalletNavGraph
 import com.gemwallet.android.ui.navigation.WalletRootRoute
 import com.gemwallet.android.ui.navigation.rememberWalletNavigationState
 import com.gemwallet.android.ui.navigation.routes.WalletRoute
+import kotlinx.coroutines.flow.first
 import uniffi.gemstone.GemAppUpdateAction
 import uniffi.gemstone.GemAppUpdateOffer
 import uniffi.gemstone.GemNavigationTab
@@ -62,8 +64,7 @@ fun WalletApp(
         onOpenAction = viewModel::openAction,
     )
     val currentOnContentReady by rememberUpdatedState(onContentReady)
-    val isWalletRootActive = navigator.backStack.lastOrNull() == WalletRootRoute
-    val shouldWaitForWalletRootContent = isWalletRootActive && pendingRoutes.isEmpty()
+    val currentPendingRoutesEmpty by rememberUpdatedState(pendingRoutes.isEmpty())
 
     LaunchedEffect(pendingRoutes, navigator) {
         if (pendingRoutes.isEmpty()) return@LaunchedEffect
@@ -122,10 +123,10 @@ fun WalletApp(
         },
     )
 
-    LaunchedEffect(shouldWaitForWalletRootContent) {
-        if (!shouldWaitForWalletRootContent) {
-            currentOnContentReady()
-        }
+    LaunchedEffect(navigator) {
+        snapshotFlow { navigator.backStack.lastOrNull() != WalletRootRoute || !currentPendingRoutesEmpty }
+            .first { it }
+        currentOnContentReady()
     }
 
     state.update?.let { update ->

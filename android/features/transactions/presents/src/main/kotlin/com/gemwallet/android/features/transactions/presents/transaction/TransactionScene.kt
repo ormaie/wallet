@@ -1,12 +1,15 @@
 package com.gemwallet.android.features.transactions.presents.transaction
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -37,17 +40,32 @@ import uniffi.gemstone.GemTransactionDetailRow
 import uniffi.gemstone.GemTransactionHeaderAction
 
 @Composable
-internal fun TransactionScene(title: String, sections: List<GemGroup>, headerAction: GemTransactionHeaderAction?, chain: Chain, onAction: (TransactionAction) -> Unit) {
+internal fun TransactionScene(
+    title: String,
+    sections: List<GemGroup>,
+    headerAction: GemTransactionHeaderAction?,
+    chain: Chain?,
+    isLoading: Boolean = false,
+    onAction: (TransactionAction) -> Unit,
+) {
     val context = LocalContext.current
     Scene(
         title = title,
         actions = {
-            IconButton(onClick = { onAction(TransactionAction.Share) }) {
-                Icon(AppIcons.Share, stringResource(R.string.common_share))
+            if (!isLoading) {
+                IconButton(onClick = { onAction(TransactionAction.Share) }) {
+                    Icon(AppIcons.Share, stringResource(R.string.common_share))
+                }
             }
         },
         onClose = { onAction(TransactionAction.Close) },
     ) {
+        if (isLoading || chain == null) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+            return@Scene
+        }
         LazyColumn(modifier = Modifier.fillMaxSize().testTag("transaction_details")) {
             sections.forEach { group ->
                 itemsPositioned(group.items.filterIsInstance<GemListItem.TransactionDetail>().map { it.item }, key = { _, item -> item.id }) { position, item ->

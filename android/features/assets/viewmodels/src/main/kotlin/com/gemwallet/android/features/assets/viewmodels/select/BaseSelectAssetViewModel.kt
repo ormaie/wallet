@@ -173,7 +173,7 @@ open class BaseSelectAssetViewModel(
 
     protected val sections = combine(assets, isSearching, ::assetSections)
         .flowOn(ioDispatcher)
-        .stateIn(viewModelScope, SharingStarted.Eagerly, assetSections(assets.value, isSearching.value))
+        .stateIn(viewModelScope, SharingStarted.Eagerly, AssetSections(GemSelectAssetState.IDLE, emptyList(), emptyList(), emptyList()))
 
     val popular = sections
         .map { it.popular }

@@ -74,9 +74,9 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
@@ -102,6 +102,7 @@ import com.gemwallet.android.features.transactions.viewmodels.TransactionsViewMo
 import com.gemwallet.android.features.wallet.presents.WalletAction
 import com.gemwallet.android.features.wallet.presents.WalletScreen
 import com.gemwallet.android.features.wallet.viewmodels.WalletViewModel
+import com.gemwallet.android.ui.LocalNavTransitionRunning
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.ConnectionStatusBannerHost
 import com.gemwallet.android.ui.components.LocalConnectionBannerHandled
@@ -165,7 +166,6 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
     val walletViewModel: WalletViewModel = hiltViewModel()
     val transactionsViewModel: TransactionsViewModel = hiltViewModel()
     val settingsViewModel: SettingsViewModel = hiltViewModel()
-    val isRootRouteActive = navigator.backStack.lastOrNull() == WalletRootRoute
     var isPresentingScanner by rememberSaveable { mutableStateOf(false) }
 
     ScanReceiveModal(
@@ -178,9 +178,7 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
         },
     )
 
-    BackHandler(isRootRouteActive && currentTab.value != WalletRoute) {
-        currentTab.value = WalletRoute
-    }
+    RootTabBackHandler(navigator = navigator, currentTab = currentTab)
     val assetsListState = rememberLazyListState()
     val activitiesListState = rememberLazyListState()
     val settingsScrollState = rememberScrollState()
@@ -196,32 +194,56 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
         }
     }
 
-    val navItems = listOf(
-        BottomNavItem(
-            label = stringResource(R.string.common_wallet),
-            icon = AppIcons.TabWallet,
-            selectedIcon = AppIcons.TabWalletFilled,
-            route = WalletRoute,
-            testTag = "mainTab",
-        ),
-        BottomNavItem(
-            label = stringResource(R.string.activity_title),
-            icon = AppIcons.TabActivity,
-            selectedIcon = AppIcons.TabActivityFilled,
-            route = TransactionsRoute,
-            badge = pendingCount.takeIf { it > 0 }?.toString(),
-            testTag = "activitiesTab",
-        ),
-        BottomNavItem(
-            label = stringResource(R.string.settings_title),
-            icon = AppIcons.TabSettings,
-            selectedIcon = AppIcons.TabSettingsFilled,
-            route = SettingsRoute,
-            testTag = "settingsTab",
-        ),
-    )
+    val walletLabel = stringResource(R.string.common_wallet)
+    val activityLabel = stringResource(R.string.activity_title)
+    val settingsLabel = stringResource(R.string.settings_title)
+    val tabWallet = AppIcons.TabWallet
+    val tabWalletFilled = AppIcons.TabWalletFilled
+    val tabActivity = AppIcons.TabActivity
+    val tabActivityFilled = AppIcons.TabActivityFilled
+    val tabSettings = AppIcons.TabSettings
+    val tabSettingsFilled = AppIcons.TabSettingsFilled
+    val pendingBadge = pendingCount.takeIf { it > 0 }?.toString()
+    val navItems = remember(
+        walletLabel,
+        activityLabel,
+        settingsLabel,
+        tabWallet,
+        tabWalletFilled,
+        tabActivity,
+        tabActivityFilled,
+        tabSettings,
+        tabSettingsFilled,
+        pendingBadge,
+    ) {
+        listOf(
+            BottomNavItem(
+                label = walletLabel,
+                icon = tabWallet,
+                selectedIcon = tabWalletFilled,
+                route = WalletRoute,
+                testTag = "mainTab",
+            ),
+            BottomNavItem(
+                label = activityLabel,
+                icon = tabActivity,
+                selectedIcon = tabActivityFilled,
+                route = TransactionsRoute,
+                badge = pendingBadge,
+                testTag = "activitiesTab",
+            ),
+            BottomNavItem(
+                label = settingsLabel,
+                icon = tabSettings,
+                selectedIcon = tabSettingsFilled,
+                route = SettingsRoute,
+                testTag = "settingsTab",
+            ),
+        )
+    }
     val contentBackdropLayer = rememberGraphicsLayer()
-    var contentOrigin by remember { mutableStateOf(Offset.Zero) }
+    val backdropAlignment = remember { BackdropAlignmentState() }
+    val isNavTransitionRunning = LocalNavTransitionRunning.current
     val backdropInvalidationKey: () -> Int = {
         when (currentTab.value) {
             WalletRoute -> assetsListState.firstVisibleItemIndex * scrollIndexStride + assetsListState.firstVisibleItemScrollOffset
@@ -238,8 +260,10 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                 items = navItems,
                 selectedRoute = currentTab.value,
                 backdropLayer = contentBackdropLayer,
-                backdropOrigin = { contentOrigin },
+                backdropOffset = { backdropAlignment.offset },
+                onPillPlaced = backdropAlignment::onPillPlaced,
                 backdropInvalidationKey = backdropInvalidationKey,
+                isNavTransitionRunning = isNavTransitionRunning,
                 onSelect = { route ->
                     if (route == currentTab.value) {
                         scrollTabToTop(route)
@@ -256,15 +280,17 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
             modifier = Modifier
                 .fillMaxSize()
                 .consumeWindowInsets(WindowInsets.navigationBars)
-                .onGloballyPositioned { coordinates ->
-                    contentOrigin = coordinates.positionInRoot()
-                }
+                .onPlaced(backdropAlignment::onContentPlaced)
                 .drawWithContent {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        contentBackdropLayer.record {
-                            this@drawWithContent.drawContent()
+                        if (!isNavTransitionRunning() || contentBackdropLayer.size == IntSize.Zero) {
+                            contentBackdropLayer.record {
+                                this@drawWithContent.drawContent()
+                            }
+                            drawLayer(contentBackdropLayer)
+                        } else {
+                            drawContent()
                         }
-                        drawLayer(contentBackdropLayer)
                     } else {
                         drawContent()
                     }
@@ -340,45 +366,94 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
 }
 
 @Composable
+private fun RootTabBackHandler(navigator: WalletNavigator, currentTab: MutableState<String>) {
+    val isRootRouteActive = navigator.backStack.lastOrNull() == WalletRootRoute
+    BackHandler(isRootRouteActive && currentTab.value != WalletRoute) {
+        currentTab.value = WalletRoute
+    }
+}
+
+private class BackdropAlignmentState {
+    private var contentCoordinates: LayoutCoordinates? = null
+    private var pillCoordinates: LayoutCoordinates? = null
+    var offset by mutableStateOf(Offset.Zero)
+        private set
+
+    fun onContentPlaced(coordinates: LayoutCoordinates) {
+        contentCoordinates = coordinates
+        updateOffset()
+    }
+
+    fun onPillPlaced(coordinates: LayoutCoordinates) {
+        pillCoordinates = coordinates
+        updateOffset()
+    }
+
+    private fun updateOffset() {
+        val content = contentCoordinates ?: return
+        val pill = pillCoordinates ?: return
+        if (!content.isAttached || !pill.isAttached) return
+        val next = pill.localPositionOf(content, Offset.Zero)
+        if (next != offset) {
+            offset = next
+        }
+    }
+}
+
+@Composable
 private fun FloatingBottomNavigationBar(
     items: List<BottomNavItem>,
     selectedRoute: String,
     backdropLayer: GraphicsLayer,
-    backdropOrigin: () -> Offset,
+    backdropOffset: () -> Offset,
+    onPillPlaced: (LayoutCoordinates) -> Unit,
     backdropInvalidationKey: () -> Int,
+    isNavTransitionRunning: () -> Boolean,
     onSelect: (String) -> Unit,
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surface
     val isDark = surfaceColor.luminance() < 0.5f
     val frostedBlurSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    var pillOrigin by remember { mutableStateOf(Offset.Zero) }
-    val pillFillBrush = if (isDark) {
-        Brush.verticalGradient(
-            colors = listOf(
-                darkFrostedTopTint.copy(alpha = if (frostedBlurSupported) darkFrostedTopAlpha else fallbackFrostedTopAlpha),
-                darkFrostedBottomTint.copy(alpha = if (frostedBlurSupported) darkFrostedBottomAlpha else fallbackFrostedBottomAlpha),
-            ),
-        )
-    } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = if (frostedBlurSupported) lightFrostedTopAlpha else fallbackFrostedTopAlpha),
-                lightFrostedBottomTint.copy(alpha = if (frostedBlurSupported) lightFrostedBottomAlpha else fallbackFrostedBottomAlpha),
-            ),
-        )
+    val pillFillBrush = remember(isDark, frostedBlurSupported) {
+        if (isDark) {
+            Brush.verticalGradient(
+                colors = listOf(
+                    darkFrostedTopTint.copy(alpha = if (frostedBlurSupported) darkFrostedTopAlpha else fallbackFrostedTopAlpha),
+                    darkFrostedBottomTint.copy(alpha = if (frostedBlurSupported) darkFrostedBottomAlpha else fallbackFrostedBottomAlpha),
+                ),
+            )
+        } else {
+            Brush.verticalGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = if (frostedBlurSupported) lightFrostedTopAlpha else fallbackFrostedTopAlpha),
+                    lightFrostedBottomTint.copy(alpha = if (frostedBlurSupported) lightFrostedBottomAlpha else fallbackFrostedBottomAlpha),
+                ),
+            )
+        }
     }
-    val pillBorderBrush = if (isDark) {
+    val pillBorderBrush = remember(isDark) {
+        if (isDark) {
+            Brush.verticalGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = darkTopBorderAlpha),
+                    Color.White.copy(alpha = darkBottomBorderAlpha),
+                ),
+            )
+        } else {
+            Brush.verticalGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = lightTopBorderAlpha),
+                    Color.Black.copy(alpha = lightBottomBorderAlpha),
+                ),
+            )
+        }
+    }
+    val scrimBrush = remember(surfaceColor) {
         Brush.verticalGradient(
             colors = listOf(
-                Color.White.copy(alpha = darkTopBorderAlpha),
-                Color.White.copy(alpha = darkBottomBorderAlpha),
-            ),
-        )
-    } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = lightTopBorderAlpha),
-                Color.Black.copy(alpha = lightBottomBorderAlpha),
+                Color.Transparent,
+                surfaceColor.copy(alpha = frostedScrimMidAlpha),
+                surfaceColor.copy(alpha = frostedScrimBottomAlpha),
             ),
         )
     }
@@ -409,15 +484,7 @@ private fun FloatingBottomNavigationBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        surfaceColor.copy(alpha = frostedScrimMidAlpha),
-                        surfaceColor.copy(alpha = frostedScrimBottomAlpha),
-                    ),
-                ),
-            )
+            .background(scrimBrush)
             .windowInsetsPadding(WindowInsets.navigationBars),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -440,9 +507,7 @@ private fun FloatingBottomNavigationBar(
                         offset = DpOffset(x = space0, y = floatingNavShadowOffsetY),
                     ),
                 )
-                .onGloballyPositioned { coordinates ->
-                    pillOrigin = coordinates.positionInRoot()
-                }
+                .onPlaced(onPillPlaced)
                 .clip(CircleShape)
                 .border(
                     width = floatingNavBorderWidth,
@@ -453,10 +518,10 @@ private fun FloatingBottomNavigationBar(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 FrostedBackdropSurface(
                     backdropLayer = backdropLayer,
-                    backdropOrigin = backdropOrigin,
-                    pillOrigin = { pillOrigin },
+                    backdropOffset = backdropOffset,
                     invalidationKey = backdropInvalidationKey,
                     tabIndicatorPosition = { animatedIndex },
+                    isNavTransitionRunning = isNavTransitionRunning,
                     surfaceColor = surfaceColor,
                     blurRadius = floatingNavBlurRadius,
                     saturation = frostedBackdropSaturation,
@@ -511,10 +576,10 @@ private fun FloatingBottomNavigationBar(
 @Composable
 private fun BoxScope.FrostedBackdropSurface(
     backdropLayer: GraphicsLayer,
-    backdropOrigin: () -> Offset,
-    pillOrigin: () -> Offset,
+    backdropOffset: () -> Offset,
     invalidationKey: () -> Int,
     tabIndicatorPosition: () -> Float,
+    isNavTransitionRunning: () -> Boolean,
     surfaceColor: Color,
     blurRadius: Dp,
     saturation: Float,
@@ -552,11 +617,13 @@ private fun BoxScope.FrostedBackdropSurface(
                 clip = true
             }
             .drawBehind {
-                invalidationKey()
-                tabIndicatorPosition()
+                if (!isNavTransitionRunning()) {
+                    invalidationKey()
+                    tabIndicatorPosition()
+                }
                 drawRect(color = surfaceColor)
                 if (backdropLayer.size != IntSize.Zero) {
-                    val delta = backdropOrigin() - pillOrigin()
+                    val delta = backdropOffset()
                     translate(
                         left = delta.x + padPx.toFloat(),
                         top = delta.y + padPx.toFloat(),

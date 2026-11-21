@@ -138,7 +138,8 @@ class AssetViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val transactionsPhase: StateFlow<GemListPhase?> = combine(transactionsState, transactions, details, ::transactionsPhase)
-        .stateIn(viewModelScope, SharingStarted.Eagerly, transactionsPhase(transactionsState.value, transactions.value, details.value))
+        .flowOn(ioDispatcher)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val asset: StateFlow<Asset?> = chainAssetInfo
         .map { it?.assetData?.asset }

@@ -15,6 +15,7 @@ import com.gemwallet.android.ext.toGem
 import com.gemwallet.android.ext.toIdentifier
 import com.gemwallet.android.ui.localization.text
 import com.wallet.core.primitives.Asset
+import com.wallet.core.primitives.AssetData
 import com.wallet.core.primitives.AssetId
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -96,10 +97,10 @@ class ReceiveViewModel @AssistedInject constructor(
         selectedAssetId.value = assetId
     }
 
-    fun shareAddress(): String? = asset.value?.account?.address?.takeIf { it.isNotEmpty() }
+    fun shareAddress(assetInfo: AssetData? = asset.value): String? = assetInfo?.account?.address?.takeIf { it.isNotEmpty() }
 
-    fun copyAddress(): GemCopy? = asset.value?.let { assetInfo ->
-        assetInfo.account.address.takeIf { it.isNotEmpty() }?.let { addressCopy(assetInfo.asset.id.chain.string, it) }
+    fun copyAddress(assetInfo: AssetData? = asset.value): GemCopy? = assetInfo?.let { info ->
+        info.account.address.takeIf { it.isNotEmpty() }?.let { addressCopy(info.asset.id.chain.string, it) }
     }
 
     @AssistedFactory

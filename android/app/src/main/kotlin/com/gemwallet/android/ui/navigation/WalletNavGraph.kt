@@ -2,7 +2,9 @@ package com.gemwallet.android.ui.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterExitState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -11,11 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.Scene
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import com.gemwallet.android.features.assets.presents.select.assetsManageScreen
 import com.gemwallet.android.features.assets.viewmodels.asset.models.AssetAction
@@ -28,6 +32,7 @@ import com.gemwallet.android.features.onboarding.presents.terms.acceptTermsScree
 import com.gemwallet.android.features.transactions.presents.transaction.TransactionAction
 import com.gemwallet.android.features.wallet.presents.WalletSearchAction
 import com.gemwallet.android.features.wallet.presents.WalletsAction
+import com.gemwallet.android.ui.LocalNavTransitionRunning
 import com.gemwallet.android.ui.components.animation.navigationSlideTransition
 import com.gemwallet.android.ui.models.actions.AmountTransactionAction
 import com.gemwallet.android.ui.models.actions.ConfirmTransactionAction
@@ -335,13 +340,16 @@ fun WalletNavGraph(
             walletConnectorRequest(content = walletConnectorRequest)
         }
     }
+    val saveableDecorator = rememberSaveableStateHolderNavEntryDecorator<NavKey>()
+    val viewModelDecorator = rememberRouteArgumentsViewModelStoreNavEntryDecorator<NavKey>()
+    val transitionDecorator = rememberNavTransitionNavEntryDecorator()
+    val entryDecorators = remember(saveableDecorator, viewModelDecorator, transitionDecorator) {
+        listOf(saveableDecorator, viewModelDecorator, transitionDecorator)
+    }
     val entries = rememberWalletNavEntries(navigator.backStack, entryProvider)
     val decoratedEntries = rememberDecoratedNavEntries(
         entries = entries,
-        entryDecorators = listOf(
-            rememberSaveableStateHolderNavEntryDecorator(),
-            rememberRouteArgumentsViewModelStoreNavEntryDecorator(),
-        ),
+        entryDecorators = entryDecorators,
     )
 
     NavDisplay(
@@ -355,16 +363,29 @@ fun WalletNavGraph(
 }
 
 @Composable
+private fun rememberNavTransitionNavEntryDecorator(): NavEntryDecorator<NavKey> = remember {
+    NavEntryDecorator(
+        decorate = { entry ->
+            val transition = LocalNavAnimatedContentScope.current.transition
+            val isTransitionRunning = remember(transition) {
+                {
+                    transition.currentState != EnterExitState.Visible ||
+                        transition.targetState != EnterExitState.Visible
+                }
+            }
+            CompositionLocalProvider(LocalNavTransitionRunning provides isTransitionRunning) {
+                entry.Content()
+            }
+        },
+    )
+}
+
+@Composable
 private fun rememberWalletNavEntries(backStack: List<NavKey>, entryProvider: (NavKey) -> NavEntry<NavKey>): List<NavEntry<NavKey>> {
+    val cache = remember(entryProvider) { mutableMapOf<Pair<NavKey, Int>, NavEntry<NavKey>>() }
     val keys = backStack.toList()
     return remember(keys, entryProvider) {
-        val occurrences = mutableMapOf<Any, Int>()
-        keys.map { key ->
-            val entry = entryProvider(key)
-            val occurrence = occurrences.getOrDefault(entry.contentKey, 0)
-            occurrences[entry.contentKey] = occurrence + 1
-            entry.withOccurrenceContentKey(key, occurrence)
-        }
+        resolveWalletNavEntries(keys, cache, entryProvider)
     }
 }
 

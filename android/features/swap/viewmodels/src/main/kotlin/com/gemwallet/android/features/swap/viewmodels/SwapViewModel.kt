@@ -112,7 +112,7 @@ class SwapViewModel @Inject constructor(
 
     private var presetPayValue: String? = null
 
-    private val selectedSlippageBps = MutableStateFlow<UInt?>(null)
+    private val selectedSlippageBps = MutableStateFlow(service.slippageBps())
     val selectedSlippage: StateFlow<UInt?> = selectedSlippageBps.asStateFlow()
 
     private val slippageSession = MutableStateFlow<GemSlippageSession?>(null)
@@ -181,9 +181,6 @@ class SwapViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, session.value.viewState(null, null, currency))
 
     init {
-        viewModelScope.launch {
-            selectedSlippageBps.value = service.slippageBps()
-        }
         combine(payValueFlow, payAsset, receiveAsset, selectedSlippageBps) { text, pay, receive, slippageBps ->
             session.update { it.onInputChanged(text, pay?.asset?.toGem(), receive?.asset?.toGem(), pay?.balance?.available ?: BigInteger.ZERO, slippageBps, numberFormat()) }
         }
@@ -216,7 +213,10 @@ class SwapViewModel @Inject constructor(
             return
         }
         val payAssetId = savedStateHandle.get<String?>(RouteArgument.FromAssetId.key)
-        val suggestion = service.suggestPair(payAssetId) ?: return
+        val suggestion = withContext(ioDispatcher) { service.suggestPair(payAssetId) } ?: return
+        if (savedStateHandle.get<String?>(RouteArgument.ToAssetId.key) != null || savedStateHandle.get<String?>(RouteArgument.FromAssetId.key) != payAssetId) {
+            return
+        }
         savedStateHandle[RouteArgument.FromAssetId.key] = suggestion.payAssetId
         savedStateHandle[RouteArgument.ToAssetId.key] = suggestion.receiveAssetId
     }

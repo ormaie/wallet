@@ -121,6 +121,20 @@ class ReceiveViewModelTest {
     }
 
     @Test
+    fun `copy and share use the rendered asset snapshot after another network is selected`() = runTest(dispatcher) {
+        val bitcoinData = mockAssetData(asset = bitcoin, account = mockAccount(chain = Chain.Bitcoin, address = "bc1q"))
+        val ethereumData = mockAssetData(asset = ethereum, account = mockAccount(chain = Chain.Ethereum, address = "0xabc"))
+        val model = receiveModel(mockk(relaxed = true), assets = mapOf(bitcoin.id to bitcoinData, ethereum.id to ethereumData))
+        val rendered = requireNotNull(model.asset.first { it?.asset?.id == bitcoin.id })
+
+        model.selectAsset(ethereum.id)
+        model.asset.first { it?.asset?.id == ethereum.id }
+
+        assertEquals("bc1q", model.shareAddress(rendered))
+        assertEquals("bc1q", model.copyAddress(rendered)?.value)
+    }
+
+    @Test
     fun `showing the screen enables the asset for the wallet`() = runTest(dispatcher) {
         val service: GemReceiveServiceInterface = mockk(relaxed = true) {
         }
