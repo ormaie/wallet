@@ -33,7 +33,6 @@ import uniffi.gemstone.AddressType
 import uniffi.gemstone.AutocloseValidation
 import uniffi.gemstone.DelegationState
 import uniffi.gemstone.FeeOption
-import uniffi.gemstone.GemAcceptTermsItem
 import uniffi.gemstone.GemAcquireAssetFlow
 import uniffi.gemstone.GemAcquireOption
 import uniffi.gemstone.GemAmountErrorDisplay
@@ -636,13 +635,6 @@ private fun GemPriceAlertLabel.stringRes(): Int = when (this) {
     GemPriceAlertLabel.UNDER -> R.string.price_alerts_direction_under
     GemPriceAlertLabel.INCREASES_BY -> R.string.price_alerts_direction_increases_by
     GemPriceAlertLabel.DECREASES_BY -> R.string.price_alerts_direction_decreases_by
-}
-
-@StringRes
-fun GemAcceptTermsItem.stringRes(): Int = when (this) {
-    GemAcceptTermsItem.SELF_CUSTODY -> R.string.onboarding_accept_terms_item1_message
-    GemAcceptTermsItem.RECOVERY -> R.string.onboarding_accept_terms_item2_message
-    GemAcceptTermsItem.RESPONSIBILITY -> R.string.onboarding_accept_terms_item3_message
 }
 
 @StringRes

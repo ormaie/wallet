@@ -22,8 +22,6 @@ import com.gemwallet.android.features.onboarding.presents.create_wallet.CreateWa
 import com.gemwallet.android.features.onboarding.presents.create_wallet.CreateWalletSecurityReminderRoute
 import com.gemwallet.android.features.onboarding.presents.import_wallet.ImportWalletRoute
 import com.gemwallet.android.features.onboarding.presents.import_wallet.ImportWalletTypeRoute
-import com.gemwallet.android.features.onboarding.presents.terms.AcceptTermsDestination
-import com.gemwallet.android.features.onboarding.presents.terms.AcceptTermsRoute
 import com.gemwallet.android.features.transfer.viewmodels.confirm.models.GetAssetAction
 import com.gemwallet.android.model.AmountParams
 import com.gemwallet.android.model.ImportType
@@ -231,7 +229,6 @@ class WalletNavigator(
     }
 
     fun openWallets() = push(WalletsRoute)
-    fun openAcceptTerms(destination: AcceptTermsDestination) = push(AcceptTermsRoute(destination))
     fun openAssetsManage(chain: Chain? = null) = push(AssetsManageRoute(chain))
     fun openAssetsSearch() = push(WalletSearchRoute)
     fun openAssetsResults(query: String) = push(AssetsResultsRoute(query, WalletSearchTag.All))
@@ -374,15 +371,6 @@ class WalletNavigator(
     fun openCollection(nftCollectionId: String) = push(CollectionRoute(nftCollectionId))
     fun openUnverifiedCollections() = push(UnverifiedCollectionsRoute)
     fun openCollectible(nftAssetId: NFTAssetId) = push(CollectibleRoute(nftAssetId.toIdentifier()))
-
-    fun finishAcceptTerms(destination: AcceptTermsDestination) {
-        replaceTop(
-            when (destination) {
-                AcceptTermsDestination.Create -> CreateWalletSecurityReminderRoute
-                AcceptTermsDestination.Import -> ImportWalletTypeRoute
-            },
-        )
-    }
 
     internal fun openPendingNavigation(routes: List<NavKey>, tab: GemNavigationTab? = null): Boolean {
         if (routes.isEmpty()) return false

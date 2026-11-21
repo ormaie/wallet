@@ -25,7 +25,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -78,7 +77,6 @@ class AppViewModelTest {
             coEvery { ensureCurrentWallet() } returns currentWalletId
         }
         val config: UserConfig = mockk(relaxed = true) {
-            every { isTermsAccepted() } returns flowOf(true)
             every { shouldRequestReview() } returns false
         }
         val sync: SyncAppUpdate = mockk { coEvery { syncAppUpdate() } returns update }

@@ -28,7 +28,6 @@ import com.gemwallet.android.features.main.views.MainScreen
 import com.gemwallet.android.features.onboarding.presents.authentication.enableAuthenticationScreen
 import com.gemwallet.android.features.onboarding.presents.create_wallet.createWalletScreen
 import com.gemwallet.android.features.onboarding.presents.import_wallet.importWalletScreen
-import com.gemwallet.android.features.onboarding.presents.terms.acceptTermsScreen
 import com.gemwallet.android.features.transactions.presents.transaction.TransactionAction
 import com.gemwallet.android.features.wallet.presents.WalletSearchAction
 import com.gemwallet.android.features.wallet.presents.WalletsAction
@@ -69,7 +68,6 @@ fun WalletNavGraph(
     modifier: Modifier = Modifier,
     navigator: WalletNavigator,
     onboard: @Composable () -> Unit,
-    onAcceptTerms: () -> Unit,
     shouldOfferAuthentication: () -> Boolean,
     onAuthenticationOffered: (Boolean) -> Unit,
     onPayment: (String) -> Unit,
@@ -89,7 +87,7 @@ fun WalletNavGraph(
         }
     }
 
-    val entryProvider = remember(navigator, onboard, onAcceptTerms, walletConnectorRequest) {
+    val entryProvider = remember(navigator, onboard, walletConnectorRequest) {
         entryProvider<NavKey> {
             entry<WalletRootRoute> {
                 MainScreen(
@@ -286,14 +284,6 @@ fun WalletNavGraph(
                         is ContactsAction.AddContact -> navigator.openAddContact(action.draft)
                         ContactsAction.Cancel -> onCancel()
                     }
-                },
-            )
-
-            acceptTermsScreen(
-                onCancel = onCancel,
-                onAccept = { destination ->
-                    onAcceptTerms()
-                    navigator.finishAcceptTerms(destination)
                 },
             )
 

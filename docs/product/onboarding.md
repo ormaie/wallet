@@ -6,18 +6,17 @@ Getting a wallet into the app: create a new one, or import one with a Secret Phr
 
 ```mermaid
 flowchart LR
-    A[Accept Terms] --> B[Security reminder] --> C[Secret Phrase] --> D[Secret Phrase verification] --> E[Wallet created] --> F[Wallet screen]
+    A[Security reminder] --> B[Secret Phrase] --> C[Secret Phrase verification] --> D[Wallet created] --> E[Wallet screen]
 ```
 
-1. The user accepts the terms and reads the security reminder.
+1. The user reads the security reminder.
 2. The user sees a new 12-word Secret Phrase in two numbered columns and can copy it.
 3. The user verifies it on the "Confirm" screen by tapping the words back in order, shuffled inside groups of four.
 4. The wallet is created, named "Wallet #N", selected, and the wallet screen opens.
 
 | When | Expected | Why |
 |---|---|---|
-| The terms were already accepted on this install | they are not asked again; the security reminder still shows on every create | |
-| The user accepts the terms | the next screen opens once; whether the terms are asked is decided when create or import opens, not while it is open | accepting must not also replace the screen underneath |
+| The user creates a wallet, including another wallet | the security reminder shows on every create | |
 | The user taps a word that is not the next one on "Confirm" | the word gives a brief single nudge, turns its label red for a moment and plays the error [haptic](../PRODUCT.md#haptics); nothing is filled in | a tap that did nothing read as slow or broken |
 | The Secret Phrase holds the same word twice | either of its two buttons fills either place, and each button is used once | the two words are the same, so neither tap is wrong |
 

@@ -26,7 +26,6 @@ class UserConfig(private val preferencesService: GemPreferencesServiceInterface)
     private val hideBalancesState = MutableStateFlow(preferencesService.isHideBalanceEnabled())
     private val perpetualEnabledState = MutableStateFlow(preferencesService.isPerpetualEnabled())
     private val appearanceState = MutableStateFlow(preferencesService.getAppearance().toPrimitives())
-    private val termsAcceptedState = MutableStateFlow(preferencesService.isAcceptTermsCompleted())
 
     override fun isHideBalances(): Flow<Boolean> = hideBalancesState
 
@@ -61,14 +60,6 @@ class UserConfig(private val preferencesService: GemPreferencesServiceInterface)
         hideBalancesState.value = preferencesService.isHideBalanceEnabled()
         perpetualEnabledState.value = preferencesService.isPerpetualEnabled()
         appearanceState.value = preferencesService.getAppearance().toPrimitives()
-        termsAcceptedState.value = preferencesService.isAcceptTermsCompleted()
-    }
-
-    fun isTermsAccepted(): Flow<Boolean> = termsAcceptedState
-
-    fun acceptTerms() {
-        preferencesService.setAcceptTermsCompleted()
-        termsAcceptedState.value = preferencesService.isAcceptTermsCompleted()
     }
 
     fun shouldOfferAuthentication(isAvailable: Boolean, authRequired: Boolean): Boolean = preferencesService.shouldOfferAuthentication(isAvailable, authRequired)

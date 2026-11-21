@@ -27,7 +27,6 @@ import com.gemwallet.android.SystemAuthPolicy
 import com.gemwallet.android.WalletConnectorRequestContent
 import com.gemwallet.android.application.wallet_connect.ActiveWalletConnectRequest
 import com.gemwallet.android.features.onboarding.presents.OnboardingScene
-import com.gemwallet.android.features.onboarding.presents.terms.AcceptTermsDestination
 import com.gemwallet.android.flavors.ReviewManager
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.localization.stringRes
@@ -52,7 +51,6 @@ fun WalletApp(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val startDestination by viewModel.startDestinationState.collectAsStateWithLifecycle()
-    val isTermsAccepted by viewModel.isTermsAccepted.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val start = startDestination ?: return
@@ -98,27 +96,14 @@ fun WalletApp(
     WalletNavGraph(
         navigator = navigator,
         onWalletContentReady = onContentReady,
-        onAcceptTerms = viewModel::acceptTerms,
         shouldOfferAuthentication = { viewModel.shouldOfferAuthentication(SystemAuthPolicy.isAvailable(context)) },
         onAuthenticationOffered = viewModel::onAuthenticationOffered,
         onPayment = viewModel::openPayment,
         walletConnectorRequest = walletConnectorRequestContent,
         onboard = {
             OnboardingScene(
-                onCreateWallet = {
-                    if (isTermsAccepted) {
-                        navigator.openCreateWalletSecurityReminder()
-                    } else {
-                        navigator.openAcceptTerms(AcceptTermsDestination.Create)
-                    }
-                },
-                onImportWallet = {
-                    if (isTermsAccepted) {
-                        navigator.openImportWallet()
-                    } else {
-                        navigator.openAcceptTerms(AcceptTermsDestination.Import)
-                    }
-                },
+                onCreateWallet = navigator::openCreateWalletSecurityReminder,
+                onImportWallet = navigator::openImportWallet,
             )
         },
     )

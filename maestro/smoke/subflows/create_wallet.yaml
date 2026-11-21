@@ -10,6 +10,5 @@ appId: ${APP_ID}
     timeout: 30000
 - tapOn:
     id: "create"
-- runFlow: accept_terms.yaml
 - runFlow: backup_phrase.yaml
 - runFlow: finish_onboarding.yaml

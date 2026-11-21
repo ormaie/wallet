@@ -82,9 +82,6 @@ class AppViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    val isTermsAccepted = userConfig.isTermsAccepted()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
-
     init {
         viewModelScope.launch(ioDispatcher) {
             startDestination.value = getStartDestination()
@@ -127,12 +124,6 @@ class AppViewModel @Inject constructor(
         when (offer.destination) {
             is GemAppUpdateDestination.File -> return
             is GemAppUpdateDestination.Store -> state.update { it.copy(update = offer) }
-        }
-    }
-
-    fun acceptTerms() {
-        viewModelScope.launch(ioDispatcher) {
-            userConfig.acceptTerms()
         }
     }
 

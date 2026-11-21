@@ -10,7 +10,6 @@ appId: ${APP_ID}
     timeout: 30000
 - tapOn:
     id: "import"
-- runFlow: accept_terms.yaml
 - tapOn:
     id: "multicoin_item"
 - tapOn:

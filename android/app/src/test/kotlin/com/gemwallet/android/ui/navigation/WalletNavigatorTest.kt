@@ -15,8 +15,6 @@ import com.gemwallet.android.features.onboarding.presents.create_wallet.CreateWa
 import com.gemwallet.android.features.onboarding.presents.create_wallet.CreateWalletSecurityReminderRoute
 import com.gemwallet.android.features.onboarding.presents.import_wallet.ImportWalletRoute
 import com.gemwallet.android.features.onboarding.presents.import_wallet.ImportWalletTypeRoute
-import com.gemwallet.android.features.onboarding.presents.terms.AcceptTermsDestination
-import com.gemwallet.android.features.onboarding.presents.terms.AcceptTermsRoute
 import com.gemwallet.android.features.transfer.viewmodels.confirm.models.GetAssetAction
 import com.gemwallet.android.model.ImportType
 import com.gemwallet.android.model.Session
@@ -219,21 +217,12 @@ class WalletNavigatorTest {
     }
 
     @Test
-    fun finishAcceptTerms_replacesCreateTermsRoute() {
-        val navigator = navigatorWith(OnboardingRoute, AcceptTermsRoute(AcceptTermsDestination.Create))
+    fun openCreateWalletSecurityReminder_pushesSecurityReminderFromOnboarding() {
+        val navigator = navigatorWith(OnboardingRoute)
 
-        navigator.finishAcceptTerms(AcceptTermsDestination.Create)
+        navigator.openCreateWalletSecurityReminder()
 
         assertEquals(listOf(OnboardingRoute, CreateWalletSecurityReminderRoute), navigator.backStack.toList())
-    }
-
-    @Test
-    fun finishAcceptTerms_replacesImportTermsRoute() {
-        val navigator = navigatorWith(OnboardingRoute, AcceptTermsRoute(AcceptTermsDestination.Import))
-
-        navigator.finishAcceptTerms(AcceptTermsDestination.Import)
-
-        assertEquals(listOf(OnboardingRoute, ImportWalletTypeRoute), navigator.backStack.toList())
     }
 
     @Test

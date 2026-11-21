@@ -175,16 +175,6 @@ class ScreenshotsCapture {
         importButton.click()
         runBlocking { delay(SCREEN_TIMEOUT) }
 
-        // Accept terms if shown
-        if (device.wait(Until.hasObject(By.res("term_1")), SCREEN_TIMEOUT * 2) == true) {
-            waitForObject("term_1").click()
-            waitForObject("term_2").click()
-            waitForObject("term_3").click()
-            runBlocking { delay(SCREEN_TIMEOUT / 2) }
-            waitForObject("main_action").click()
-            runBlocking { delay(SCREEN_TIMEOUT) }
-        }
-
         waitForObject("multicoin_item").click()
         runBlocking { delay(SCREEN_TIMEOUT) }
 
