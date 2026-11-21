@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="icon_tint">#FF49454F</color>
+    <color name="wallet_badge_background">#FFE9EFFD</color>
+    <color name="wallet_badge_foreground">#FF2D5BE6</color>
 </resources>
