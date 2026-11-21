@@ -375,7 +375,7 @@
   <string name="secret_phrase_do_not_share_title">切勿泄露助记词！</string>
   <string name="secret_phrase_do_not_share_description">任何人只要拥有助记词，就能完全控制这个钱包！</string>
   <string name="secret_phrase_save_phrase_safely">请将助记词保存在\n只有您能掌控的安全位置。</string>
-  <string name="secret_phrase_confirm_quick_test_title">完成这个快速测试，确认是否已正确保存所有内容。</string>
+  <string name="secret_phrase_confirm_quick_test_title">请按顺序点选助记词，\n确认已准确备份。</string>
   <string name="secret_phrase_screenshot_detected_title">检测到屏幕截图</string>
   <string name="secret_phrase_screenshot_detected_description">屏幕截图可能会被其他应用访问；以此方式保存助记词会带来泄露风险。</string>
   <string name="secret_phrase_content_hidden_description">屏幕录制期间内容已隐藏</string>
