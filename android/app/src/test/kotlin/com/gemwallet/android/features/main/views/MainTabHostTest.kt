@@ -76,6 +76,33 @@ class MainTabHostTest {
     }
 
     @Test
+    fun tabTransition_keepsExitAndEnterDisjointAndSkipsHiddenTabs() {
+        assertTrue(shouldPlaceTab(isActive = true, isExiting = false))
+        assertTrue(shouldPlaceTab(isActive = false, isExiting = true))
+        assertFalse(shouldPlaceTab(isActive = false, isExiting = false))
+
+        for (step in 0..100) {
+            val progress = step / 100f
+            val exitVisible = isTabVisibleDuringTransition(progress, isActive = false)
+            val enterVisible = isTabVisibleDuringTransition(progress, isActive = true)
+            assertTrue("Exactly one tab should be visible at progress=$progress", exitVisible xor enterVisible)
+        }
+
+        assertEquals(0f, tabSurfaceVeilAlpha(0f, isActive = false), 0.0001f)
+        assertEquals(1f, tabSurfaceVeilAlpha(0.45f, isActive = false), 0.0001f)
+        assertEquals(1f, tabSurfaceVeilAlpha(0f, isActive = true), 0.0001f)
+        assertEquals(0f, tabSurfaceVeilAlpha(1f, isActive = true), 0.0001f)
+    }
+
+    @Test
+    fun shouldUseFrostedBackdrop_gatesApi31AndAbove() {
+        assertFalse(shouldUseFrostedBackdrop(sdkInt = 28))
+        assertFalse(shouldUseFrostedBackdrop(sdkInt = 30))
+        assertTrue(shouldUseFrostedBackdrop(sdkInt = 31))
+        assertTrue(shouldUseFrostedBackdrop(sdkInt = 35))
+    }
+
+    @Test
     fun frostedBackdropGeometry_downsamplesAndPreservesExactPillMapping() {
         val geometry = computeFrostedBackdropGeometry(
             pillWidth = 936,

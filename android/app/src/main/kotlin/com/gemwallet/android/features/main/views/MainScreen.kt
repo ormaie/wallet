@@ -7,7 +7,6 @@ import android.graphics.Shader
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -58,7 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -74,7 +73,6 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.rememberGraphicsLayer
-import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.layout
@@ -88,7 +86,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -129,8 +126,8 @@ private val floatingNavIconSize = 22.dp
 private val floatingNavBlurRadius = 16.dp
 private const val frostedBackdropDownsampleScale = 0.5f
 private val floatingNavBorderWidth = 1.dp
-private val floatingNavShadowRadius = 18.dp
-private val floatingNavShadowOffsetY = 6.dp
+private val lightFloatingNavShadowElevation = 8.dp
+private val darkFloatingNavShadowElevation = 12.dp
 private val lightFrostedBottomTint = Color(0xFFFAFBFF)
 private val darkFrostedTopTint = Color(0xFF282B31)
 private val darkFrostedBottomTint = Color(0xFF24262C)
@@ -151,13 +148,15 @@ private const val lightTopBorderAlpha = 0.88f
 private const val lightBottomBorderAlpha = 0.08f
 private const val darkTopBorderAlpha = 0.18f
 private const val darkBottomBorderAlpha = 0.05f
-private const val lightShadowAlpha = 0.10f
-private const val darkShadowAlpha = 0.42f
+private const val lightShadowAlpha = 0.32f
+private const val darkShadowAlpha = 0.70f
 private const val lightIndicatorAlpha = 0.11f
 private const val darkIndicatorAlpha = 0.22f
 private const val indicatorDampingRatio = 0.78f
 private const val selectedIconScale = 1.06f
 private const val scrollIndexStride = 100_000
+
+internal fun shouldUseFrostedBackdrop(sdkInt: Int = Build.VERSION.SDK_INT): Boolean = sdkInt >= Build.VERSION_CODES.S
 
 @Composable
 fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onWalletContentReady: () -> Unit = {}, viewModel: MainScreenViewModel = hiltViewModel()) {
@@ -239,8 +238,9 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
             ),
         )
     }
-    val contentBackdropLayer = rememberGraphicsLayer()
-    val backdropAlignment = remember { BackdropAlignmentState() }
+    val frostedBlurSupported = shouldUseFrostedBackdrop()
+    val contentBackdropLayer = if (frostedBlurSupported) rememberGraphicsLayer() else null
+    val backdropAlignment = if (frostedBlurSupported) remember { BackdropAlignmentState() } else null
     val isNavTransitionRunning = LocalNavTransitionRunning.current
     val backdropInvalidationKey: () -> Int = {
         when (currentTab.value) {
@@ -258,8 +258,8 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                 items = navItems,
                 selectedRoute = currentTab.value,
                 backdropLayer = contentBackdropLayer,
-                backdropOffset = { backdropAlignment.offset },
-                onPillPlaced = backdropAlignment::onPillPlaced,
+                backdropOffset = { backdropAlignment?.offset ?: Offset.Zero },
+                onPillPlaced = backdropAlignment?.let { it::onPillPlaced },
                 backdropInvalidationKey = backdropInvalidationKey,
                 isNavTransitionRunning = isNavTransitionRunning,
                 onSelect = { route ->
@@ -275,24 +275,25 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
         },
     ) { scaffoldPadding ->
         val bottomPadding = scaffoldPadding.calculateBottomPadding()
-        Box(
-            modifier = Modifier
+        val contentModifier = if (contentBackdropLayer != null && backdropAlignment != null) {
+            Modifier
                 .fillMaxSize()
                 .consumeWindowInsets(WindowInsets.navigationBars)
                 .onPlaced(backdropAlignment::onContentPlaced)
                 .drawWithContent {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        if (!isNavTransitionRunning() || contentBackdropLayer.size == IntSize.Zero) {
-                            contentBackdropLayer.record {
-                                this@drawWithContent.drawContent()
-                            }
+                    if (!isNavTransitionRunning() || contentBackdropLayer.size == IntSize.Zero) {
+                        contentBackdropLayer.record {
+                            this@drawWithContent.drawContent()
                         }
-                        drawLayer(contentBackdropLayer)
-                    } else {
-                        drawContent()
                     }
-                },
-        ) {
+                    drawLayer(contentBackdropLayer)
+                }
+        } else {
+            Modifier
+                .fillMaxSize()
+                .consumeWindowInsets(WindowInsets.navigationBars)
+        }
+        Box(modifier = contentModifier) {
             val onWalletAction = remember<(WalletAction.Navigation) -> Unit>(navigator) {
                 { action ->
                     when (action) {
@@ -434,16 +435,16 @@ private class BackdropAlignmentState {
 private fun FloatingBottomNavigationBar(
     items: List<BottomNavItem>,
     selectedRoute: String,
-    backdropLayer: GraphicsLayer,
+    backdropLayer: GraphicsLayer?,
     backdropOffset: () -> Offset,
-    onPillPlaced: (LayoutCoordinates) -> Unit,
+    onPillPlaced: ((LayoutCoordinates) -> Unit)?,
     backdropInvalidationKey: () -> Int,
     isNavTransitionRunning: () -> Boolean,
     onSelect: (String) -> Unit,
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surface
     val isDark = surfaceColor.luminance() < 0.5f
-    val frostedBlurSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val frostedBlurSupported = backdropLayer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val pillFillBrush = remember(isDark, frostedBlurSupported) {
         if (isDark) {
             Brush.verticalGradient(
@@ -492,6 +493,7 @@ private fun FloatingBottomNavigationBar(
     } else {
         lightPillShadowColor.copy(alpha = lightShadowAlpha)
     }
+    val pillShadowElevation = if (isDark) darkFloatingNavShadowElevation else lightFloatingNavShadowElevation
     val indicatorColor = if (isDark) {
         darkSelectedIconColor.copy(alpha = darkIndicatorAlpha)
     } else {
@@ -502,7 +504,7 @@ private fun FloatingBottomNavigationBar(
     val unselectedColor = if (isDark) darkUnselectedNavColor else lightUnselectedNavColor
 
     val selectedIndex = items.indexOfFirst { it.route == selectedRoute }.coerceAtLeast(0)
-    val animatedIndex by animateFloatAsState(
+    val animatedIndexState = animateFloatAsState(
         targetValue = selectedIndex.toFloat(),
         animationSpec = spring(
             dampingRatio = indicatorDampingRatio,
@@ -529,15 +531,14 @@ private fun FloatingBottomNavigationBar(
                 .widthIn(max = SceneSizing.buttonMaxWidth)
                 .fillMaxWidth()
                 .height(floatingNavHeight)
-                .dropShadow(
+                .shadow(
+                    elevation = pillShadowElevation,
                     shape = CircleShape,
-                    shadow = Shadow(
-                        radius = floatingNavShadowRadius,
-                        color = pillShadowColor,
-                        offset = DpOffset(x = space0, y = floatingNavShadowOffsetY),
-                    ),
+                    clip = false,
+                    ambientColor = pillShadowColor,
+                    spotColor = pillShadowColor,
                 )
-                .onPlaced(onPillPlaced)
+                .then(if (onPillPlaced != null) Modifier.onPlaced(onPillPlaced) else Modifier)
                 .clip(CircleShape)
                 .border(
                     width = floatingNavBorderWidth,
@@ -545,12 +546,12 @@ private fun FloatingBottomNavigationBar(
                     shape = CircleShape,
                 ),
         ) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (backdropLayer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 FrostedBackdropSurface(
                     backdropLayer = backdropLayer,
                     backdropOffset = backdropOffset,
                     invalidationKey = backdropInvalidationKey,
-                    tabIndicatorPosition = { animatedIndex },
+                    tabIndicatorPosition = { animatedIndexState.value },
                     isNavTransitionRunning = isNavTransitionRunning,
                     surfaceColor = surfaceColor,
                     blurRadius = floatingNavBlurRadius,
@@ -570,10 +571,11 @@ private fun FloatingBottomNavigationBar(
                     .drawBehind {
                         if (items.isNotEmpty()) {
                             val itemWidth = size.width / items.size
+                            val currentIndex = animatedIndexState.value
                             val slot = if (layoutDirection == LayoutDirection.Rtl) {
-                                items.lastIndex - animatedIndex
+                                items.lastIndex - currentIndex
                             } else {
-                                animatedIndex
+                                currentIndex
                             }
                             val radius = size.height / 2f
                             drawRoundRect(
@@ -702,7 +704,7 @@ private fun FloatingBottomNavItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val iconScale by animateFloatAsState(
+    val iconScaleState = animateFloatAsState(
         targetValue = if (selected) selectedIconScale else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -710,14 +712,8 @@ private fun FloatingBottomNavItem(
         ),
         label = "FloatingTabIconScale",
     )
-    val iconTint by animateColorAsState(
-        targetValue = if (selected) selectedIconColor else unselectedColor,
-        label = "FloatingTabIconTint",
-    )
-    val labelColor by animateColorAsState(
-        targetValue = if (selected) selectedLabelColor else unselectedColor,
-        label = "FloatingTabLabelColor",
-    )
+    val iconTint = if (selected) selectedIconColor else unselectedColor
+    val labelColor = if (selected) selectedLabelColor else unselectedColor
 
     Column(
         modifier = modifier
@@ -751,8 +747,9 @@ private fun FloatingBottomNavItem(
                 modifier = Modifier
                     .size(floatingNavIconSize)
                     .graphicsLayer {
-                        scaleX = iconScale
-                        scaleY = iconScale
+                        val scale = iconScaleState.value
+                        scaleX = scale
+                        scaleY = scale
                     },
                 imageVector = if (selected) item.selectedIcon else item.icon,
                 tint = iconTint,
