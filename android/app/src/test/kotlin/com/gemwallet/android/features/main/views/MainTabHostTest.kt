@@ -74,4 +74,59 @@ class MainTabHostTest {
         assertEquals(0f, tabSlideProgress(0f), 0.0001f)
         assertEquals(1f, tabSlideProgress(1f), 0.0001f)
     }
+
+    @Test
+    fun frostedBackdropGeometry_downsamplesAndPreservesExactPillMapping() {
+        val geometry = computeFrostedBackdropGeometry(
+            pillWidth = 936,
+            pillHeight = 168,
+            blurRadiusPx = 48f,
+            downsampleScale = 0.5f,
+        )
+
+        assertEquals(516, geometry.surfaceWidth)
+        assertEquals(132, geometry.surfaceHeight)
+        assertEquals(-48, geometry.placeOffsetX)
+        assertEquals(-48, geometry.placeOffsetY)
+        assertEquals(24f, geometry.blurRadiusPx, 0.0001f)
+        assertEquals(48f, geometry.contentTranslatePadPx, 0.0001f)
+        assertEquals(0.5f, geometry.downsampleScale, 0.0001f)
+        assertEquals(2f, geometry.upsampleScale, 0.0001f)
+
+        listOf(0f to 0f, 936f to 168f, 317.5f to 83.25f).forEach { (pillX, pillY) ->
+            val localX = (pillX + geometry.contentTranslatePadPx) * geometry.downsampleScale
+            val localY = (pillY + geometry.contentTranslatePadPx) * geometry.downsampleScale
+            val mappedX = geometry.placeOffsetX + localX * geometry.upsampleScale
+            val mappedY = geometry.placeOffsetY + localY * geometry.upsampleScale
+            assertEquals(pillX, mappedX, 0.001f)
+            assertEquals(pillY, mappedY, 0.001f)
+        }
+    }
+
+    @Test
+    fun frostedBackdropGeometry_coversOddDimensionsAndClampsInputs() {
+        val odd = computeFrostedBackdropGeometry(
+            pillWidth = 935,
+            pillHeight = 167,
+            blurRadiusPx = 47.2f,
+            downsampleScale = 0.5f,
+        )
+
+        assertTrue(odd.placeOffsetX + odd.surfaceWidth * odd.upsampleScale >= 935f + 47.2f)
+        assertTrue(odd.placeOffsetY + odd.surfaceHeight * odd.upsampleScale >= 167f + 47.2f)
+        val mappedOriginX = odd.placeOffsetX + odd.contentTranslatePadPx * odd.downsampleScale * odd.upsampleScale
+        assertEquals(0f, mappedOriginX, 0.001f)
+
+        val clamped = computeFrostedBackdropGeometry(
+            pillWidth = -10,
+            pillHeight = 0,
+            blurRadiusPx = -4f,
+            downsampleScale = 0.1f,
+        )
+
+        assertEquals(0, clamped.surfaceWidth)
+        assertEquals(0, clamped.surfaceHeight)
+        assertEquals(0.25f, clamped.downsampleScale, 0.0001f)
+        assertEquals(4f, clamped.upsampleScale, 0.0001f)
+    }
 }

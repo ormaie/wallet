@@ -12,7 +12,13 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import com.gemwallet.android.application.assets.cases.GetActiveAssetsInfo
 import com.gemwallet.android.application.notifications.cases.ShowSystemNotification
 import com.gemwallet.android.application.transactions.cases.GetTransactions
+import dagger.Lazy
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import uniffi.gemstone.initializeForeignFutureResultStructs
@@ -24,21 +30,32 @@ class App :
     SingletonImageLoader.Factory {
 
     @Inject
-    lateinit var appLifecycleCoordinator: AppLifecycleCoordinator
+    lateinit var appLifecycleCoordinator: Lazy<AppLifecycleCoordinator>
 
     @Inject
-    lateinit var getActiveAssetsInfo: GetActiveAssetsInfo
+    lateinit var getActiveAssetsInfo: Lazy<GetActiveAssetsInfo>
 
     @Inject
-    lateinit var getTransactions: GetTransactions
+    lateinit var getTransactions: Lazy<GetTransactions>
 
     @Inject
-    lateinit var showSystemNotification: ShowSystemNotification
+    lateinit var showSystemNotification: Lazy<ShowSystemNotification>
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
-        showSystemNotification.ensureChannels()
-        ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleCoordinator)
+        appScope.launch {
+            getActiveAssetsInfo.get()
+            getTransactions.get()
+        }
+        appScope.launch {
+            showSystemNotification.get().ensureChannels()
+            val coordinator = appLifecycleCoordinator.get()
+            withContext(Dispatchers.Main) {
+                ProcessLifecycleOwner.get().lifecycle.addObserver(coordinator)
+            }
+        }
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader = ImageLoader.Builder(this)

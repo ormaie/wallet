@@ -64,7 +64,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
@@ -95,12 +98,9 @@ import com.gemwallet.android.features.main.ScanReceiveModal
 import com.gemwallet.android.features.main.models.BottomNavItem
 import com.gemwallet.android.features.main.viewmodels.MainScreenViewModel
 import com.gemwallet.android.features.settings.presents.SettingsScreen
-import com.gemwallet.android.features.settings.viewmodels.SettingsViewModel
 import com.gemwallet.android.features.transactions.presents.list.TransactionsScreen
-import com.gemwallet.android.features.transactions.viewmodels.TransactionsViewModel
 import com.gemwallet.android.features.wallet.presents.WalletAction
 import com.gemwallet.android.features.wallet.presents.WalletScreen
-import com.gemwallet.android.features.wallet.viewmodels.WalletViewModel
 import com.gemwallet.android.ui.LocalNavTransitionRunning
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.ConnectionStatusBannerHost
@@ -120,12 +120,14 @@ import com.gemwallet.android.ui.theme.space0
 import com.gemwallet.android.ui.theme.space2
 import com.gemwallet.android.ui.theme.space24
 import com.gemwallet.android.ui.theme.space6
-import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
+import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 private val floatingNavHeight = 56.dp
 private val floatingNavIconSize = 22.dp
 private val floatingNavBlurRadius = 16.dp
+private const val frostedBackdropDownsampleScale = 0.5f
 private val floatingNavBorderWidth = 1.dp
 private val floatingNavShadowRadius = 18.dp
 private val floatingNavShadowOffsetY = 6.dp
@@ -161,9 +163,6 @@ private const val scrollIndexStride = 100_000
 fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onWalletContentReady: () -> Unit = {}, viewModel: MainScreenViewModel = hiltViewModel()) {
     val pendingCount by viewModel.pendingTxCount.collectAsStateWithLifecycle()
     val showsScanReceiveSelector by viewModel.showsScanReceiveSelector.collectAsStateWithLifecycle()
-    val walletViewModel: WalletViewModel = hiltViewModel()
-    val transactionsViewModel: TransactionsViewModel = hiltViewModel()
-    val settingsViewModel: SettingsViewModel = hiltViewModel()
     var isPresentingScanner by rememberSaveable { mutableStateOf(false) }
 
     ScanReceiveModal(
@@ -287,10 +286,8 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                             contentBackdropLayer.record {
                                 this@drawWithContent.drawContent()
                             }
-                            drawLayer(contentBackdropLayer)
-                        } else {
-                            drawContent()
                         }
+                        drawLayer(contentBackdropLayer)
                     } else {
                         drawContent()
                     }
@@ -345,7 +342,6 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                             onContentReady = onWalletContentReady,
                             listState = assetsListState,
                             bottomPadding = bottomPadding,
-                            viewModel = walletViewModel,
                         )
 
                         TransactionsRoute -> TransactionsScreen(
@@ -354,13 +350,11 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                             onTransaction = navigator::openTransaction,
                             onBuy = navigator::openBuy,
                             onReceive = navigator::openReceive,
-                            viewModel = transactionsViewModel,
                         )
 
                         else -> SettingsScreen(
                             scrollState = settingsScrollState,
                             bottomPadding = bottomPadding,
-                            viewModel = settingsViewModel,
                             onAction = onSettingsAction,
                         )
                     }
@@ -376,6 +370,37 @@ private fun RootTabBackHandler(navigator: WalletNavigator, currentTab: MutableSt
     BackHandler(isRootRouteActive && currentTab.value != WalletRoute) {
         currentTab.value = WalletRoute
     }
+}
+
+internal data class FrostedBackdropGeometry(
+    val surfaceWidth: Int,
+    val surfaceHeight: Int,
+    val placeOffsetX: Int,
+    val placeOffsetY: Int,
+    val blurRadiusPx: Float,
+    val contentTranslatePadPx: Float,
+    val downsampleScale: Float,
+    val upsampleScale: Float,
+)
+
+internal fun computeFrostedBackdropGeometry(pillWidth: Int, pillHeight: Int, blurRadiusPx: Float, downsampleScale: Float): FrostedBackdropGeometry {
+    val scale = downsampleScale.coerceIn(0.25f, 1f)
+    val upsample = 1f / scale
+    val scaledBlur = blurRadiusPx.coerceAtLeast(0f) * scale
+    val scaledPad = ceil(scaledBlur).toInt()
+    val fullPad = (scaledPad * upsample).roundToInt()
+    val surfaceWidth = (ceil(pillWidth.coerceAtLeast(0) * scale).toInt() + scaledPad * 2).coerceAtLeast(0)
+    val surfaceHeight = (ceil(pillHeight.coerceAtLeast(0) * scale).toInt() + scaledPad * 2).coerceAtLeast(0)
+    return FrostedBackdropGeometry(
+        surfaceWidth = surfaceWidth,
+        surfaceHeight = surfaceHeight,
+        placeOffsetX = -fullPad,
+        placeOffsetY = -fullPad,
+        blurRadiusPx = scaledBlur,
+        contentTranslatePadPx = fullPad.toFloat(),
+        downsampleScale = scale,
+        upsampleScale = upsample,
+    )
 }
 
 private class BackdropAlignmentState {
@@ -591,11 +616,18 @@ private fun BoxScope.FrostedBackdropSurface(
 ) {
     val density = LocalDensity.current
     val blurRadiusPx = with(density) { blurRadius.toPx() }
-    val padPx = blurRadiusPx.roundToInt()
-    val renderEffect = remember(blurRadiusPx, saturation) {
+    val baseGeometry = remember(blurRadiusPx) {
+        computeFrostedBackdropGeometry(
+            pillWidth = 0,
+            pillHeight = 0,
+            blurRadiusPx = blurRadiusPx,
+            downsampleScale = frostedBackdropDownsampleScale,
+        )
+    }
+    val renderEffect = remember(baseGeometry.blurRadiusPx, saturation) {
         val blur = RenderEffect.createBlurEffect(
-            blurRadiusPx,
-            blurRadiusPx,
+            baseGeometry.blurRadiusPx,
+            baseGeometry.blurRadiusPx,
             Shader.TileMode.CLAMP,
         )
         val colorMatrix = ColorMatrix().apply { setSaturation(saturation) }
@@ -610,34 +642,54 @@ private fun BoxScope.FrostedBackdropSurface(
             .layout { measurable, constraints ->
                 val width = constraints.maxWidth
                 val height = constraints.maxHeight
+                val geometry = computeFrostedBackdropGeometry(
+                    pillWidth = width,
+                    pillHeight = height,
+                    blurRadiusPx = blurRadiusPx,
+                    downsampleScale = frostedBackdropDownsampleScale,
+                )
                 val placeable = measurable.measure(
-                    Constraints.fixed(width + padPx * 2, height + padPx * 2),
+                    Constraints.fixed(geometry.surfaceWidth, geometry.surfaceHeight),
                 )
                 layout(width, height) {
-                    placeable.place(-padPx, -padPx)
+                    placeable.place(geometry.placeOffsetX, geometry.placeOffsetY)
                 }
             }
             .graphicsLayer {
-                this.renderEffect = renderEffect
+                compositingStrategy = CompositingStrategy.Offscreen
+                transformOrigin = TransformOrigin(0f, 0f)
+                scaleX = baseGeometry.upsampleScale
+                scaleY = baseGeometry.upsampleScale
                 clip = true
-            }
-            .drawBehind {
-                if (!isNavTransitionRunning()) {
-                    invalidationKey()
-                    tabIndicatorPosition()
-                }
-                drawRect(color = surfaceColor)
-                if (backdropLayer.size != IntSize.Zero) {
-                    val delta = backdropOffset()
-                    translate(
-                        left = delta.x + padPx.toFloat(),
-                        top = delta.y + padPx.toFloat(),
-                    ) {
-                        drawLayer(backdropLayer)
-                    }
-                }
             },
-    )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    this.renderEffect = renderEffect
+                    clip = true
+                }
+                .drawBehind {
+                    if (!isNavTransitionRunning()) {
+                        invalidationKey()
+                        tabIndicatorPosition()
+                    }
+                    drawRect(color = surfaceColor)
+                    if (backdropLayer.size != IntSize.Zero) {
+                        val delta = backdropOffset()
+                        scale(scale = baseGeometry.downsampleScale, pivot = Offset.Zero) {
+                            translate(
+                                left = delta.x + baseGeometry.contentTranslatePadPx,
+                                top = delta.y + baseGeometry.contentTranslatePadPx,
+                            ) {
+                                drawLayer(backdropLayer)
+                            }
+                        }
+                    }
+                },
+        )
+    }
 }
 
 @Composable
