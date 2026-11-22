@@ -51,7 +51,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -110,11 +109,13 @@ open class BaseSelectAssetViewModel(
 
     private val walletFlow = session
         .map { session -> session?.wallet?.let { service.walletFlow(selectType, it.toGem()) } }
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val availableChains = walletFlow
         .map { walletFlow -> walletFlow?.chains?.map { chain -> chain.requireChain() }.orEmpty() }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        .flowOn(ioDispatcher)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
 
     protected val currentQuery = snapshotFlow { queryState.text.toString() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
@@ -136,22 +137,20 @@ open class BaseSelectAssetViewModel(
     }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    private val assetsContent = combine(
-        filters,
-        search.items(filters),
-    ) { _, items ->
-        val current = session.value
-        items
-            .map { item ->
-                val account = item.account.takeIf { it.address.isNotEmpty() } ?: current?.wallet?.getAccount(item.asset.id.chain)
-                if (account == null || account == item.account) item else item.copy(account = account)
-            }
-            .toAssetInfoDataAggregates(current?.currency ?: Currency.USD, flow.rowStyle)
-    }
+    private val assets = search.items(filters)
+        .map { items ->
+            val current = session.value
+            items
+                .map { item ->
+                    val account = item.account.takeIf { it.address.isNotEmpty() } ?: current?.wallet?.getAccount(item.asset.id.chain)
+                    if (account == null || account == item.account) item else item.copy(account = account)
+                }
+                .toAssetInfoDataAggregates(current?.currency ?: Currency.USD, flow.rowStyle)
+        }
         .flowOn(ioDispatcher)
-        .shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    protected data class AssetSections(val state: GemSelectAssetState, val popular: List<AssetInfoDataAggregate>, val pinned: List<AssetInfoDataAggregate>, val unpinned: List<AssetInfoDataAggregate>)
+    data class AssetSections(val state: GemSelectAssetState, val popular: List<AssetInfoDataAggregate>, val pinned: List<AssetInfoDataAggregate>, val unpinned: List<AssetInfoDataAggregate>)
 
     private fun assetSections(items: List<AssetInfoDataAggregate>, isSearching: Boolean): AssetSections {
         val view = flow.view(
@@ -168,24 +167,21 @@ open class BaseSelectAssetViewModel(
         )
     }
 
-    private val assets = assetsContent
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList<AssetInfoDataAggregate>())
-
-    protected val sections = combine(assets, isSearching, ::assetSections)
+    val sections = combine(assets, isSearching, ::assetSections)
         .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, AssetSections(GemSelectAssetState.IDLE, emptyList(), emptyList(), emptyList()))
 
     val popular = sections
         .map { it.popular }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, sections.value.popular)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), sections.value.popular)
 
     val pinned = sections
         .map { it.pinned }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, sections.value.pinned)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), sections.value.pinned)
 
     val unpinned = sections
         .map { it.unpinned }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, sections.value.unpinned)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), sections.value.unpinned)
 
     val recent = combine(currentQuery, filterView) { query, filterView -> query to filterView.filters.toSet() }
         .flatMapLatest { (query, filters) ->
@@ -200,23 +196,25 @@ open class BaseSelectAssetViewModel(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList<Asset>())
 
     val showsRecents: StateFlow<Boolean> = combine(snapshotFlow { queryState.text.isNotEmpty() }, recent) { hasQuery, recents -> flow.showsRecents(hasQuery, recents.isNotEmpty()) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+        .flowOn(ioDispatcher)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
 
     val uiState = sections
         .map { it.state }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, GemSelectAssetState.IDLE)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), GemSelectAssetState.IDLE)
 
     val isChainFilterAvailable = walletFlow
         .map { it?.showsChainFilter == true }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
 
     val isAddAssetAvailable = walletFlow
         .map { it?.showsAddToken == true }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
 
     val searchEmptyState: StateFlow<GemEmptyState> = walletFlow
-        .map { it?.emptyState ?: emptyState(GemEmptyStateKind.SEARCH_ASSETS) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyState(GemEmptyStateKind.SEARCH_ASSETS))
+        .map { it?.emptyState ?: defaultSearchEmptyState }
+        .flowOn(ioDispatcher)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), defaultSearchEmptyState)
 
     fun onSelected(asset: Asset) {
         flow.action?.let { updateRecent(asset, it) }
@@ -303,5 +301,7 @@ open class BaseSelectAssetViewModel(
 
     private companion object {
         private const val TAG = "AssetSelect"
+        private const val STOP_TIMEOUT_MILLIS = 5_000L
+        private val defaultSearchEmptyState: GemEmptyState by lazy { emptyState(GemEmptyStateKind.SEARCH_ASSETS) }
     }
 }

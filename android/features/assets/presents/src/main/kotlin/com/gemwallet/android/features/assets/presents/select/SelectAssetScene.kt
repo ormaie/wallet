@@ -299,7 +299,13 @@ fun LazyListScope.assetRows(
     indexOffset: Int = 0,
     totalCount: Int = items.size,
 ) {
-    itemsPositioned(items, indexOffset = indexOffset, totalCount = totalCount, key = { _, item -> "$keyPrefix-${item.id.toIdentifier()}" }) { position, item ->
+    itemsPositioned(
+        items = items,
+        indexOffset = indexOffset,
+        totalCount = totalCount,
+        key = { _, item -> "$keyPrefix-${item.id.toIdentifier()}" },
+        contentType = { _, _ -> "asset_row" },
+    ) { position, item ->
         SelectAssetRow(
             position = position,
             item = item,

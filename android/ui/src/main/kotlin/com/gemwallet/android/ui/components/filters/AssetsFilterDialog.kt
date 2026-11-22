@@ -17,16 +17,15 @@ import uniffi.gemstone.GemAssetsFilterView
 
 @Composable
 fun AssetsFilter(isVisible: Boolean, availableChains: List<Chain>, filter: GemAssetsFilterView, onDismissRequest: () -> Unit, onChainFilter: (Chain) -> Unit, onBalanceFilter: (Boolean) -> Unit, onClearFilters: () -> Unit) {
-    val query = rememberTextFieldState()
-
-    val matchingChains = rememberMatchingChains(availableChains, query.text.toString())
-    val chainFilter = remember(filter.selectedChains) { filter.selectedChains.map { it.requireChain() } }
     FormDialog(
         isVisible = isVisible,
         title = stringResource(R.string.filter_title),
         onDismiss = onDismissRequest,
         onClear = onClearFilters,
     ) {
+        val query = rememberTextFieldState()
+        val matchingChains = rememberMatchingChains(availableChains, query.text.toString())
+        val chainFilter = remember(filter.selectedChains) { filter.selectedChains.map { it.requireChain() } }
         availableChains.takeIf { it.size > 1 }?.let { SearchBar(query) }
         if (filter.showsBalanceToggle) {
             HasBalances(isActive = filter.hasBalance, onBalanceFilter)

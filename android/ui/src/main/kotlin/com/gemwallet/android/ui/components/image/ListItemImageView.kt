@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import coil3.compose.AsyncImage
@@ -33,6 +32,7 @@ import com.gemwallet.android.ui.components.list_item.ListItemImageStyle
 import com.gemwallet.android.ui.components.list_item.ListItemSymbol
 import com.gemwallet.android.ui.components.list_item.color
 import com.gemwallet.android.ui.icons.AppIcons
+import com.gemwallet.android.ui.icons.cachedDrawablePainter
 import com.gemwallet.android.ui.theme.actionIconGlyphSize
 import com.gemwallet.android.ui.theme.secondaryFaded
 import com.gemwallet.android.ui.theme.space12
@@ -109,7 +109,7 @@ private fun AssetIconImage(icon: GemAssetIcon, size: Dp, modifier: Modifier) {
 @Composable
 private fun BundledImage(@DrawableRes resource: Int, size: Dp, isRounded: Boolean, modifier: Modifier) {
     Image(
-        painter = painterResource(resource),
+        painter = cachedDrawablePainter(resource),
         contentDescription = null,
         modifier = if (isRounded) modifier.size(size).clip(CircleShape) else modifier.size(size),
     )

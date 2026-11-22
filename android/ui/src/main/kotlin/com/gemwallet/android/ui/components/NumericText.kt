@@ -43,22 +43,31 @@ fun NumericText(
     autoSize: TextAutoSize? = null,
     animated: Boolean = true,
 ) {
+    if (!animated || !text.any(Char::isDigit)) {
+        Text(
+            text = text,
+            modifier = modifier,
+            color = color,
+            style = style,
+            textAlign = textAlign,
+            overflow = overflow,
+            maxLines = maxLines,
+            autoSize = autoSize,
+        )
+        return
+    }
     val transition = remember { NumericTransition() }
     val scope = rememberCoroutineScope()
     Text(
         text = text,
-        modifier = if (animated) modifier.drawWithContent { if (!transition.draw(this)) drawContent() } else modifier,
+        modifier = modifier.drawWithContent { if (!transition.draw(this)) drawContent() },
         color = color,
         style = style,
         textAlign = textAlign,
         overflow = overflow,
         maxLines = maxLines,
         autoSize = autoSize,
-        onTextLayout = if (animated) {
-            { transition.update(it, scope) }
-        } else {
-            null
-        },
+        onTextLayout = { transition.update(it, scope) },
     )
 }
 

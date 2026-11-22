@@ -56,10 +56,7 @@ fun SelectAssetScreen(
 ) {
     val title = stringResource(viewModel.flow.title.stringRes())
     val clipboard = rememberClipboard()
-    val uiStates by viewModel.uiState.collectAsStateWithLifecycle()
-    val popular by viewModel.popular.collectAsStateWithLifecycle()
-    val pinned by viewModel.pinned.collectAsStateWithLifecycle()
-    val unpinned by viewModel.unpinned.collectAsStateWithLifecycle()
+    val sections by viewModel.sections.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
     val showsRecents by viewModel.showsRecents.collectAsStateWithLifecycle()
     val searchEmptyState by viewModel.searchEmptyState.collectAsStateWithLifecycle()
@@ -78,11 +75,11 @@ fun SelectAssetScreen(
         title = titleContent ?: { SceneTitle(title) },
         closeIcon = closeIcon,
         query = viewModel.queryState,
-        pinned = pinned,
-        popular = popular,
-        unpinned = unpinned,
+        pinned = sections.pinned,
+        popular = sections.popular,
+        unpinned = sections.unpinned,
         recent = if (showsRecents) recent else emptyList(),
-        state = uiStates,
+        state = sections.state,
         rowAction = viewModel.flow.rowAction,
         empty = searchEmptyState,
         availableChains = availableChains,

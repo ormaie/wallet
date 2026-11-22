@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import uniffi.gemstone.GemAssetFilter
 import uniffi.gemstone.GemRecentActivityServiceInterface
+import uniffi.gemstone.GemRecentsSections
 import uniffi.gemstone.GemRecentsViewState
 import java.time.Instant
 import java.time.LocalDate
@@ -63,7 +64,7 @@ class RecentsViewModel @Inject constructor(
             )
         }
         .flowOn(ioDispatcher)
-        .stateIn(viewModelScope, SharingStarted.Eagerly, recentActivityService.viewState(emptyList(), emptyList(), LocalDate.now().gemDay().boundaries(), ""))
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyRecentsViewState)
 
     fun show(filters: Set<GemAssetFilter> = emptySet(), types: List<RecentActivityType>) {
         query.clearText()
@@ -91,3 +92,8 @@ class RecentsViewModel @Inject constructor(
 }
 
 private const val TAG = "RecentsSheet"
+
+private val emptyRecentsViewState = GemRecentsViewState(
+    sections = GemRecentsSections(showsItems = false, showsClear = false, empty = null),
+    days = emptyList(),
+)
