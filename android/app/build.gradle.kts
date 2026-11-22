@@ -249,11 +249,9 @@ dependencies {
 
     gemChannels.forEach { (name, channel) ->
         val configuration = "${name}Implementation"
-        listOf("push", "review").forEach { key ->
-            val module = channel[key] as String
-            if (rootProject.findProject(module) != null) {
-                add(configuration, project(module))
-            }
+        val module = channel["push"] as String
+        if (rootProject.findProject(module) != null) {
+            add(configuration, project(module))
         }
     }
 

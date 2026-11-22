@@ -22,10 +22,6 @@ include(":flavors:pushes-stub")
 if (file("flavors/fcm").isDirectory) {
     include(":flavors:fcm")
 }
-if (file("flavors/google-review").isDirectory) {
-    include(":flavors:google-review")
-}
-include(":flavors:review-stub")
 include(":features")
 include(":features:nft")
 include(":features:nft:presents")

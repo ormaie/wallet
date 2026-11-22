@@ -15,14 +15,6 @@ class UserConfig(private val preferencesService: GemPreferencesServiceInterface)
 
     override fun developEnabled(enabled: Boolean) = preferencesService.setDeveloperEnabled(enabled)
 
-    fun increaseLaunchNumber() {
-        preferencesService.incrementLaunchesCount()
-    }
-
-    fun shouldRequestReview(): Boolean = preferencesService.shouldRequestReview()
-
-    fun setRateApplicationShown() = preferencesService.setRateApplicationShown()
-
     private val hideBalancesState = MutableStateFlow(preferencesService.isHideBalanceEnabled())
     private val perpetualEnabledState = MutableStateFlow(preferencesService.isPerpetualEnabled())
     private val appearanceState = MutableStateFlow(preferencesService.getAppearance().toPrimitives())

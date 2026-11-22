@@ -68,7 +68,6 @@ flowchart LR
 | The user closes the update prompt | it counts as Skip | |
 | The user skipped a version | that version is not offered again | |
 | The user long-presses Version | Developer turns on or off | |
-| After the fifth launch | the app asks once for a store review | |
 
 ## Platform differences
 

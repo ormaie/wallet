@@ -4,12 +4,7 @@ use primitives::Appearance;
 
 use primitives::currency::Currency;
 
-const REVIEW_REQUEST_LAUNCHES: u32 = 5;
 const ASK_NOTIFICATIONS_COOLDOWN_SECONDS: u64 = 30 * 24 * 60 * 60;
-
-pub fn should_request_review(launches_count: u32, rate_application_shown: bool) -> bool {
-    launches_count >= REVIEW_REQUEST_LAUNCHES && !rate_application_shown
-}
 
 pub fn should_ask_notifications(declined: bool, last_asked_at: u64, now: u64) -> bool {
     !declined && now.saturating_sub(last_asked_at) >= ASK_NOTIFICATIONS_COOLDOWN_SECONDS
@@ -69,13 +64,6 @@ pub fn notification_prompt(is_granted: bool, has_asked: bool) -> GemNotification
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_review_requested_after_five_launches_until_shown() {
-        assert!(!should_request_review(4, false));
-        assert!(should_request_review(5, false));
-        assert!(!should_request_review(9, true));
-    }
 
     #[test]
     fn test_asking_for_notifications_again_waits_a_month() {

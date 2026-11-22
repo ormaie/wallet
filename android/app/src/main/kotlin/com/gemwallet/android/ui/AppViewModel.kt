@@ -88,7 +88,6 @@ class AppViewModel @Inject constructor(
         }
         viewModelScope.launch(ioDispatcher) {
             offerStoreUpdate()
-            rateAs()
             getSession().collectLatest {
                 onSession(it ?: return@collectLatest)
             }
@@ -140,15 +139,6 @@ class AppViewModel @Inject constructor(
         }
     }
 
-    private fun rateAs() {
-        userConfig.increaseLaunchNumber()
-        if (!userConfig.shouldRequestReview()) {
-            return
-        }
-        state.update { it.copy(intent = AppIntent.ShowReview) }
-        userConfig.setRateApplicationShown()
-    }
-
     private fun onSession(session: Session) {
         state.update {
             it.copy(session = session)
@@ -162,18 +152,9 @@ class AppViewModel @Inject constructor(
         }
     }
 
-    fun onReviewOpen() {
-        state.update { it.copy(intent = AppIntent.None) }
-    }
-
     private companion object {
         const val TAG = "App"
     }
 }
 
-data class AppState(val session: Session? = null, val intent: AppIntent = AppIntent.None, val update: GemAppUpdateOffer? = null)
-
-enum class AppIntent {
-    None,
-    ShowReview,
-}
+data class AppState(val session: Session? = null, val update: GemAppUpdateOffer? = null)

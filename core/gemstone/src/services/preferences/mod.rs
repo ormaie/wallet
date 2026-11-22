@@ -25,8 +25,6 @@ const CHART_PERIOD: &str = "chart_period";
 const CHART_STYLE_CANDLES: &str = "chart_style_candles";
 const PERPETUAL_CHART_PERIOD: &str = "perpetual_chart_period";
 const PUSH_NOTIFICATIONS_ENABLED: &str = "is_push_notifications_enabled";
-const LAUNCHES_COUNT: &str = "launches_count";
-const RATE_APPLICATION_SHOWN: &str = "rate_application_shown";
 const NOTIFICATIONS_ASKED_AT: &str = "notifications_asked_at";
 const PUSH_NOTIFICATIONS_DECLINED: &str = "push_notifications_declined";
 const SKIPPED_APP_VERSION: &str = "skipped_app_version";
@@ -137,21 +135,6 @@ impl GemPreferencesService {
 
     pub fn set_appearance(&self, appearance: Appearance) -> Result<(), GemServiceError> {
         self.set_observed(APPEARANCE, rules::appearance_value(appearance).to_string())
-    }
-
-    pub fn increment_launches_count(&self) -> Result<u32, GemServiceError> {
-        let count = self.get_launches_count() + 1;
-        self.store.set(LAUNCHES_COUNT.to_string(), count.to_string())?;
-        Ok(count)
-    }
-
-    pub fn should_request_review(&self) -> bool {
-        let shown = self.store.get(RATE_APPLICATION_SHOWN.to_string()).as_deref() == Some("true");
-        rules::should_request_review(self.get_launches_count(), shown)
-    }
-
-    pub fn set_rate_application_shown(&self) -> Result<(), GemServiceError> {
-        self.store.set(RATE_APPLICATION_SHOWN.to_string(), "true".to_string())
     }
 
     pub fn notification_prompt(&self, is_granted: bool) -> rules::GemNotificationPrompt {
@@ -266,9 +249,6 @@ impl GemPreferencesService {
     }
     pub fn set_push_notifications_declined(&self, declined: bool) -> Result<(), GemServiceError> {
         self.store.set(PUSH_NOTIFICATIONS_DECLINED.to_string(), declined.to_string())
-    }
-    fn get_launches_count(&self) -> u32 {
-        self.store.get(LAUNCHES_COUNT.to_string()).and_then(|value| value.parse().ok()).unwrap_or(0)
     }
     pub fn is_price_alerts_enabled(&self) -> bool {
         self.store.get(PRICE_ALERTS_ENABLED.to_string()).as_deref() == Some("true")

@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Build
-import androidx.activity.compose.LocalActivity
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,7 +26,6 @@ import com.gemwallet.android.SystemAuthPolicy
 import com.gemwallet.android.WalletConnectorRequestContent
 import com.gemwallet.android.application.wallet_connect.ActiveWalletConnectRequest
 import com.gemwallet.android.features.onboarding.presents.OnboardingScene
-import com.gemwallet.android.flavors.ReviewManager
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.localization.stringRes
 import com.gemwallet.android.ui.navigation.WalletNavGraph
@@ -120,14 +118,6 @@ fun WalletApp(
             onSkip = viewModel::onSkip,
             onUpdateOpened = viewModel::onUpdateOpened,
         )
-    }
-
-    val activity = LocalActivity.current
-    LaunchedEffect(state.intent, activity) {
-        if (state.intent == AppIntent.ShowReview && activity != null) {
-            viewModel.onReviewOpen()
-            ReviewManager().open(activity)
-        }
     }
 }
 

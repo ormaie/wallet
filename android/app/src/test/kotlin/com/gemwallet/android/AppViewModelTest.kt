@@ -76,9 +76,7 @@ class AppViewModelTest {
         val walletSession: GemWalletSessionServiceInterface = mockk {
             coEvery { ensureCurrentWallet() } returns currentWalletId
         }
-        val config: UserConfig = mockk(relaxed = true) {
-            every { shouldRequestReview() } returns false
-        }
+        val config: UserConfig = mockk(relaxed = true)
         val sync: SyncAppUpdate = mockk { coEvery { syncAppUpdate() } returns update }
         val walletHomeState: GetWalletHomeState = mockk { every { walletHomeState() } returns MutableStateFlow(null) }
         return AppViewModel(
