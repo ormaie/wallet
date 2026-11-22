@@ -5,10 +5,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,6 +18,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gemwallet.android.features.settings.viewmodels.about_us.AboutUsViewModel
 import com.gemwallet.android.features.settings.viewmodels.about_us.opensDeveloperMenu
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.components.GemDropdownMenu
+import com.gemwallet.android.ui.components.GemDropdownMenuItem
 import com.gemwallet.android.ui.components.list_item.GemListRowView
 import com.gemwallet.android.ui.components.list_item.SubheaderItem
 import com.gemwallet.android.ui.components.list_item.property.itemsPositioned
@@ -52,13 +50,12 @@ fun AboutUsScreen(onCancel: () -> Unit, viewModel: AboutUsViewModel = hiltViewMo
                             ),
                         )
                         if (opensMenu) {
-                            DropdownMenu(
-                                isShowDevelopEnable,
-                                { isShowDevelopEnable = false },
-                                containerColor = MaterialTheme.colorScheme.background,
+                            GemDropdownMenu(
+                                expanded = isShowDevelopEnable,
+                                onDismissRequest = { isShowDevelopEnable = false },
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text(viewState.developerToggle.string(context)) },
+                                GemDropdownMenuItem(
+                                    text = viewState.developerToggle.string(context),
                                     onClick = {
                                         isShowDevelopEnable = false
                                         viewModel.toggleDeveloperMode()

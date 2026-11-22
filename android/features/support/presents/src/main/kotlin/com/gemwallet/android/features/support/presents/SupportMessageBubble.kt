@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import com.gemwallet.android.ext.toPrimitives
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.components.GemDropdownMenuItem
 import com.gemwallet.android.ui.components.clipboard.rememberClipboard
 import com.gemwallet.android.ui.components.list_item.ChevronIcon
 import com.gemwallet.android.ui.components.list_item.DropDownContextItem
@@ -111,9 +111,9 @@ internal fun SupportMessageBubble(row: GemSupportMessageRow, onImageClick: (Stri
                 onLongClick = { menuExpanded = true },
                 onClick = {},
                 menuItems = {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.common_copy)) },
-                        leadingIcon = { Icon(AppIcons.ContentCopy, contentDescription = null) },
+                    GemDropdownMenuItem(
+                        text = stringResource(R.string.common_copy),
+                        trailingIcon = AppIcons.ContentCopyOutlined,
                         onClick = {
                             clipboard.copy(message.content)
                             menuExpanded = false

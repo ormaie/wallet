@@ -1,19 +1,16 @@
 package com.gemwallet.android.features.perpetuals.presents.components
 
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.gemwallet.android.ext.toGem
 import com.gemwallet.android.ext.toIdentifier
 import com.gemwallet.android.ext.toPrimitives
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.components.GemDropdownMenuItem
 import com.gemwallet.android.ui.components.list_item.AssetListItem
 import com.gemwallet.android.ui.components.list_item.DropDownContextItem
 import com.gemwallet.android.ui.components.list_item.property.DataBadgeChevron
@@ -58,15 +55,9 @@ fun PerpetualListItem(item: GemPerpetualMarketItem, modifier: Modifier = Modifie
             )
         },
         menuItems = {
-            DropdownMenuItem(
-                text = { Text(text = stringResource(id = if (isPinned) R.string.common_unpin else R.string.common_pin)) },
-                trailingIcon = {
-                    if (isPinned) {
-                        Icon(painterResource(R.drawable.keep_off), "unpin")
-                    } else {
-                        Icon(AppIcons.PushPin, "pin")
-                    }
-                },
+            GemDropdownMenuItem(
+                text = stringResource(id = if (isPinned) R.string.common_unpin else R.string.common_pin),
+                trailingIcon = if (isPinned) AppIcons.KeepOff else AppIcons.PushPin,
                 onClick = {
                     onTogglePin(perpetualId)
                     longPressState.value = null

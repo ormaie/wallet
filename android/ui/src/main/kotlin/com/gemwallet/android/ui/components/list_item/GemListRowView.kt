@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -23,6 +21,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.gemwallet.android.ui.components.GemDropdownMenuDivider
+import com.gemwallet.android.ui.components.GemDropdownMenuItem
 import com.gemwallet.android.ui.components.clipboard.rememberClipboard
 import com.gemwallet.android.ui.components.image.IconWithBadge
 import com.gemwallet.android.ui.components.image.ListItemImageView
@@ -217,14 +217,13 @@ private fun GemListRowMenu(items: List<GemListRowMenuItem>, onClick: () -> Unit 
         onClick = onClick,
         content = content,
         menuItems = {
-            items.forEach { item ->
-                DropdownMenuItem(
-                    text = { Text(text = item.title) },
-                    trailingIcon = {
-                        when (item) {
-                            is GemListRowMenuItem.Copy -> Icon(AppIcons.ContentCopy, contentDescription = null)
-                            is GemListRowMenuItem.Open -> DataBadgeChevron()
-                        }
+            items.forEachIndexed { index, item ->
+                if (index > 0) GemDropdownMenuDivider()
+                GemDropdownMenuItem(
+                    text = item.title,
+                    trailingIcon = when (item) {
+                        is GemListRowMenuItem.Copy -> AppIcons.ContentCopyOutlined
+                        is GemListRowMenuItem.Open -> AppIcons.OpenInNew
                     },
                     onClick = {
                         isExpanded = false

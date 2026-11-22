@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +23,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gemwallet.android.features.wallet.viewmodels.PortfolioViewModel
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.components.GemDropdownMenu
+import com.gemwallet.android.ui.components.GemDropdownMenuDivider
+import com.gemwallet.android.ui.components.GemDropdownMenuItem
 import com.gemwallet.android.ui.components.RefreshOnTimer
 import com.gemwallet.android.ui.components.TabsBar
 import com.gemwallet.android.ui.components.chart.ChartSection
@@ -111,10 +112,12 @@ private fun ChartTypeSelector(selected: PortfolioChartType, onSelect: (Portfolio
                 )
             }
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            PortfolioChartType.entries.forEach { type ->
-                DropdownMenuItem(
-                    text = { Text(stringResource(type.stringRes())) },
+        GemDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            PortfolioChartType.entries.forEachIndexed { index, type ->
+                if (index > 0) GemDropdownMenuDivider()
+                GemDropdownMenuItem(
+                    text = stringResource(type.stringRes()),
+                    isSelected = type == selected,
                     onClick = {
                         onSelect(type)
                         expanded = false

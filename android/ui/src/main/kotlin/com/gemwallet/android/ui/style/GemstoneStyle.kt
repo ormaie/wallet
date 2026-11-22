@@ -107,7 +107,7 @@ fun GemAssetMenuIcon.iconRes(): Int = when (this) {
     GemAssetMenuIcon.UNPIN -> R.drawable.keep_off
     GemAssetMenuIcon.HIDE -> R.drawable.ic_visibility_off
     GemAssetMenuIcon.ADD_TO_WALLET -> R.drawable.ic_add_circle_outlined
-    GemAssetMenuIcon.COPY -> R.drawable.ic_content_copy
+    GemAssetMenuIcon.COPY -> R.drawable.ic_content_copy_outlined
 }
 
 @DrawableRes

@@ -2,18 +2,17 @@ package com.gemwallet.android.ui.components.list_item
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.gemwallet.android.ui.components.GemDropdownMenuDivider
+import com.gemwallet.android.ui.components.GemDropdownMenuGroupDivider
+import com.gemwallet.android.ui.components.GemDropdownMenuItem
 import com.gemwallet.android.ui.components.clipboard.rememberClipboard
+import com.gemwallet.android.ui.icons.cachedDrawablePainter
 import com.wallet.core.primitives.AssetId
 
 @Immutable
@@ -33,10 +32,16 @@ private fun ColumnScope.AssetContextMenuItems(assetId: AssetId, address: String?
         assetContextMenuItems(clipboard, assetId, address, isPinned, isBalanceEnabled, actions)
     }
     items.forEachIndexed { index, item ->
-        if (index > 0 && item.group != items[index - 1].group) HorizontalDivider()
-        DropdownMenuItem(
-            text = { Text(stringResource(item.titleRes)) },
-            trailingIcon = { Icon(painterResource(item.iconRes), null) },
+        if (index > 0) {
+            if (item.group != items[index - 1].group) {
+                GemDropdownMenuGroupDivider()
+            } else {
+                GemDropdownMenuDivider()
+            }
+        }
+        GemDropdownMenuItem(
+            text = stringResource(item.titleRes),
+            trailingIcon = cachedDrawablePainter(item.iconRes),
             onClick = {
                 item.onClick()
                 onDismiss()

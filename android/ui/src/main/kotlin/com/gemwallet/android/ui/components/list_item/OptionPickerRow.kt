@@ -2,17 +2,9 @@ package com.gemwallet.android.ui.components.list_item
 
 import android.graphics.Rect
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,11 +17,11 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
-import com.gemwallet.android.ui.icons.AppIcons
+import com.gemwallet.android.ui.components.GemDropdownMenu
+import com.gemwallet.android.ui.components.GemDropdownMenuDivider
+import com.gemwallet.android.ui.components.GemDropdownMenuItem
 import com.gemwallet.android.ui.models.ListPosition
-import com.gemwallet.android.ui.theme.Spacer4
 import com.gemwallet.android.ui.theme.adaptivePadding
-import com.gemwallet.android.ui.theme.compactIconSize
 import com.gemwallet.android.ui.theme.menuWindowMargin
 import com.gemwallet.android.ui.theme.paddingDefault
 import com.gemwallet.android.ui.theme.paddingSmall
@@ -61,25 +53,16 @@ fun <T> OptionPickerRow(row: GemListRow, listPosition: ListPosition, current: T?
                         menuMaxHeight = with(density) { (available - menuWindowMargin.toPx()).toDp() }
                     },
             ) {
-                DropdownMenu(
+                GemDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false },
                     modifier = Modifier.heightIn(max = menuMaxHeight),
-                    containerColor = MaterialTheme.colorScheme.background,
                 ) {
-                    options.forEach { option ->
-                        DropdownMenuItem(
-                            text = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    if (option == current) {
-                                        Icon(AppIcons.Check, null, modifier = Modifier.size(compactIconSize))
-                                    } else {
-                                        Spacer(modifier = Modifier.size(compactIconSize))
-                                    }
-                                    Spacer4()
-                                    Text(label(option))
-                                }
-                            },
+                    options.forEachIndexed { index, option ->
+                        if (index > 0) GemDropdownMenuDivider()
+                        GemDropdownMenuItem(
+                            text = label(option),
+                            isSelected = option == current,
                             onClick = {
                                 onSelect(option)
                                 expanded = false

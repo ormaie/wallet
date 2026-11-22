@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +34,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gemwallet.android.features.wallet.viewmodels.DownloadState
 import com.gemwallet.android.features.wallet.viewmodels.InAppUpdateViewModel
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.components.GemDropdownMenuDivider
+import com.gemwallet.android.ui.components.GemDropdownMenuItem
 import com.gemwallet.android.ui.components.list_item.DropDownContextItem
 import com.gemwallet.android.ui.components.list_item.listItem
 import com.gemwallet.android.ui.icons.AppIcons
@@ -102,16 +103,17 @@ fun InAppUpdateBanner() {
                 DownloadState.PermissionRequired,
                 DownloadState.Success,
                 -> {
-                    DropdownMenuItem(
-                        text = { Text(text = stringResource(id = GemAppUpdateAction.UPDATE.stringRes())) },
+                    GemDropdownMenuItem(
+                        text = stringResource(id = GemAppUpdateAction.UPDATE.stringRes()),
                         onClick = {
                             isShowContextMenu = false
                             viewModel.update()
                         },
                     )
                     if (canDismiss) {
-                        DropdownMenuItem(
-                            text = { Text(text = stringResource(GemAppUpdateAction.SKIP.stringRes())) },
+                        GemDropdownMenuDivider()
+                        GemDropdownMenuItem(
+                            text = stringResource(GemAppUpdateAction.SKIP.stringRes()),
                             onClick = {
                                 isShowContextMenu = false
                                 viewModel.skip()
@@ -124,8 +126,8 @@ fun InAppUpdateBanner() {
                 is DownloadState.Progress,
                 -> {
                     if (canDismiss) {
-                        DropdownMenuItem(
-                            text = { Text(text = stringResource(id = R.string.common_cancel)) },
+                        GemDropdownMenuItem(
+                            text = stringResource(id = R.string.common_cancel),
                             onClick = {
                                 isShowContextMenu = false
                                 viewModel.cancel()

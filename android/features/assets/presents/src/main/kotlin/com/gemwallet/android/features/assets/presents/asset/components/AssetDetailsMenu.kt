@@ -1,12 +1,8 @@
 package com.gemwallet.android.features.assets.presents.asset.components
 
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +14,9 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.components.GemDropdownMenu
+import com.gemwallet.android.ui.components.GemDropdownMenuDivider
+import com.gemwallet.android.ui.components.GemDropdownMenuItem
 import com.gemwallet.android.ui.components.image.vector
 import com.gemwallet.android.ui.icons.AppIcons
 import com.gemwallet.android.ui.localization.text
@@ -50,15 +49,23 @@ fun RowScope.AssetDetailsMenu(details: GemAssetDetails, onPriceAlert: () -> Unit
             contentDescription = stringResource(R.string.wallet_more),
         )
     }
-    DropdownMenu(
+    GemDropdownMenu(
         expanded = menuExpanded,
         onDismissRequest = { menuExpanded = false },
-        containerColor = MaterialTheme.colorScheme.background,
     ) {
-        details.options.forEach { option ->
-            DropdownMenuItem(
-                text = { Text(option.text(context)) },
+        details.options.forEachIndexed { index, option ->
+            if (index > 0) GemDropdownMenuDivider()
+            GemDropdownMenuItem(
+                text = option.text(context),
+                trailingIcon = when (option) {
+                    is GemAssetOption.ViewAddress,
+                    is GemAssetOption.ViewToken,
+                    -> AppIcons.OpenInNew
+
+                    GemAssetOption.Share -> AppIcons.Share
+                },
                 onClick = {
+                    menuExpanded = false
                     when (option) {
                         is GemAssetOption.ViewAddress -> uriHandler.open(context, option.link.link)
                         is GemAssetOption.ViewToken -> uriHandler.open(context, option.link.link)

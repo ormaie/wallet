@@ -1,19 +1,13 @@
 package com.gemwallet.android.features.wallet.presents.components
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.components.GemDropdownMenuDivider
+import com.gemwallet.android.ui.components.GemDropdownMenuGroupDivider
+import com.gemwallet.android.ui.components.GemDropdownMenuItem
 import com.gemwallet.android.ui.components.list_item.DropDownContextItem
 import com.gemwallet.android.ui.components.list_item.WalletItem
 import com.gemwallet.android.ui.components.list_item.pinnedHeader
@@ -50,42 +44,35 @@ internal fun LazyListScope.wallets(
                 )
             },
             menuItems = {
-                WalletDropDownItem(
-                    if (row.isPinned) R.string.common_unpin else R.string.common_pin,
-                    if (row.isPinned) AppIcons.KeepOff else AppIcons.PushPin,
-                ) {
-                    onTogglePin(row)
-                    longPressedWallet.value = ""
-                }
-                WalletDropDownItem(R.string.common_wallet, AppIcons.Settings) {
-                    onEdit(row)
-                    longPressedWallet.value = ""
-                }
-                HorizontalDivider()
-                WalletDropDownItem(R.string.common_delete, AppIcons.Delete, MaterialTheme.colorScheme.error) {
-                    onDeleteWallet(row)
-                    longPressedWallet.value = ""
-                }
+                GemDropdownMenuItem(
+                    text = stringResource(if (row.isPinned) R.string.common_unpin else R.string.common_pin),
+                    trailingIcon = if (row.isPinned) AppIcons.KeepOff else AppIcons.PushPin,
+                    onClick = {
+                        onTogglePin(row)
+                        longPressedWallet.value = ""
+                    },
+                )
+                GemDropdownMenuDivider()
+                GemDropdownMenuItem(
+                    text = stringResource(R.string.common_wallet),
+                    trailingIcon = AppIcons.SettingsOutlined,
+                    onClick = {
+                        onEdit(row)
+                        longPressedWallet.value = ""
+                    },
+                )
+                GemDropdownMenuGroupDivider()
+                GemDropdownMenuItem(
+                    text = stringResource(R.string.common_delete),
+                    trailingIcon = AppIcons.Delete,
+                    isDestructive = true,
+                    onClick = {
+                        onDeleteWallet(row)
+                        longPressedWallet.value = ""
+                    },
+                )
             },
             onLongClick = { longPressedWallet.value = row.id },
         ) { onSelectWallet(row) }
     }
-}
-
-@Composable
-private fun WalletDropDownItem(@StringRes text: Int, icon: ImageVector, color: Color = Color.Unspecified, onClick: () -> Unit) {
-    val text = stringResource(text)
-    DropdownMenuItem(
-        text = {
-            Text(text = text, color = color)
-        },
-        trailingIcon = {
-            Icon(
-                imageVector = icon,
-                tint = color,
-                contentDescription = text,
-            )
-        },
-        onClick = onClick,
-    )
 }

@@ -6,13 +6,6 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,10 +13,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
+import com.gemwallet.android.ui.components.GemDropdownMenu
+import com.gemwallet.android.ui.components.GemDropdownMenuDivider
+import com.gemwallet.android.ui.components.GemDropdownMenuGroupDivider
+import com.gemwallet.android.ui.components.GemDropdownMenuItem
 import com.gemwallet.android.ui.components.list_head.AmountHeadAction
 import com.gemwallet.android.ui.icons.AppIcons
 import com.gemwallet.android.ui.localization.stringRes
@@ -60,16 +56,22 @@ fun NftHeaderActions(header: GemHeaderActions, actions: List<GemCollectibleMenuR
                         },
                         onClick = { isMenuExpanded = true },
                     )
-                    DropdownMenu(
+                    GemDropdownMenu(
                         expanded = isMenuExpanded,
                         onDismissRequest = { isMenuExpanded = false },
                     ) {
                         actions.forEachIndexed { index, item ->
-                            if (index > 0 && item.isDestructive != actions[index - 1].isDestructive) HorizontalDivider()
-                            val color = if (item.isDestructive) MaterialTheme.colorScheme.error else Color.Unspecified
-                            DropdownMenuItem(
-                                text = { Text(stringResource(item.action.stringRes()), color = color) },
-                                leadingIcon = { Icon(item.action.icon(), contentDescription = null, tint = if (item.isDestructive) color else LocalContentColor.current) },
+                            if (index > 0) {
+                                if (item.isDestructive != actions[index - 1].isDestructive) {
+                                    GemDropdownMenuGroupDivider()
+                                } else {
+                                    GemDropdownMenuDivider()
+                                }
+                            }
+                            GemDropdownMenuItem(
+                                text = stringResource(item.action.stringRes()),
+                                trailingIcon = item.action.icon(),
+                                isDestructive = item.isDestructive,
                                 onClick = {
                                     isMenuExpanded = false
                                     onAction(item.action)
