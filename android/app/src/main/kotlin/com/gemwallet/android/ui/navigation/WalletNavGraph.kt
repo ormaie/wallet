@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onPlaced
@@ -25,9 +27,14 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.scene.NavigationBackHandler
 import androidx.navigation3.scene.Scene
+import androidx.navigation3.scene.SinglePaneSceneStrategy
+import androidx.navigation3.scene.rememberNavigationEventState
+import androidx.navigation3.scene.rememberSceneState
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigationevent.NavigationEventTransitionState
 import com.gemwallet.android.features.assets.presents.select.assetsManageScreen
 import com.gemwallet.android.features.assets.viewmodels.asset.models.AssetAction
 import com.gemwallet.android.features.contacts.presents.ContactsAction
@@ -98,6 +105,9 @@ fun WalletNavGraph(
     }
     val hasWalletRoot by remember(navigator) {
         derivedStateOf { navigator.backStack.firstOrNull() == WalletRootRoute }
+    }
+    val isWalletRootTop by remember(navigator) {
+        derivedStateOf { navigator.backStack.lastOrNull() == WalletRootRoute }
     }
 
     val entryProvider = remember(navigator, onboard, walletConnectorRequest, walletRootHostState) {
@@ -341,7 +351,8 @@ fun WalletNavGraph(
     }
     val saveableDecorator = rememberSaveableStateHolderNavEntryDecorator<NavKey>()
     val viewModelDecorator = rememberRouteArgumentsViewModelStoreNavEntryDecorator<NavKey>()
-    val transitionDecorator = rememberNavTransitionNavEntryDecorator()
+    val navTransitionTracker = remember { NavTransitionTracker() }
+    val transitionDecorator = rememberNavTransitionNavEntryDecorator(navTransitionTracker)
     val entryDecorators = remember(saveableDecorator, viewModelDecorator, transitionDecorator) {
         listOf(saveableDecorator, viewModelDecorator, transitionDecorator)
     }
@@ -350,6 +361,34 @@ fun WalletNavGraph(
         entries = entries,
         entryDecorators = entryDecorators,
     )
+    val sceneStrategies = remember { listOf(SinglePaneSceneStrategy<NavKey>()) }
+    val sceneState = rememberSceneState(
+        entries = decoratedEntries,
+        sceneStrategies = sceneStrategies,
+        onBack = { navigator.pop() },
+    )
+    val backNavigationEventState = rememberNavigationEventState(sceneState)
+    val idleNavigationEventState = rememberNavigationEventState(sceneState)
+    NavigationBackHandler(
+        sceneState = sceneState,
+        state = backNavigationEventState,
+        onBackCompleted = { navigator.pop() },
+    )
+    val predictiveBackGate = remember { PredictiveBackGate() }
+    val isBackGestureInProgress = backNavigationEventState.transitionState is NavigationEventTransitionState.InProgress
+    val displayNavigationEventState = if (
+        predictiveBackGate.shouldAllowPredictiveBack(isBackGestureInProgress) {
+            Snapshot.withoutReadObservation {
+                navTransitionTracker.isTransitionRunning(
+                    sceneState.currentScene.entries.map { it.contentKey },
+                )
+            }
+        }
+    ) {
+        backNavigationEventState
+    } else {
+        idleNavigationEventState
+    }
 
     val rootSaveableStateHolder = rememberSaveableStateHolder()
     val walletRootContentKey = if (hasWalletRoot) entries.firstOrNull()?.contentKey else null
@@ -367,6 +406,10 @@ fun WalletNavGraph(
         }
     }
 
+    LaunchedEffect(isWalletRootTop) {
+        walletRootHostState.updateRootTop(isWalletRootTop)
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -374,12 +417,12 @@ fun WalletNavGraph(
             .semantics { testTagsAsResourceId = true },
     ) {
         NavDisplay(
-            entries = decoratedEntries,
+            sceneState = sceneState,
+            navigationEventState = displayNavigationEventState,
             modifier = Modifier
                 .fillMaxSize()
                 .zIndex(1f),
-            onBack = { navigator.pop() },
-            transitionSpec = slideLeftTransition,
+            transitionSpec = walletNavTransition,
             popTransitionSpec = slideRightTransition,
             predictivePopTransitionSpec = { slideRightTransition() },
         )
@@ -400,7 +443,7 @@ fun WalletNavGraph(
 }
 
 @Composable
-private fun rememberNavTransitionNavEntryDecorator(): NavEntryDecorator<NavKey> = remember {
+private fun rememberNavTransitionNavEntryDecorator(tracker: NavTransitionTracker): NavEntryDecorator<NavKey> = remember(tracker) {
     NavEntryDecorator(
         decorate = { entry ->
             val transition = LocalNavAnimatedContentScope.current.transition
@@ -408,6 +451,12 @@ private fun rememberNavTransitionNavEntryDecorator(): NavEntryDecorator<NavKey> 
                 {
                     transition.currentState != EnterExitState.Visible ||
                         transition.targetState != EnterExitState.Visible
+                }
+            }
+            DisposableEffect(tracker, entry.contentKey, isTransitionRunning) {
+                tracker.attach(entry.contentKey, isTransitionRunning)
+                onDispose {
+                    tracker.detach(entry.contentKey, isTransitionRunning)
                 }
             }
             CompositionLocalProvider(LocalNavTransitionRunning provides isTransitionRunning) {
@@ -428,8 +477,8 @@ private fun rememberWalletNavEntries(backStack: List<NavKey>, entryProvider: (Na
 
 private typealias WalletNavTransition = AnimatedContentTransitionScope<Scene<NavKey>>.() -> ContentTransform
 
-private val slideLeftTransition: WalletNavTransition = {
-    navigationSlideTransition(AnimatedContentTransitionScope.SlideDirection.Left)
+private val walletNavTransition: WalletNavTransition = {
+    navigationSlideTransition(forward = !isScenePop(initialState, targetState))
 }
 
 private val slideRightTransition: WalletNavTransition = {

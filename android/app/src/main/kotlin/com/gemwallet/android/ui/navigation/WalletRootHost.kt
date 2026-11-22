@@ -1,5 +1,8 @@
 package com.gemwallet.android.ui.navigation
 
+import androidx.compose.foundation.IndicationNodeFactory
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -7,6 +10,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.SaveableStateHolder
@@ -17,6 +21,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.node.DelegatableNode
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -35,9 +40,13 @@ internal class WalletRootHostState(initiallyActivated: Boolean) {
         private set
     var slideOffsetX by mutableFloatStateOf(0f)
         private set
+    var rippleResetGeneration by mutableIntStateOf(0)
+        private set
 
     private var activeTransitionRunning by mutableStateOf<(() -> Boolean)?>(null)
     private var onVisibilityChanged: ((Boolean) -> Unit)? = null
+    private var wasRootTop = initiallyActivated
+    private var hasDetachedProxy = false
 
     val isNavTransitionRunning: () -> Boolean = {
         activeTransitionRunning?.invoke() ?: false
@@ -48,10 +57,21 @@ internal class WalletRootHostState(initiallyActivated: Boolean) {
         listener?.invoke(isProxyMounted)
     }
 
+    fun updateRootTop(isRootTop: Boolean) {
+        if (isRootTop && !wasRootTop) {
+            rippleResetGeneration += 1
+        }
+        wasRootTop = isRootTop
+    }
+
     fun attachProxy(transitionRunning: () -> Boolean) {
         hasActivatedRoot = true
         activeTransitionRunning = transitionRunning
         if (!isProxyMounted) {
+            if (hasDetachedProxy) {
+                rippleResetGeneration += 1
+                hasDetachedProxy = false
+            }
             isProxyMounted = true
             onVisibilityChanged?.invoke(true)
         }
@@ -62,6 +82,7 @@ internal class WalletRootHostState(initiallyActivated: Boolean) {
             activeTransitionRunning = null
             if (isProxyMounted) {
                 isProxyMounted = false
+                hasDetachedProxy = true
                 slideOffsetX = 0f
                 onVisibilityChanged?.invoke(false)
             }
@@ -71,6 +92,8 @@ internal class WalletRootHostState(initiallyActivated: Boolean) {
     fun reset() {
         hasActivatedRoot = false
         isProxyMounted = false
+        hasDetachedProxy = false
+        wasRootTop = false
         slideOffsetX = 0f
         activeTransitionRunning = null
         activeContentKey = null
@@ -169,6 +192,14 @@ internal fun PersistentWalletRoot(
                 updateVisibility(hostState.isProxyMounted)
             }
         }
+        val currentIndication = LocalIndication.current
+        val rootIndication = remember(currentIndication, hostState.rippleResetGeneration) {
+            if (currentIndication is IndicationNodeFactory) {
+                ResettableIndicationNodeFactory(currentIndication, hostState.rippleResetGeneration)
+            } else {
+                currentIndication
+            }
+        }
 
         DisposableEffect(parentLifecycle, rootLifecycleOwner, hostState) {
             val observer = LifecycleEventObserver { source, _ ->
@@ -201,6 +232,7 @@ internal fun PersistentWalletRoot(
                 LocalViewModelStoreOwner provides rootViewModelStoreOwner,
                 LocalLifecycleOwner provides rootLifecycleOwner,
                 LocalNavTransitionRunning provides hostState.isNavTransitionRunning,
+                LocalIndication provides rootIndication,
             ) {
                 MainScreen(
                     navigator = navigator,
@@ -210,4 +242,12 @@ internal fun PersistentWalletRoot(
             }
         }
     }
+}
+
+private class ResettableIndicationNodeFactory(private val delegate: IndicationNodeFactory, private val generation: Int) : IndicationNodeFactory {
+    override fun create(interactionSource: InteractionSource): DelegatableNode = delegate.create(interactionSource)
+
+    override fun equals(other: Any?): Boolean = this === other || (other is ResettableIndicationNodeFactory && delegate == other.delegate && generation == other.generation)
+
+    override fun hashCode(): Int = 31 * delegate.hashCode() + generation
 }

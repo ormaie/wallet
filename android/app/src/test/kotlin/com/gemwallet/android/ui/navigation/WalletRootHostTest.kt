@@ -101,4 +101,30 @@ class WalletRootHostTest {
         assertEquals(null, state.activeContentKey)
         assertEquals(listOf(false, true, false, true, false), visibilityEvents)
     }
+
+    @Test
+    fun walletRootHostState_incrementsRippleResetGenerationOnReturnAndReattach() {
+        val state = WalletRootHostState(initiallyActivated = true)
+        val transition = { false }
+
+        state.attachProxy(transition)
+        state.updateRootTop(true)
+        assertEquals(0, state.rippleResetGeneration)
+
+        state.updateRootTop(false)
+        assertEquals(0, state.rippleResetGeneration)
+
+        state.updateRootTop(true)
+        assertEquals(1, state.rippleResetGeneration)
+
+        state.updateRootTop(false)
+        state.detachProxy(transition)
+        assertEquals(1, state.rippleResetGeneration)
+
+        state.attachProxy(transition)
+        assertEquals(2, state.rippleResetGeneration)
+
+        state.updateRootTop(true)
+        assertEquals(3, state.rippleResetGeneration)
+    }
 }

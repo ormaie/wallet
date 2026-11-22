@@ -161,7 +161,8 @@ private typealias AutocloseNavTransition =
     AnimatedContentTransitionScope<Scene<NavKey>>.() -> ContentTransform
 
 private val slideLeftTransition: AutocloseNavTransition = {
-    navigationSlideTransition(AnimatedContentTransitionScope.SlideDirection.Left)
+    val isPop = targetState.previousEntries.size < initialState.previousEntries.size
+    navigationSlideTransition(forward = !isPop)
 }
 
 private val slideRightTransition: AutocloseNavTransition = {
