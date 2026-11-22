@@ -70,11 +70,12 @@ fun GemListRowView(
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
-    val clipboard = rememberClipboard()
-    val selectAction = onSelect?.let { action ?: row.action() }
-    val rowModifier = row.action()?.let { modifier.testTag(it.identifier()) } ?: modifier
+    val rowAction = remember(row) { row.action() }
+    val selectAction = onSelect?.let { action ?: rowAction }
+    val rowModifier = rowAction?.let { modifier.testTag(it.identifier()) } ?: modifier
+    val uiModel = remember(row, context) { row.uiModel(context) }
 
-    when (val row = row.uiModel(context)) {
+    when (val row = uiModel) {
         is GemListRowUIModel.Notice -> WarningItem(
             title = row.title,
             message = row.message,
@@ -146,8 +147,11 @@ fun GemListRowView(
             ListItemImageView(image = row.image, size = headerIconSize)
         }
 
-        is GemListRowUIModel.Address -> GemListRowMenu(items = row.menu, onClick = { clipboard.copy(row.copy) }) { menuModifier ->
-            AddressRow(address = row.address, listPosition = listPosition, modifier = menuModifier)
+        is GemListRowUIModel.Address -> {
+            val clipboard = rememberClipboard()
+            GemListRowMenu(items = row.menu, onClick = { clipboard.copy(row.copy) }) { menuModifier ->
+                AddressRow(address = row.address, listPosition = listPosition, modifier = menuModifier)
+            }
         }
 
         is GemListRowUIModel.Network -> PropertyNetworkItem(

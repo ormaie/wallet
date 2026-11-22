@@ -15,14 +15,16 @@ import androidx.compose.ui.unit.sp
 
 class TextPainter(val circleColor: Color, val circleSize: Size, val textMeasurer: TextMeasurer, val text: String) : Painter() {
 
-    val textLayoutResult: TextLayoutResult = textMeasurer.measure(
-        text = AnnotatedString(text),
-        style = TextStyle(
-            Color.Companion.White,
-            fontSize = if (text.length == 1) 18.sp else 10.sp,
-            fontWeight = if (text.length == 1) FontWeight.Companion.W600 else null,
-        ),
-    )
+    val textLayoutResult: TextLayoutResult by lazy(LazyThreadSafetyMode.NONE) {
+        textMeasurer.measure(
+            text = AnnotatedString(text),
+            style = TextStyle(
+                Color.Companion.White,
+                fontSize = if (text.length == 1) 18.sp else 10.sp,
+                fontWeight = if (text.length == 1) FontWeight.Companion.W600 else null,
+            ),
+        )
+    }
 
     override val intrinsicSize: Size get() = circleSize
 

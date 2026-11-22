@@ -40,7 +40,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -54,6 +53,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.icons.AppIcons
+import com.gemwallet.android.ui.icons.cachedDrawablePainter
 import com.gemwallet.android.ui.theme.compactIconSize
 import com.gemwallet.android.ui.theme.paddingDefault
 import com.gemwallet.android.ui.theme.paddingHalfSmall
@@ -187,7 +187,7 @@ fun ColumnScope.AmountField(
             onInputTypeClick?.let {
                 Icon(
                     modifier = Modifier.size(compactIconSize),
-                    painter = painterResource(R.drawable.amount_switch),
+                    painter = cachedDrawablePainter(R.drawable.amount_switch),
                     tint = MaterialTheme.colorScheme.secondary,
                     contentDescription = null,
                 )

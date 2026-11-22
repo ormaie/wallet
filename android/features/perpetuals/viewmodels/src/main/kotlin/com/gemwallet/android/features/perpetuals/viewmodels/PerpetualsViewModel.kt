@@ -124,6 +124,7 @@ class PerpetualsViewModel @Inject constructor(
 
     val positionRows: StateFlow<List<PerpetualPositionRowUIModel>> = positions
         .map { items -> items.zip(perpetualPositionRows(items.map { it.toGem() })) { data, row -> PerpetualPositionRowUIModel(data.asset, row.row) } }
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val balanceHeader: StateFlow<GemValueHeader?> = combine(
         getSession()
@@ -142,6 +143,7 @@ class PerpetualsViewModel @Inject constructor(
         .distinctUntilChanged()
         .flatMapLatest { recentActivityQuery(it, listOf(RecentActivityType.Perpetual), limit = GemConstants.recentAssetsLimit) }
         .map { items -> items.map { it.asset } }
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val marketView: StateFlow<GemPerpetualMarketView> = combine(positions, perpetualSections, recent, session) { positions, markets, recents, session ->
@@ -151,7 +153,9 @@ class PerpetualsViewModel @Inject constructor(
             marketIds = markets.markets.map { it.data.perpetual.id },
             recentAssetIds = recents.map { it.id.toIdentifier() },
         )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, session.value.view(emptyList(), emptyList(), emptyList(), emptyList()))
+    }
+        .flowOn(ioDispatcher)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, session.value.view(emptyList(), emptyList(), emptyList(), emptyList()))
 
     fun onRefresh() {
         isRefreshing.value = true

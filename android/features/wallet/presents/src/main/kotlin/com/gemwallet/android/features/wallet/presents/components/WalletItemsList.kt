@@ -29,7 +29,11 @@ internal fun LazyListScope.wallets(
     if (section.kind == GemWalletSectionKind.PINNED) {
         pinnedHeader()
     }
-    itemsIndexed(items = section.rows, key = { _, row -> row.id }) { index, row ->
+    itemsIndexed(
+        items = section.rows,
+        key = { _, row -> row.id },
+        contentType = { _, _ -> "wallet_row" },
+    ) { index, row ->
         DropDownContextItem(
             isExpanded = longPressedWallet.value == row.id,
             onDismiss = { longPressedWallet.value = "" },

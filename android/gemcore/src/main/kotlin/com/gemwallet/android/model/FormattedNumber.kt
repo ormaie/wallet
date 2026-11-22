@@ -17,7 +17,20 @@ import uniffi.gemstone.GemTransactionRowValue
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.Locale
-import java.util.concurrent.ConcurrentHashMap
+
+private data class NumberFormatKey(val locale: Locale, val currencyCode: String?, val withSign: Boolean)
+
+private data class PercentFormatKey(val locale: Locale, val showsSign: Boolean)
+
+private data class CompactFormatKey(val locale: Locale, val currencyCode: String?)
+
+private class ThreadFormatCache {
+    val numberFormats = HashMap<NumberFormatKey, DecimalFormat>()
+    val percentFormats = HashMap<PercentFormatKey, DecimalFormat>()
+    val compactFormats = HashMap<CompactFormatKey, CompactDecimalFormat>()
+}
+
+private val threadFormatCache = ThreadLocal.withInitial(::ThreadFormatCache)
 
 fun GemFormattedNumber.text(locale: Locale = Locale.getDefault()): String = when (notation) {
     GemNumberNotation.PARENTHESISED -> "(${body(locale)})"
@@ -61,20 +74,21 @@ private val GemFormattedNumber.currencyCode: String?
     get() = (unit as? GemNumberUnit.Currency)?.code
 
 private fun percentText(value: BigDecimal, precision: GemPrecision, showsSign: Boolean, rounding: Int, locale: Locale): String {
-    val formatter = (percentFormats.getOrPut(locale to showsSign) { percentFormat(locale, showsSign) }.clone() as DecimalFormat).apply {
-        when (precision) {
-            is GemPrecision.Fraction -> {
-                minimumFractionDigits = precision.min
-                maximumFractionDigits = precision.max
-            }
-
-            is GemPrecision.Significant -> {
-                minimumFractionDigits = 0
-                maximumFractionDigits = Int.MAX_VALUE
-            }
-        }
-        roundingMode = rounding
+    val formatter = threadFormatCache.get()!!.percentFormats.getOrPut(PercentFormatKey(locale, showsSign)) {
+        percentFormat(locale, showsSign)
     }
+    when (precision) {
+        is GemPrecision.Fraction -> {
+            formatter.minimumFractionDigits = precision.min
+            formatter.maximumFractionDigits = precision.max
+        }
+
+        is GemPrecision.Significant -> {
+            formatter.minimumFractionDigits = 0
+            formatter.maximumFractionDigits = Int.MAX_VALUE
+        }
+    }
+    formatter.roundingMode = rounding
     val amount = value.movePointLeft(2)
     return formatter.format(
         when (precision) {
@@ -91,37 +105,34 @@ private fun GemFormattedNumber.appendSymbol(text: String): String = when (val un
 }
 
 private fun GemFormattedNumber.numberText(value: BigDecimal, precision: GemPrecision, locale: Locale, withSign: Boolean = showsSign): String {
-    val formatter = numberFormat(locale, withSign).apply {
-        roundingMode = numberRounding
-    }
+    val formatter = numberFormat(locale, withSign)
+    formatter.roundingMode = numberRounding
     return formatter.format(value, precision)
 }
 
 private fun GemFormattedNumber.abbreviatedText(value: BigDecimal, locale: Locale): String {
-    val formatter = CompactDecimalFormat.getInstance(locale, CompactDecimalFormat.CompactStyle.SHORT).apply {
-        setSignificantDigitsUsed(false)
-        minimumFractionDigits = 0
-        maximumFractionDigits = 2
-        roundingMode = numberRounding
-        currencyCode?.let { currency = Currency.getInstance(it) }
+    val formatter = threadFormatCache.get()!!.compactFormats.getOrPut(CompactFormatKey(locale, currencyCode)) {
+        CompactDecimalFormat.getInstance(locale, CompactDecimalFormat.CompactStyle.SHORT).apply {
+            setSignificantDigitsUsed(false)
+            minimumFractionDigits = 0
+            maximumFractionDigits = 2
+            currencyCode?.let { currency = Currency.getInstance(it) }
+        }
     }
+    formatter.roundingMode = numberRounding
     return when {
         showsSign -> "$signText${formatter.format(value.abs())}"
         else -> formatter.format(value)
     }
 }
 
-private val numberFormats = ConcurrentHashMap<Triple<Locale, String?, Boolean>, DecimalFormat>()
-
-private val percentFormats = ConcurrentHashMap<Pair<Locale, Boolean>, DecimalFormat>()
-
-private fun GemFormattedNumber.numberFormat(locale: Locale, withSign: Boolean): DecimalFormat = numberFormats.getOrPut(Triple(locale, currencyCode, withSign)) {
+private fun GemFormattedNumber.numberFormat(locale: Locale, withSign: Boolean): DecimalFormat = threadFormatCache.get()!!.numberFormats.getOrPut(NumberFormatKey(locale, currencyCode, withSign)) {
     ((currencyCode?.let { code -> NumberFormat.getCurrencyInstance(locale).apply { currency = Currency.getInstance(code) } } ?: NumberFormat.getInstance(locale)) as DecimalFormat).apply {
         if (withSign) {
             alwaysShowSign()
         }
     }
-}.clone() as DecimalFormat
+}
 
 private fun percentFormat(locale: Locale, showsSign: Boolean): DecimalFormat = (NumberFormat.getPercentInstance(locale) as DecimalFormat).apply {
     if (showsSign) {

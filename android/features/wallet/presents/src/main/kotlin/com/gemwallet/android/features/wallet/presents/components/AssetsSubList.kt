@@ -19,9 +19,13 @@ private const val AssetsGroupHeaderKeyPrefix = "assets_group_header"
 internal fun LazyListScope.assets(items: List<AssetInfoDataAggregate>, longPressState: MutableState<AssetId?>, group: GemAssetSectionKind, onAssetClick: (AssetId) -> Unit, actions: AssetContextActions) {
     if (items.isEmpty()) return
 
-    item(key = "$AssetsGroupHeaderKeyPrefix-${group.name}") { AssetSectionHeaderItem(group) }
+    item(key = "$AssetsGroupHeaderKeyPrefix-${group.name}", contentType = "asset_section_header") { AssetSectionHeaderItem(group) }
 
-    itemsPositioned(items = items, key = { _, item -> "${item.id.toIdentifier()}-${group.name}" }) { position, item ->
+    itemsPositioned(
+        items = items,
+        key = { _, item -> "${item.id.toIdentifier()}-${group.name}" },
+        contentType = { _, _ -> "asset_row" },
+    ) { position, item ->
         AssetItem(
             modifier = Modifier.testTag(item.id.toIdentifier()),
             listPosition = position,

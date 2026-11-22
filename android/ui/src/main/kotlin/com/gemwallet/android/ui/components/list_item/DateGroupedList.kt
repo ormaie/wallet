@@ -75,12 +75,12 @@ fun <T> dateSections(items: List<T>, createdAt: (T) -> Long, zone: ZoneId, local
 @OptIn(ExperimentalFoundationApi::class)
 fun <T> LazyListScope.dateSectionedList(sections: List<DateSection<T>>, key: (Int, T) -> Any, itemContent: @Composable LazyItemScope.(ListPosition, T) -> Unit) {
     sections.forEach { section ->
-        stickyHeader {
+        stickyHeader(key = "date_header-${section.label}", contentType = "date_header") {
             SubheaderItem(
                 title = section.label,
                 modifier = Modifier.background(MaterialTheme.colorScheme.surface),
             )
         }
-        itemsPositioned(section.items, key = key, itemContent = itemContent)
+        itemsPositioned(section.items, key = key, contentType = { _, _ -> "date_item" }, itemContent = itemContent)
     }
 }

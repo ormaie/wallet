@@ -32,7 +32,7 @@ internal fun WalletsScene(sections: List<GemWalletSection>, offlineWalletIds: Se
         val onDeleteWallet: (GemWalletRow) -> Unit = { onAction(WalletsAction.Delete(it)) }
         val onTogglePin: (GemWalletRow) -> Unit = { onAction(WalletsAction.TogglePin(it)) }
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            item {
+            item(key = "wallets_actions", contentType = "wallets_actions") {
                 WalletsActions(
                     onCreate = { onAction(WalletsAction.Create) },
                     onImport = { onAction(WalletsAction.Import) },

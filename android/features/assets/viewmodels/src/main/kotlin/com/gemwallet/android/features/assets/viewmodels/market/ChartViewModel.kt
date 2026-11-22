@@ -107,6 +107,7 @@ class ChartViewModel internal constructor(
             styleSwitch = view?.styleSwitch,
         )
     }
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(StopTimeoutMillis), ChartUIState(period = session.value.period.toPrimitives(), periods = session.value.periods().map { it.toPrimitives() }))
 
     fun setPeriod(period: ChartPeriod) {

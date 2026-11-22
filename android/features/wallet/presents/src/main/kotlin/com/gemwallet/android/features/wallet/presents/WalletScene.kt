@@ -108,7 +108,7 @@ internal fun WalletScene(
             onRefresh = { onAction(WalletAction.Refresh) },
         ) {
             val longPressedAsset = remember { mutableStateOf<AssetId?>(null) }
-            val onAssetClick: (AssetId) -> Unit = { onAction(WalletAction.OpenAsset(it)) }
+            val onAssetClick = remember<(AssetId) -> Unit>(onAction) { { onAction(WalletAction.OpenAsset(it)) } }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -116,7 +116,7 @@ internal fun WalletScene(
                 state = listState,
                 contentPadding = PaddingValues(bottom = bottomPadding),
             ) {
-                item(key = WalletHeaderItemKey) {
+                item(key = WalletHeaderItemKey, contentType = WalletHeaderItemKey) {
                     WalletHeader(
                         header = homeState?.header,
                         isBalanceHidden = isBalanceHidden,
@@ -128,11 +128,11 @@ internal fun WalletScene(
                         onHideBalances = { onAction(WalletAction.HideBalances) },
                     )
                 }
-                item(key = InAppUpdateBannerItemKey) {
+                item(key = InAppUpdateBannerItemKey, contentType = InAppUpdateBannerItemKey) {
                     InAppUpdateBanner()
                 }
                 homeState?.banner?.let { banner ->
-                    item(key = BannersItemKey) {
+                    item(key = BannersItemKey, contentType = BannersItemKey) {
                         Banner(
                             banner = banner.row,
                             destination = banner.destination,
@@ -148,7 +148,7 @@ internal fun WalletScene(
                     }
                 }
                 if (importing) {
-                    item(key = ImportingItemKey) {
+                    item(key = ImportingItemKey, contentType = ImportingItemKey) {
                         Row(
                             modifier = Modifier.padding(paddingDefault),
                             verticalAlignment = Alignment.CenterVertically,
@@ -172,7 +172,7 @@ internal fun WalletScene(
                     }
                 }
                 if (homeState?.showsPerpetuals == true) {
-                    item(key = PerpetualsSectionItemKey) {
+                    item(key = PerpetualsSectionItemKey, contentType = PerpetualsSectionItemKey) {
                         PerpetualsPreviewSection(
                             onOpenPerpetuals = { onAction(WalletAction.Perpetuals) },
                             onOpenPerpetual = { onAction(WalletAction.OpenPerpetual(it)) },
@@ -194,7 +194,7 @@ internal fun WalletScene(
                     actions = assetActions,
                 )
                 if (homeState?.showCollections == true) {
-                    item(key = CollectionsSectionItemKey) {
+                    item(key = CollectionsSectionItemKey, contentType = CollectionsSectionItemKey) {
                         CollectionsPreviewSection(
                             collections = collections,
                             onAction = { action ->
@@ -207,7 +207,7 @@ internal fun WalletScene(
                         )
                     }
                 }
-                item(key = FooterItemKey) { AssetsListFooter { onAction(WalletAction.Manage) } }
+                item(key = FooterItemKey, contentType = FooterItemKey) { AssetsListFooter { onAction(WalletAction.Manage) } }
             }
         }
     }

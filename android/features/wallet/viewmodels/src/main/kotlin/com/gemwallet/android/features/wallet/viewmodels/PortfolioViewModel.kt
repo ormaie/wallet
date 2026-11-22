@@ -1,5 +1,6 @@
 package com.gemwallet.android.features.wallet.viewmodels
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
@@ -38,6 +40,17 @@ import uniffi.gemstone.GemRefreshKind
 import uniffi.gemstone.PortfolioChartType
 import uniffi.gemstone.portfolioSession
 import javax.inject.Inject
+
+@Immutable
+data class PortfolioUiState(
+    val selectedType: PortfolioType,
+    val selectedChartType: PortfolioChartType,
+    val statistics: List<GemListRow>,
+    val isRefreshing: Boolean,
+    val chartUIState: ChartUIState,
+    val showSegmentedControl: Boolean,
+    val showChartTypePicker: Boolean,
+)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -79,15 +92,43 @@ class PortfolioViewModel internal constructor(
 
     val chartUIState: StateFlow<ChartUIState> = viewState
         .map { it.chartUIState() }
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, viewState.value.chartUIState())
 
     val showSegmentedControl: StateFlow<Boolean> = wallet
         .map { wallet -> wallet?.let { service.showPerpetuals(it.type.toGem(), it.chainIds) } ?: false }
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     val showChartTypePicker: StateFlow<Boolean> = viewState
         .map { it.showsChartTypePicker }
         .stateIn(viewModelScope, SharingStarted.Eagerly, viewState.value.showsChartTypePicker)
+
+    val uiState: StateFlow<PortfolioUiState> = combine(viewState, showSegmentedControl) { state, showSegmented ->
+        PortfolioUiState(
+            selectedType = state.portfolioType.toPrimitives(),
+            selectedChartType = state.chartType,
+            statistics = state.statistics,
+            isRefreshing = state.isRefreshing,
+            chartUIState = state.chartUIState(),
+            showSegmentedControl = showSegmented,
+            showChartTypePicker = state.showsChartTypePicker,
+        )
+    }
+        .flowOn(ioDispatcher)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            PortfolioUiState(
+                selectedType = initialType,
+                selectedChartType = viewState.value.chartType,
+                statistics = emptyList(),
+                isRefreshing = false,
+                chartUIState = viewState.value.chartUIState(),
+                showSegmentedControl = false,
+                showChartTypePicker = viewState.value.showsChartTypePicker,
+            ),
+        )
 
     val refreshIntervalMillis = observeRefreshInterval.refreshIntervalMillis(GemRefreshKind.CHART)
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0L)

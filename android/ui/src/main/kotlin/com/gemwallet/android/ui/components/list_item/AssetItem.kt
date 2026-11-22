@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -88,7 +89,10 @@ fun AssetListItem(asset: AssetInfoDataAggregate, listPosition: ListPosition, mod
 @Composable
 fun AssetListItem(row: GemAssetItemRow, listPosition: ListPosition, modifier: Modifier = Modifier, hideBalance: Boolean = false, onAction: ((AssetItemAction) -> Unit)? = null, accessory: (@Composable () -> Unit)? = null) {
     val context = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
     val hidden = hideBalance && row.masksBalance
+    val subtitleText = remember(row.subtitle, context, locale) { row.subtitle?.string(context) }
+    val subtitleExtra = remember(row.subtitleExtra, context, locale) { row.subtitleExtra?.let { it.string(context) to it.tone } }
     val trailing: (@Composable () -> Unit)? = when (val value = row.trailing) {
         is GemAssetItemTrailing.Value -> getBalanceInfo(value.value, value.extra, hidden)
 
@@ -112,7 +116,9 @@ fun AssetListItem(row: GemAssetItemRow, listPosition: ListPosition, modifier: Mo
         titleSubtitleSpacing = space0,
         leading = @Composable { AssetIcon(row.icon) },
         title = @Composable { ListItemTitleText(row.title, { Badge(text = row.titleExtra) }) },
-        subtitle = row.subtitle?.let { subtitle -> { AssetItemSupport(subtitle.string(context), subtitle.tone, row.subtitleExtra?.let { it.string(context) to it.tone }) } },
+        subtitle = row.subtitle?.let { subtitle ->
+            subtitleText?.let { text -> { AssetItemSupport(text, subtitle.tone, subtitleExtra) } }
+        },
         trailing = if (trailing == null && accessory == null) {
             null
         } else {
@@ -200,9 +206,12 @@ fun getBalanceInfo(crypto: String, equivalent: String): @Composable () -> Unit =
 fun getBalanceInfo(value: GemRowText, extra: GemRowText?, hidden: Boolean = false): @Composable () -> Unit = (
     @Composable {
         val context = LocalContext.current
+        val locale = LocalConfiguration.current.locales[0]
+        val cryptoText = remember(value, context, locale, hidden) { value.string(context).hiddenWhen(hidden) }
+        val equivalentText = remember(extra, context, locale, hidden) { extra?.string(context)?.hiddenWhen(hidden).orEmpty() }
         BalanceInfo(
-            crypto = value.string(context).hiddenWhen(hidden),
-            equivalent = extra?.string(context)?.hiddenWhen(hidden).orEmpty(),
+            crypto = cryptoText,
+            equivalent = equivalentText,
             color = value.tone.color(),
             equivalentColor = extra?.tone?.color() ?: MaterialTheme.colorScheme.secondary,
         )

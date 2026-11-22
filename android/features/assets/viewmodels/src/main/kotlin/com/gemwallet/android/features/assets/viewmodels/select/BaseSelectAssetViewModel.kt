@@ -105,6 +105,7 @@ open class BaseSelectAssetViewModel(
     private val filterSession = MutableStateFlow(flow.filterSession(chains.map { it.string }))
     val filterView: StateFlow<GemAssetsFilterView> = filterSession
         .map { it.viewState() }
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, filterSession.value.viewState())
 
     private val walletFlow = session
@@ -120,11 +121,15 @@ open class BaseSelectAssetViewModel(
     protected val currentQuery = snapshotFlow { queryState.text.toString() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
+    protected val localQuery = currentQuery
+        .debounce { query -> if (query.isEmpty()) 0L else LOCAL_SEARCH_DEBOUNCE_MILLIS }
+        .distinctUntilChanged()
+
     private val searchRequests = currentQuery.debounce(GemConstants.searchDebounce).distinctUntilChanged()
 
     private val filters = combine(
         session,
-        currentQuery,
+        localQuery,
         filterView,
     ) { session, query, filterView ->
         SelectAssetFilters(
@@ -135,6 +140,7 @@ open class BaseSelectAssetViewModel(
             filters = filterView.filters,
         )
     }
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val assets = search.items(filters)
@@ -302,6 +308,7 @@ open class BaseSelectAssetViewModel(
     private companion object {
         private const val TAG = "AssetSelect"
         private const val STOP_TIMEOUT_MILLIS = 5_000L
+        private const val LOCAL_SEARCH_DEBOUNCE_MILLIS = 80L
         private val defaultSearchEmptyState: GemEmptyState by lazy { emptyState(GemEmptyStateKind.SEARCH_ASSETS) }
     }
 }

@@ -38,7 +38,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
@@ -66,6 +65,7 @@ import com.gemwallet.android.ui.components.list_item.ListItemTextStyle
 import com.gemwallet.android.ui.components.list_item.color
 import com.gemwallet.android.ui.components.mask
 import com.gemwallet.android.ui.icons.AppIcons
+import com.gemwallet.android.ui.icons.cachedVectorResource
 import com.gemwallet.android.ui.localization.stringRes
 import com.gemwallet.android.ui.style.color
 import com.gemwallet.android.ui.style.icon
@@ -238,7 +238,7 @@ fun AssetHeadActions(actions: GemHeaderActions, onAction: (GemHeaderButtonAction
                     .weight(1f)
                     .testTag("${button.kind.name.lowercase()}_button"),
                 title = title,
-                imageVector = ImageVector.vectorResource(button.kind.iconRes()),
+                imageVector = cachedVectorResource(button.kind.iconRes()),
                 enabled = button.isEnabled,
                 contentDescription = title,
                 fontSize = actionFontSize,

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,7 +25,8 @@ import uniffi.gemstone.assetText
 
 @Composable
 fun AssetIcon(asset: Asset, size: Dp = listItemIconSize, badgeBackgroundColor: Color? = null) {
-    AssetIcon(assetText(asset.toGem()).icon, size, badgeBackgroundColor)
+    val icon = remember(asset) { assetText(asset.toGem()).icon }
+    AssetIcon(icon, size, badgeBackgroundColor)
 }
 
 @Composable

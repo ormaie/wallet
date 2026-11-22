@@ -118,6 +118,7 @@ class SwapViewModel @Inject constructor(
     private val slippageSession = MutableStateFlow<GemSlippageSession?>(null)
     val slippage: StateFlow<GemSlippageViewState?> = slippageSession
         .map { it?.viewState() }
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val refreshRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)

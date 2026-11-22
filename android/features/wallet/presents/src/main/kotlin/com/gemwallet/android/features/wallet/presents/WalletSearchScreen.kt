@@ -41,73 +41,98 @@ import uniffi.gemstone.GemSearchListRow
 @Composable
 fun WalletSearchScreen(onAction: (WalletSearchAction) -> Unit, viewModel: WalletSearchViewModel = hiltViewModel(), recentsViewModel: RecentsViewModel = hiltViewModel()) {
     val searchEmptyState by viewModel.searchEmptyState.collectAsStateWithLifecycle()
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    val pinned by viewModel.pinnedAssets.collectAsStateWithLifecycle()
-    val previewAssets by viewModel.previewAssets.collectAsStateWithLifecycle()
-    val hasMoreAssets by viewModel.hasMoreAssets.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateSnapshot.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
-    val previewPerpetuals by viewModel.previewPerpetuals.collectAsStateWithLifecycle()
-    val hasMorePerpetuals by viewModel.hasMorePerpetuals.collectAsStateWithLifecycle()
-    val pinnedPerpetuals by viewModel.pinnedPerpetuals.collectAsStateWithLifecycle()
-    val previewNfts by viewModel.previewNfts.collectAsStateWithLifecycle()
-    val hasMoreNfts by viewModel.hasMoreNfts.collectAsStateWithLifecycle()
-    val lists by viewModel.lists.collectAsStateWithLifecycle()
+
+    val state = uiState.state
+    val pinned = uiState.pinnedAssets
+    val previewAssets = uiState.previewAssets
+    val hasMoreAssets = uiState.hasMoreAssets
+    val previewPerpetuals = uiState.previewPerpetuals
+    val hasMorePerpetuals = uiState.hasMorePerpetuals
+    val pinnedPerpetuals = uiState.pinnedPerpetuals
+    val previewNfts = uiState.previewNfts
+    val hasMoreNfts = uiState.hasMoreNfts
+    val lists = uiState.lists
 
     val longPressedPerpetual = remember { mutableStateOf<PerpetualId?>(null) }
     val snackbar = remember { SnackbarHostState() }
     ToastEffect(viewModel.toastEvents, snackbar)
 
-    val handleAction: (WalletSearchAction) -> Unit = { action ->
-        when (action) {
-            is WalletSearchAction.PinAsset -> viewModel.onTogglePin(action.assetId)
+    val handleAction = remember<(WalletSearchAction) -> Unit>(viewModel, recentsViewModel, onAction) {
+        { action ->
+            when (action) {
+                is WalletSearchAction.PinAsset -> viewModel.onTogglePin(action.assetId)
 
-            is WalletSearchAction.AddToWallet -> viewModel.onAddToWallet(action.assetId)
+                is WalletSearchAction.AddToWallet -> viewModel.onAddToWallet(action.assetId)
 
-            is WalletSearchAction.TogglePerpetualPin -> viewModel.onTogglePerpetualPin(action.item)
+                is WalletSearchAction.TogglePerpetualPin -> viewModel.onTogglePerpetualPin(action.item)
 
-            WalletSearchAction.OpenRecentsSheet -> recentsViewModel.show(filters = viewModel.assetFilters(), types = viewModel.recentTypes)
+                WalletSearchAction.OpenRecentsSheet -> recentsViewModel.show(filters = viewModel.assetFilters(), types = viewModel.recentTypes)
 
-            is WalletSearchAction.OpenAsset -> {
-                viewModel.openRecent(action.asset)
-                onAction(action)
+                is WalletSearchAction.OpenAsset -> {
+                    viewModel.openRecent(action.asset)
+                    onAction(action)
+                }
+
+                is WalletSearchAction.OpenPerpetual -> {
+                    viewModel.openRecent(action.asset)
+                    onAction(action)
+                }
+
+                WalletSearchAction.AddAsset,
+                WalletSearchAction.Cancel,
+                WalletSearchAction.OpenPerpetuals,
+                WalletSearchAction.OpenCollections,
+                is WalletSearchAction.OpenNftCollection,
+                is WalletSearchAction.OpenNftAsset,
+                is WalletSearchAction.OpenList,
+                is WalletSearchAction.OpenRecent,
+                is WalletSearchAction.ShowAllAssets,
+                -> onAction(action)
             }
-
-            is WalletSearchAction.OpenPerpetual -> {
-                viewModel.openRecent(action.asset)
-                onAction(action)
-            }
-
-            WalletSearchAction.AddAsset,
-            WalletSearchAction.Cancel,
-            WalletSearchAction.OpenPerpetuals,
-            WalletSearchAction.OpenCollections,
-            is WalletSearchAction.OpenNftCollection,
-            is WalletSearchAction.OpenNftAsset,
-            is WalletSearchAction.OpenList,
-            is WalletSearchAction.OpenRecent,
-            is WalletSearchAction.ShowAllAssets,
-            -> onAction(action)
         }
     }
 
-    val pinnedPerpetualRows: List<@Composable (ListPosition) -> Unit> = pinnedPerpetuals.map { item ->
-        @Composable { position: ListPosition ->
-            PerpetualListItem(
-                item = item,
-                listPosition = position,
-                longPressState = longPressedPerpetual,
-                onTogglePin = { handleAction(WalletSearchAction.TogglePerpetualPin(item)) },
-                onClick = { handleAction(WalletSearchAction.OpenPerpetual(item.data.asset.toPrimitives())) },
-            )
+    val contextActions = remember(handleAction) {
+        AssetContextActions(
+            onTogglePin = { handleAction(WalletSearchAction.PinAsset(it)) },
+            onAddToWallet = { handleAction(WalletSearchAction.AddToWallet(it)) },
+        )
+    }
+
+    val visiblePinnedPerpetuals = if (state.showsPinned) pinnedPerpetuals else emptyList()
+    val pinnedPerpetualContent: (LazyListScope.(Int) -> Unit)? = if (visiblePinnedPerpetuals.isNotEmpty()) {
+        { totalCount ->
+            itemsPositioned(
+                items = visiblePinnedPerpetuals,
+                totalCount = totalCount,
+                key = { _, item -> "pinned_perpetual-${item.data.perpetual.id}" },
+                contentType = { _, _ -> "perpetual_row" },
+            ) { position, item ->
+                PerpetualListItem(
+                    item = item,
+                    listPosition = position,
+                    longPressState = longPressedPerpetual,
+                    onTogglePin = { handleAction(WalletSearchAction.TogglePerpetualPin(item)) },
+                    onClick = { handleAction(WalletSearchAction.OpenPerpetual(item.data.asset.toPrimitives())) },
+                )
+            }
         }
+    } else {
+        null
     }
 
     val perpetualsContent: (LazyListScope.() -> Unit)? = if (state.showsPerpetuals) {
         {
-            item {
+            item(key = "search_perpetuals_header", contentType = "subheader") {
                 SubheaderItem(R.string.perpetuals_title, if (hasMorePerpetuals) ({ handleAction(WalletSearchAction.OpenPerpetuals) }) else null)
             }
-            itemsPositioned(previewPerpetuals) { position, item ->
+            itemsPositioned(
+                items = previewPerpetuals,
+                key = { _, item -> "perpetual-${item.data.perpetual.id}" },
+                contentType = { _, _ -> "perpetual_row" },
+            ) { position, item ->
                 PerpetualListItem(
                     item = item,
                     listPosition = position,
@@ -123,10 +148,14 @@ fun WalletSearchScreen(onAction: (WalletSearchAction) -> Unit, viewModel: Wallet
 
     val listsContent: (LazyListScope.() -> Unit)? = if (state.showsLists) {
         {
-            item {
+            item(key = "search_lists_header", contentType = "subheader") {
                 SubheaderItem(R.string.common_lists)
             }
-            itemsPositioned(lists) { position, item ->
+            itemsPositioned(
+                items = lists,
+                key = { _, item -> "search_list-${item.list.id}" },
+                contentType = { _, _ -> "search_list_row" },
+            ) { position, item ->
                 SearchListItem(
                     row = item,
                     listPosition = position,
@@ -140,10 +169,19 @@ fun WalletSearchScreen(onAction: (WalletSearchAction) -> Unit, viewModel: Wallet
 
     val nftsContent: (LazyListScope.() -> Unit)? = if (state.showsNfts) {
         {
-            item {
+            item(key = "search_nfts_header", contentType = "subheader") {
                 SubheaderItem(R.string.nft_collections, if (hasMoreNfts) ({ handleAction(WalletSearchAction.OpenCollections) }) else null)
             }
-            itemsPositioned(previewNfts) { position, item ->
+            itemsPositioned(
+                items = previewNfts,
+                key = { _, item ->
+                    when (val target = item.target) {
+                        is NftItemTarget.Collection -> "nft_collection-${target.id}"
+                        is NftItemTarget.Asset -> "nft_asset-${target.id}"
+                    }
+                },
+                contentType = { _, _ -> "nft_row" },
+            ) { position, item ->
                 NftListItem(
                     row = item.row,
                     listPosition = position,
@@ -200,11 +238,9 @@ fun WalletSearchScreen(onAction: (WalletSearchAction) -> Unit, viewModel: Wallet
             }
         },
         recentsSheetEnabled = true,
-        contextActions = AssetContextActions(
-            onTogglePin = { handleAction(WalletSearchAction.PinAsset(it)) },
-            onAddToWallet = { handleAction(WalletSearchAction.AddToWallet(it)) },
-        ),
-        pinnedPerpetualRows = if (state.showsPinned) pinnedPerpetualRows else emptyList(),
+        contextActions = contextActions,
+        pinnedPerpetualCount = visiblePinnedPerpetuals.size,
+        pinnedPerpetualContent = pinnedPerpetualContent,
         perpetualsContent = perpetualsContent,
         listsContent = listsContent,
         nftsContent = nftsContent,

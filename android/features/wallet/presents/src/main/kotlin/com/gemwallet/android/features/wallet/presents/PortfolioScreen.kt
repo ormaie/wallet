@@ -46,40 +46,45 @@ fun PortfolioScreen(onCancel: () -> Unit, viewModel: PortfolioViewModel = hiltVi
     val refreshIntervalMillis by viewModel.refreshIntervalMillis.collectAsStateWithLifecycle()
     RefreshOnTimer(refreshIntervalMillis, viewModel::refresh)
 
-    val statistics by viewModel.statistics.collectAsStateWithLifecycle()
-    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
-    val selectedType by viewModel.selectedType.collectAsStateWithLifecycle()
-    val showSegmentedControl by viewModel.showSegmentedControl.collectAsStateWithLifecycle()
-    val selectedChartType by viewModel.selectedChartType.collectAsStateWithLifecycle()
-    val state by viewModel.chartUIState.collectAsStateWithLifecycle()
-    val showChartTypePicker by viewModel.showChartTypePicker.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scene(
         titleContent = {
-            if (showSegmentedControl) {
-                PortfolioTypeSelector(selected = selectedType, onSelect = viewModel::setType)
+            if (uiState.showSegmentedControl) {
+                PortfolioTypeSelector(selected = uiState.selectedType, onSelect = viewModel::setType)
             } else {
-                Text(stringResource(selectedType.stringRes()))
+                Text(stringResource(uiState.selectedType.stringRes()))
             }
         },
         onClose = onCancel,
         actions = {
-            if (showChartTypePicker) {
-                ChartTypeSelector(selected = selectedChartType, onSelect = viewModel::setChartType)
+            if (uiState.showChartTypePicker) {
+                ChartTypeSelector(selected = uiState.selectedChartType, onSelect = viewModel::setChartType)
             }
         },
     ) {
         PullToRefreshBox(
-            isRefreshing = isRefreshing,
+            isRefreshing = uiState.isRefreshing,
             onRefresh = viewModel::refresh,
             containerColor = PullToRefreshDefaults.indicatorContainerColor,
         ) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                item { PortfolioChart(viewModel) }
-                if (state.phase is GemChartPhase.Data || state.phase is GemChartPhase.NoData) {
-                    if (statistics.isNotEmpty()) {
-                        item { SubheaderItem(R.string.common_info) }
-                        itemsPositioned(statistics) { position, row -> GemListRowView(row = row, listPosition = position) }
+                item(key = "portfolio_chart", contentType = "portfolio_chart") {
+                    ChartSection(
+                        state = uiState.chartUIState,
+                        onPeriodSelect = viewModel::setPeriod,
+                        onZoom = viewModel::onZoom,
+                        onPan = viewModel::onPan,
+                    )
+                }
+                if (uiState.chartUIState.phase is GemChartPhase.Data || uiState.chartUIState.phase is GemChartPhase.NoData) {
+                    if (uiState.statistics.isNotEmpty()) {
+                        item(key = "portfolio_info_header", contentType = "subheader") { SubheaderItem(R.string.common_info) }
+                        itemsPositioned(
+                            items = uiState.statistics,
+                            key = { index, _ -> "portfolio_stat_$index" },
+                            contentType = { _, _ -> "portfolio_stat" },
+                        ) { position, row -> GemListRowView(row = row, listPosition = position) }
                     }
                 }
             }
@@ -126,16 +131,4 @@ private fun ChartTypeSelector(selected: PortfolioChartType, onSelect: (Portfolio
             }
         }
     }
-}
-
-@Composable
-private fun PortfolioChart(viewModel: PortfolioViewModel) {
-    val state by viewModel.chartUIState.collectAsStateWithLifecycle()
-
-    ChartSection(
-        state = state,
-        onPeriodSelect = viewModel::setPeriod,
-        onZoom = viewModel::onZoom,
-        onPan = viewModel::onPan,
-    )
 }

@@ -20,8 +20,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.icons.cachedDrawablePainter
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.models.navigation.RouteMessage
 import com.gemwallet.android.ui.theme.middlePadding
@@ -93,7 +93,7 @@ fun SnackbarHost(hostState: SnackbarHostState) {
                     horizontalArrangement = Arrangement.spacedBy(paddingSmall),
                 ) {
                     Icon(
-                        painter = painterResource(visuals.iconRes),
+                        painter = cachedDrawablePainter(visuals.iconRes),
                         contentDescription = null,
                         modifier = Modifier.size(smallIconSize),
                     )

@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -24,8 +25,6 @@ import androidx.compose.ui.unit.Dp
 import coil3.compose.AsyncImage
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
-import coil3.request.transformations
-import coil3.transform.CircleCropTransformation
 import com.gemwallet.android.ext.toChain
 import com.gemwallet.android.ui.components.list_item.ListItemImage
 import com.gemwallet.android.ui.components.list_item.ListItemImageStyle
@@ -39,8 +38,6 @@ import com.gemwallet.android.ui.theme.space12
 import uniffi.gemstone.GemAssetIcon
 import uniffi.gemstone.GemAssetIconImage
 import java.io.File
-
-private val CircleCrop = CircleCropTransformation()
 
 @Composable
 fun ListItemImageView(image: ListItemImage, modifier: Modifier = Modifier, style: ListItemImageStyle = image.style, size: Dp = style.size) {
@@ -118,14 +115,14 @@ private fun BundledImage(@DrawableRes resource: Int, size: Dp, isRounded: Boolea
 @Composable
 private fun CoilImage(data: Any, size: Dp, placeholderText: String?, modifier: Modifier) {
     val context = LocalContext.current
-    val density = LocalDensity.current
-    val placeholderColor = MaterialTheme.colorScheme.secondaryFaded
-    val textMeasurer = rememberTextMeasurer()
-    val placeholderSize = with(density) { Size(size.toPx(), size.toPx()) }
-    val placeholder = remember(placeholderText, placeholderColor, placeholderSize) {
-        if (placeholderText.isNullOrEmpty()) {
-            null
-        } else {
+    val placeholder = if (placeholderText.isNullOrEmpty()) {
+        null
+    } else {
+        val density = LocalDensity.current
+        val placeholderColor = MaterialTheme.colorScheme.secondaryFaded
+        val textMeasurer = rememberTextMeasurer(cacheSize = 0)
+        val placeholderSize = with(density) { Size(size.toPx(), size.toPx()) }
+        remember(placeholderText, placeholderColor, placeholderSize, textMeasurer) {
             TextPainter(
                 circleColor = placeholderColor,
                 textMeasurer = textMeasurer,
@@ -139,7 +136,6 @@ private fun CoilImage(data: Any, size: Dp, placeholderText: String?, modifier: M
             .data(data)
             .diskCachePolicy(policy = CachePolicy.ENABLED)
             .networkCachePolicy(policy = CachePolicy.ENABLED)
-            .transformations(CircleCrop)
             .build()
     }
     AsyncImage(
@@ -147,7 +143,8 @@ private fun CoilImage(data: Any, size: Dp, placeholderText: String?, modifier: M
         placeholder = placeholder,
         error = placeholder,
         contentDescription = null,
-        modifier = modifier.size(size),
+        contentScale = ContentScale.Crop,
+        modifier = modifier.size(size).clip(CircleShape),
     )
 }
 

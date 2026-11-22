@@ -150,7 +150,8 @@ fun SelectAssetScene(
     actions: @Composable RowScope.() -> Unit = {},
     contextActions: AssetContextActions = AssetContextActions.Empty,
     recentsSheetEnabled: Boolean = false,
-    pinnedPerpetualRows: List<@Composable (ListPosition) -> Unit> = emptyList(),
+    pinnedPerpetualCount: Int = 0,
+    pinnedPerpetualContent: (LazyListScope.(totalCount: Int) -> Unit)? = null,
     perpetualsContent: (LazyListScope.() -> Unit)? = null,
     listsContent: (LazyListScope.() -> Unit)? = null,
     nftsContent: (LazyListScope.() -> Unit)? = null,
@@ -226,12 +227,10 @@ fun SelectAssetScene(
         ) {
             recentAssets(recent, onSelectRecent, onOpenRecentsSheet)
             assets(popular, GemAssetSectionKind.POPULAR, onSelect, onItemAction, longPressedAsset, contextActions)
-            if (pinned.isNotEmpty() || pinnedPerpetualRows.isNotEmpty()) {
-                item { AssetSectionHeaderItem(GemAssetSectionKind.PINNED) }
-                val pinnedTotal = pinnedPerpetualRows.size + pinned.size
-                itemsPositioned(pinnedPerpetualRows, totalCount = pinnedTotal) { position, row ->
-                    row(position)
-                }
+            if (pinned.isNotEmpty() || pinnedPerpetualCount > 0) {
+                item(key = "section_header_pinned", contentType = "section_header") { AssetSectionHeaderItem(GemAssetSectionKind.PINNED) }
+                val pinnedTotal = pinnedPerpetualCount + pinned.size
+                pinnedPerpetualContent?.invoke(this, pinnedTotal)
                 assetRows(
                     pinned,
                     GemAssetSectionKind.PINNED.name,
@@ -239,7 +238,7 @@ fun SelectAssetScene(
                     onItemAction,
                     longPressedAsset,
                     contextActions,
-                    indexOffset = pinnedPerpetualRows.size,
+                    indexOffset = pinnedPerpetualCount,
                     totalCount = pinnedTotal,
                 )
             }
@@ -247,7 +246,7 @@ fun SelectAssetScene(
             perpetualsContent?.invoke(this)
             nftsContent?.invoke(this)
             if (assetsHeaderRes != null && unpinned.isNotEmpty()) {
-                item {
+                item(key = "section_header_assets_title", contentType = "subheader") {
                     SubheaderItem(assetsHeaderRes, onAssetsHeaderClick)
                 }
             }
@@ -284,7 +283,7 @@ private fun LazyListScope.assets(
 ) {
     if (items.isEmpty()) return
 
-    item { AssetSectionHeaderItem(group) }
+    item(key = "section_header_${group.name}", contentType = "section_header") { AssetSectionHeaderItem(group) }
 
     assetRows(items, group.name, onSelect, onItemAction, longPressedAsset, contextActions)
 }
@@ -382,15 +381,15 @@ fun LazyListScope.recentAssets(items: List<Asset>, onSelect: (Asset) -> Unit, on
     if (items.isEmpty()) {
         return
     }
-    item {
+    item(key = "recents_header", contentType = "subheader") {
         SubheaderItem(R.string.recent_activity_title, onOpenRecentsSheet)
     }
-    item {
+    item(key = "recents_row", contentType = "recents_row") {
         LazyRow(
             modifier = Modifier.padding(top = paddingHalfSmall, start = paddingDefault, bottom = paddingSmall, end = paddingDefault),
             horizontalArrangement = Arrangement.spacedBy(paddingSmall),
         ) {
-            items(items) { asset ->
+            items(items, key = { it.id.toIdentifier() }, contentType = { "recent_chip" }) { asset ->
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(paddingDefault))

@@ -2,11 +2,10 @@ package com.gemwallet.android.ui.components.empty
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
+import com.gemwallet.android.ui.icons.cachedDrawablePainter
+import com.gemwallet.android.ui.icons.cachedVectorResource
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.localization.title
 import com.gemwallet.android.ui.style.image
@@ -24,8 +23,8 @@ fun EmptyContentView(kind: GemEmptyStateKind, modifier: Modifier = Modifier, sym
 fun EmptyContentView(state: GemEmptyState, modifier: Modifier = Modifier, symbol: String = "", onAction: ((GemEmptyStateAction) -> Unit)? = null) {
     val context = LocalContext.current
     val (icon, iconVector) = when (val image = state.image.image()) {
-        is EmptyStateImage.Drawable -> painterResource(image.id) to null
-        is EmptyStateImage.Vector -> null to ImageVector.vectorResource(image.id)
+        is EmptyStateImage.Drawable -> cachedDrawablePainter(image.id) to null
+        is EmptyStateImage.Vector -> null to cachedVectorResource(image.id)
     }
     EmptyStateView(
         title = state.title.text(context, symbol),

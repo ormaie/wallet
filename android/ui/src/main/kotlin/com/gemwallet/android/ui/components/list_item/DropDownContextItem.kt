@@ -6,7 +6,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpOffset
@@ -27,6 +30,10 @@ fun DropDownContextItem(
     onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    var hasOpenedMenu by remember { mutableStateOf(false) }
+    if (isExpanded) {
+        hasOpenedMenu = true
+    }
 
     Box {
         content(
@@ -38,12 +45,14 @@ fun DropDownContextItem(
                     onLongClick = onLongClick,
                 ),
         )
-        GemDropdownMenu(
-            modifier = Modifier.align(menuAlignment),
-            expanded = isExpanded,
-            offset = menuOffset,
-            onDismissRequest = onDismiss,
-            content = menuItems,
-        )
+        if (hasOpenedMenu) {
+            GemDropdownMenu(
+                modifier = Modifier.align(menuAlignment),
+                expanded = isExpanded,
+                offset = menuOffset,
+                onDismissRequest = onDismiss,
+                content = menuItems,
+            )
+        }
     }
 }

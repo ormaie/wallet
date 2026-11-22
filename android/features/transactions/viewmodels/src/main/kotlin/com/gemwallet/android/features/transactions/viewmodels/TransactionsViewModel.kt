@@ -93,6 +93,7 @@ class TransactionsViewModel @Inject constructor(
     private val transactionsState = MutableStateFlow<GemLoadState>(GemLoadState.Loading)
 
     val phase: StateFlow<GemListPhase?> = combine(transactionsState, transactions, filterView, ::phase)
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Eagerly, phase(transactionsState.value, transactions.value, filterView.value))
 
     init {
@@ -100,7 +101,9 @@ class TransactionsViewModel @Inject constructor(
             session
                 .filterNotNull()
                 .distinctUntilChangedBy { it.wallet.id }
-                .collect { list.value = ActivityList(newTransactionsFilterSession(service.filterChains(it.wallet.toGem()), it.wallet.type.toGem())) }
+                .map { ActivityList(newTransactionsFilterSession(service.filterChains(it.wallet.toGem()), it.wallet.type.toGem())) }
+                .flowOn(ioDispatcher)
+                .collect { list.value = it }
         }
     }
 
