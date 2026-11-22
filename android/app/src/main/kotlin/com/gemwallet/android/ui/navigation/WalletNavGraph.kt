@@ -3,15 +3,22 @@ package com.gemwallet.android.ui.navigation
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterExitState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.zIndex
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
@@ -24,7 +31,6 @@ import androidx.navigation3.ui.NavDisplay
 import com.gemwallet.android.features.assets.presents.select.assetsManageScreen
 import com.gemwallet.android.features.assets.viewmodels.asset.models.AssetAction
 import com.gemwallet.android.features.contacts.presents.ContactsAction
-import com.gemwallet.android.features.main.views.MainScreen
 import com.gemwallet.android.features.onboarding.presents.authentication.enableAuthenticationScreen
 import com.gemwallet.android.features.onboarding.presents.create_wallet.createWalletScreen
 import com.gemwallet.android.features.onboarding.presents.import_wallet.importWalletScreen
@@ -87,14 +93,17 @@ fun WalletNavGraph(
         }
     }
 
-    val entryProvider = remember(navigator, onboard, walletConnectorRequest) {
+    val walletRootHostState = remember(navigator) {
+        WalletRootHostState(initiallyActivated = navigator.backStack.lastOrNull() == WalletRootRoute)
+    }
+    val hasWalletRoot by remember(navigator) {
+        derivedStateOf { navigator.backStack.firstOrNull() == WalletRootRoute }
+    }
+
+    val entryProvider = remember(navigator, onboard, walletConnectorRequest, walletRootHostState) {
         entryProvider<NavKey> {
             entry<WalletRootRoute> {
-                MainScreen(
-                    navigator = navigator,
-                    currentTab = navigator.currentTab,
-                    onWalletContentReady = { currentOnWalletContentReady() },
-                )
+                WalletRootProxy(hostState = walletRootHostState)
             }
 
             entry<OnboardingRoute> {
@@ -342,14 +351,52 @@ fun WalletNavGraph(
         entryDecorators = entryDecorators,
     )
 
-    NavDisplay(
-        entries = decoratedEntries,
-        modifier = modifier.semantics { testTagsAsResourceId = true },
-        onBack = { navigator.pop() },
-        transitionSpec = slideLeftTransition,
-        popTransitionSpec = slideRightTransition,
-        predictivePopTransitionSpec = { slideRightTransition() },
-    )
+    val rootSaveableStateHolder = rememberSaveableStateHolder()
+    val walletRootContentKey = if (hasWalletRoot) entries.firstOrNull()?.contentKey else null
+
+    LaunchedEffect(hasWalletRoot, walletRootContentKey) {
+        if (!hasWalletRoot) {
+            walletRootHostState.activeContentKey?.let(rootSaveableStateHolder::removeState)
+            walletRootHostState.reset()
+        } else if (walletRootContentKey != null) {
+            val previousKey = walletRootHostState.activeContentKey
+            if (previousKey != null && previousKey != walletRootContentKey) {
+                rootSaveableStateHolder.removeState(previousKey)
+            }
+            walletRootHostState.activeContentKey = walletRootContentKey
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .onPlaced { walletRootHostState.containerCoordinates = it }
+            .semantics { testTagsAsResourceId = true },
+    ) {
+        NavDisplay(
+            entries = decoratedEntries,
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(1f),
+            onBack = { navigator.pop() },
+            transitionSpec = slideLeftTransition,
+            popTransitionSpec = slideRightTransition,
+            predictivePopTransitionSpec = { slideRightTransition() },
+        )
+
+        if (hasWalletRoot && walletRootHostState.hasActivatedRoot && walletRootContentKey != null) {
+            PersistentWalletRoot(
+                navigator = navigator,
+                hostState = walletRootHostState,
+                contentKey = walletRootContentKey,
+                saveableStateHolder = rootSaveableStateHolder,
+                onWalletContentReady = { currentOnWalletContentReady() },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(0f),
+            )
+        }
+    }
 }
 
 @Composable

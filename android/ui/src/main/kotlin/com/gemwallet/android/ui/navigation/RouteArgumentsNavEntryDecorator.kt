@@ -54,6 +54,23 @@ fun <T : Any> rememberRouteArgumentsViewModelStoreNavEntryDecorator(
     }
 }
 
+@Composable
+fun rememberNavEntryViewModelStoreOwner(
+    contentKey: Any,
+    viewModelStoreOwner: ViewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) {
+        "No ViewModelStoreOwner was provided via LocalViewModelStoreOwner"
+    },
+): ViewModelStoreOwner {
+    val entryViewModelStores = rememberEntryViewModelStores(viewModelStoreOwner)
+    val defaultArgs = remember { savedState() }
+    return rememberEntryViewModelStoreOwner(
+        contentKey = contentKey,
+        parent = viewModelStoreOwner,
+        entryViewModelStores = entryViewModelStores,
+        defaultArgs = defaultArgs,
+    )
+}
+
 private class RouteArgumentsViewModelStoreNavEntryDecorator<T : Any>(private val parent: ViewModelStoreOwner, private val entryViewModelStores: EntryViewModelStores) :
     NavEntryDecorator<T>(
         onPop = { contentKey -> entryViewModelStores.clear(contentKey) },

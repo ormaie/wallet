@@ -12,7 +12,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,7 +29,7 @@ import com.gemwallet.android.ui.components.InfoBottomSheet
 import com.gemwallet.android.ui.components.fields.AmountField
 import com.gemwallet.android.ui.components.fields.AmountSymbolPlacement
 import com.gemwallet.android.ui.components.fields.AmountSymbolUIModel
-import com.gemwallet.android.ui.components.fields.requestFocusIfAttached
+import com.gemwallet.android.ui.components.fields.RequestFocusAfterNavTransition
 import com.gemwallet.android.ui.components.infoSheet
 import com.gemwallet.android.ui.components.list_item.listItem
 import com.gemwallet.android.ui.components.list_item.property.PropertyAssetInfoItem
@@ -122,11 +121,11 @@ internal fun AmountScene(
         InfoBottomSheet(errorTopic.infoSheet { onAction(AmountAction.Buy) }) { showsErrorInfo = false }
     }
 
-    LaunchedEffect(focusesInput) {
-        if (focusesInput) {
-            focusRequester.requestFocusIfAttached()
-        }
-    }
+    RequestFocusAfterNavTransition(
+        focusRequester = focusRequester,
+        enabled = focusesInput,
+        key = focusesInput,
+    )
 }
 
 @Composable

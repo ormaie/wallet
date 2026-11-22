@@ -23,7 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.gemwallet.android.model.text
 import com.gemwallet.android.ui.components.NumericText
 import com.gemwallet.android.ui.components.fields.AmountInputTransformation
+import com.gemwallet.android.ui.components.fields.RequestFocusAfterNavTransition
 import com.gemwallet.android.ui.components.fields.decimalKeyboardOptions
 import com.gemwallet.android.ui.components.image.AssetIcon
 import com.gemwallet.android.ui.components.list_item.listItem
@@ -188,11 +188,11 @@ private fun SwapItemInput(calculating: Boolean, quote: String?, isQuote: Boolean
         color = MaterialTheme.colorScheme.onSurface,
     )
 
-    LaunchedEffect(assetSelected) {
-        if (interaction.isAmountEditable && assetSelected) {
-            focusRequester.requestFocus()
-        }
-    }
+    RequestFocusAfterNavTransition(
+        focusRequester = focusRequester,
+        enabled = interaction.isAmountEditable && assetSelected,
+        key = assetSelected,
+    )
     Box(
         modifier = Modifier
             .fillMaxWidth()

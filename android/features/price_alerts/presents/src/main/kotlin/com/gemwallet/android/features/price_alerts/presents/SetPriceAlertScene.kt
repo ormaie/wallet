@@ -24,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +40,7 @@ import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.TabsBar
 import com.gemwallet.android.ui.components.buttons.MainActionButton
 import com.gemwallet.android.ui.components.fields.AmountInputTransformation
-import com.gemwallet.android.ui.components.fields.requestFocusIfAttached
+import com.gemwallet.android.ui.components.fields.RequestFocusAfterNavTransition
 import com.gemwallet.android.ui.components.list_item.AssetListItem
 import com.gemwallet.android.ui.components.screen.Scene
 import com.gemwallet.android.ui.icons.AppIcons
@@ -82,9 +81,7 @@ internal fun SetPriceAlertScene(
     val interactionSource = remember { MutableInteractionSource() }
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocusIfAttached()
-    }
+    RequestFocusAfterNavTransition(focusRequester = focusRequester)
 
     Scene(
         snackbar = snackbar,

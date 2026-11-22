@@ -15,9 +15,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -26,15 +24,13 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import com.gemwallet.android.ui.LocalNavTransitionRunning
 import com.gemwallet.android.ui.R
-import com.gemwallet.android.ui.components.fields.requestFocusIfAttached
+import com.gemwallet.android.ui.components.fields.RequestFocusAfterNavTransition
 import com.gemwallet.android.ui.components.list_item.listItem
 import com.gemwallet.android.ui.icons.AppIcons
 import com.gemwallet.android.ui.models.ListPosition
 import com.gemwallet.android.ui.theme.paddingLarge
 import com.gemwallet.android.ui.theme.space10
-import kotlinx.coroutines.flow.first
 
 private val searchBarHeight = 42.dp
 private val inputStartPadding = 42.dp
@@ -43,14 +39,11 @@ private val inputEndPadding = 40.dp
 @Composable
 fun SearchBar(query: TextFieldState, modifier: Modifier = Modifier.listItem(ListPosition.Single), autoFocus: Boolean = false) {
     val focusRequester = remember { FocusRequester() }
-    val isNavTransitionRunning = LocalNavTransitionRunning.current
 
-    if (autoFocus) {
-        LaunchedEffect(isNavTransitionRunning) {
-            snapshotFlow(isNavTransitionRunning).first { !it }
-            focusRequester.requestFocusIfAttached()
-        }
-    }
+    RequestFocusAfterNavTransition(
+        focusRequester = focusRequester,
+        enabled = autoFocus,
+    )
 
     Row(modifier = modifier.fillMaxWidth().height(searchBarHeight)) {
         Box(modifier = Modifier.fillMaxWidth()) {
