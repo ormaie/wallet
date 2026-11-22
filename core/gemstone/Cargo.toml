@@ -12,14 +12,11 @@ crate-type = [
 
 name = "gemstone"
 
-[features]
-default = []
-reqwest_provider = ["swapper/reqwest_provider"]
-
 [dependencies]
 swapper = { path = "../crates/swapper" }
 payment = { path = "../crates/payment" }
 primitives = { path = "../crates/primitives" }
+links = { path = "../crates/links" }
 chain_primitives = { path = "../crates/chain_primitives" }
 node_probes = { path = "../crates/node_probes" }
 push_notification = { path = "../crates/push_notification" }
@@ -35,7 +32,7 @@ everstake = { path = "../crates/everstake", features = ["rpc"] }
 gem_monad = { path = "../crates/gem_monad", features = ["rpc"] }
 gem_bsc = { path = "../crates/gem_bsc", features = ["rpc"] }
 gem_tempo = { path = "../crates/gem_tempo", features = ["rpc", "signer"] }
-simulation = { path = "../crates/simulation", features = ["rpc"] }
+simulation = { path = "../crates/simulation" }
 gem_sui = { path = "../crates/gem_sui", features = ["rpc", "signer"] }
 gem_aptos = { path = "../crates/gem_aptos", features = ["rpc"] }
 gem_api = { path = "../crates/gem_api" }

@@ -8,6 +8,10 @@ updates:
       alloy:
         patterns:
           - "alloy-*"
+      uniffi:
+        patterns:
+          - "uniffi"
+          - "uniffi_bindgen"
     schedule:
       interval: "weekly"
     cooldown:

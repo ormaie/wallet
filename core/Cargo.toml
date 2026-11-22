@@ -26,6 +26,8 @@ members = [
     "crates/node_probes",
     "crates/push_notification",
     "crates/payment",
+    "crates/links",
+    "crates/sign_in",
     "crates/fiat",
     "crates/cacher",
     "crates/name_resolver",
@@ -73,8 +75,6 @@ members = [
 # Serialization and encoding
 bcs = { version = "0.2.1" }
 bech32 = { version = "0.11.1" }
-borsh = { version = "1.8.0", features = ["derive"] }
-bs58 = { version = "0.5.1" }
 bytes = { version = "1.10.1" }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.151", features = ["preserve_order"] }
@@ -151,7 +151,6 @@ tower = { version = "0.5.3", features = ["util"] }
 tower-http = { version = "0.6.11", features = ["timeout", "catch-panic", "set-header", "normalize-path"] }
 
 # Logging and metrics
-prometheus-client = { version = "0.26.0" }
 
 # Localization and embedded assets
 fluent-syntax = { version = "0.12.0" }
@@ -163,6 +162,7 @@ rust-embed = { version = "8.11.0" }
 quote = { version = "1.0.47" }
 syn = { version = "3.0.6" }
 uniffi = { version = "0.32.1", default-features = false }
+uniffi_bindgen = { version = "0.32.1" }
 
 [profile.dev]
 debug = "line-tables-only"
