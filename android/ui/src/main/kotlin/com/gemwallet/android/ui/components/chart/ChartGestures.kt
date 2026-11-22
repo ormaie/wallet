@@ -44,8 +44,9 @@ fun Modifier.chartGestures(plotLeft: Float, plotWidth: Float, isZoomed: () -> Bo
                 if (down.isConsumed) return@awaitEachGesture
                 when (withTimeoutOrNull(SCRUB_HOLD_MS) { awaitIntent(down, viewConfiguration.touchSlop, isZoomed()) } ?: ChartTouch.Scrub) {
                     ChartTouch.Scrub -> {
-                        indexAtPixel(down.position.x)?.let(onSelectionChanged)
-                        val pinched = followScrub(indexAtPixel, onSelectionChanged)
+                        val initialIndex = indexAtPixel(down.position.x)
+                        initialIndex?.let(onSelectionChanged)
+                        val pinched = followScrub(initialIndex, indexAtPixel, onSelectionChanged)
                         onSelectionChanged(null)
                         if (pinched) followPinch(zoomAtPixel)
                     }
@@ -107,13 +108,18 @@ private suspend fun glide(velocity: Float, onPan: (Float) -> Unit) {
     }
 }
 
-private suspend fun AwaitPointerEventScope.followScrub(indexAt: (Float) -> Int?, onSelectionChanged: (Int?) -> Unit): Boolean {
+private suspend fun AwaitPointerEventScope.followScrub(initialIndex: Int?, indexAt: (Float) -> Int?, onSelectionChanged: (Int?) -> Unit): Boolean {
+    var lastIndex = initialIndex
     while (true) {
         val event = awaitPointerEvent()
         if (event.pressedCount() > 1) return true
         val finger = event.changes.firstOrNull { it.pressed } ?: return false
         finger.consume()
-        indexAt(finger.position.x)?.let(onSelectionChanged)
+        val next = indexAt(finger.position.x)
+        if (next != null && next != lastIndex) {
+            lastIndex = next
+            onSelectionChanged(next)
+        }
     }
 }
 

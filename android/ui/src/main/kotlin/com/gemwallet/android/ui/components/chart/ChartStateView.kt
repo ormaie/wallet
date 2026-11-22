@@ -11,13 +11,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.PeriodsPanel
 import com.gemwallet.android.ui.components.empty.EmptyStateView
 import com.gemwallet.android.ui.components.progress.CircularProgressIndicator20
 import com.gemwallet.android.ui.icons.AppIcons
+import com.gemwallet.android.ui.icons.cachedDrawablePainter
 import com.gemwallet.android.ui.models.StateViewType
 import com.gemwallet.android.ui.theme.chartFrameHeight
 import com.gemwallet.android.ui.theme.paddingSmall
@@ -36,13 +36,9 @@ fun <T> ChartStateView(
     modifier: Modifier = Modifier,
     chartBody: @Composable BoxScope.(T) -> Unit,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().height(chartFrameHeight),
-        ) {
+    ChartStateView(
+        state = state,
+        headerContent = {
             header?.takeIf { state is StateViewType.Data }?.let {
                 ChartHeader(
                     header = it,
@@ -50,6 +46,33 @@ fun <T> ChartStateView(
                     modifier = Modifier.padding(top = paddingSmall, bottom = space4),
                 )
             }
+        },
+        period = period,
+        onPeriodSelect = onPeriodSelect,
+        periods = periods,
+        modifier = modifier,
+        chartBody = chartBody,
+    )
+}
+
+@Composable
+internal fun <T> ChartStateView(
+    state: StateViewType<T>,
+    headerContent: @Composable () -> Unit,
+    period: ChartPeriod,
+    onPeriodSelect: (ChartPeriod) -> Unit,
+    periods: List<ChartPeriod>,
+    modifier: Modifier = Modifier,
+    chartBody: @Composable BoxScope.(T) -> Unit,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().height(chartFrameHeight),
+        ) {
+            headerContent()
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                 when (state) {
                     StateViewType.Loading -> CircularProgressIndicator20(
@@ -60,7 +83,7 @@ fun <T> ChartStateView(
                     StateViewType.NoData -> EmptyStateView(
                         modifier = Modifier.fillMaxSize(),
                         title = stringResource(R.string.common_not_available),
-                        icon = painterResource(R.drawable.empty_activity),
+                        icon = cachedDrawablePainter(R.drawable.empty_activity),
                     )
 
                     is StateViewType.Error -> EmptyStateView(

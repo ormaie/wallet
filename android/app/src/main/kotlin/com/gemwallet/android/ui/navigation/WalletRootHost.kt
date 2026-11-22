@@ -2,7 +2,9 @@ package com.gemwallet.android.ui.navigation
 
 import androidx.compose.foundation.IndicationNodeFactory
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -10,7 +12,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.SaveableStateHolder
@@ -22,6 +23,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.node.DelegatableNode
+import androidx.compose.ui.node.DelegatingNode
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -30,6 +32,34 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.gemwallet.android.features.main.views.MainScreen
 import com.gemwallet.android.ui.LocalNavTransitionRunning
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
+
+internal interface ResettableIndicationHandle {
+    fun reset()
+}
+
+internal class IndicationResetBus {
+    private val activeHandles = LinkedHashSet<ResettableIndicationHandle>()
+
+    val activeCount: Int
+        get() = activeHandles.size
+
+    fun markActive(handle: ResettableIndicationHandle) {
+        activeHandles.add(handle)
+    }
+
+    fun unregister(handle: ResettableIndicationHandle) {
+        activeHandles.remove(handle)
+    }
+
+    fun resetActive() {
+        if (activeHandles.isEmpty()) return
+        val snapshot = activeHandles.toList()
+        activeHandles.clear()
+        snapshot.forEach(ResettableIndicationHandle::reset)
+    }
+}
 
 internal class WalletRootHostState(initiallyActivated: Boolean) {
     var containerCoordinates: LayoutCoordinates? = null
@@ -40,8 +70,8 @@ internal class WalletRootHostState(initiallyActivated: Boolean) {
         private set
     var slideOffsetX by mutableFloatStateOf(0f)
         private set
-    var rippleResetGeneration by mutableIntStateOf(0)
-        private set
+
+    val indicationResetBus = IndicationResetBus()
 
     private var activeTransitionRunning by mutableStateOf<(() -> Boolean)?>(null)
     private var onVisibilityChanged: ((Boolean) -> Unit)? = null
@@ -59,7 +89,7 @@ internal class WalletRootHostState(initiallyActivated: Boolean) {
 
     fun updateRootTop(isRootTop: Boolean) {
         if (isRootTop && !wasRootTop) {
-            rippleResetGeneration += 1
+            indicationResetBus.resetActive()
         }
         wasRootTop = isRootTop
     }
@@ -69,7 +99,7 @@ internal class WalletRootHostState(initiallyActivated: Boolean) {
         activeTransitionRunning = transitionRunning
         if (!isProxyMounted) {
             if (hasDetachedProxy) {
-                rippleResetGeneration += 1
+                indicationResetBus.resetActive()
                 hasDetachedProxy = false
             }
             isProxyMounted = true
@@ -97,6 +127,7 @@ internal class WalletRootHostState(initiallyActivated: Boolean) {
         slideOffsetX = 0f
         activeTransitionRunning = null
         activeContentKey = null
+        indicationResetBus.resetActive()
         onVisibilityChanged?.invoke(false)
     }
 
@@ -193,9 +224,9 @@ internal fun PersistentWalletRoot(
             }
         }
         val currentIndication = LocalIndication.current
-        val rootIndication = remember(currentIndication, hostState.rippleResetGeneration) {
+        val rootIndication = remember(currentIndication, hostState.indicationResetBus) {
             if (currentIndication is IndicationNodeFactory) {
-                ResettableIndicationNodeFactory(currentIndication, hostState.rippleResetGeneration)
+                ResettableIndicationNodeFactory(currentIndication, hostState.indicationResetBus)
             } else {
                 currentIndication
             }
@@ -244,10 +275,54 @@ internal fun PersistentWalletRoot(
     }
 }
 
-private class ResettableIndicationNodeFactory(private val delegate: IndicationNodeFactory, private val generation: Int) : IndicationNodeFactory {
-    override fun create(interactionSource: InteractionSource): DelegatableNode = delegate.create(interactionSource)
+private class ResettableIndicationNodeFactory(
+    private val delegate: IndicationNodeFactory,
+    private val resetBus: IndicationResetBus,
+) : IndicationNodeFactory {
+    override fun create(interactionSource: InteractionSource): DelegatableNode = ResettableIndicationNode(delegate, interactionSource, resetBus)
 
-    override fun equals(other: Any?): Boolean = this === other || (other is ResettableIndicationNodeFactory && delegate == other.delegate && generation == other.generation)
+    override fun equals(other: Any?): Boolean = this === other || (other is ResettableIndicationNodeFactory && delegate == other.delegate && resetBus === other.resetBus)
 
-    override fun hashCode(): Int = 31 * delegate.hashCode() + generation
+    override fun hashCode(): Int = 31 * delegate.hashCode() + System.identityHashCode(resetBus)
+}
+
+private class ResettableIndicationNode(
+    private val factory: IndicationNodeFactory,
+    interactionSource: InteractionSource,
+    private val resetBus: IndicationResetBus,
+) : DelegatingNode(),
+    ResettableIndicationHandle {
+    private val trackedInteractionSource = PressTrackingInteractionSource(interactionSource) {
+        if (isAttached) {
+            resetBus.markActive(this)
+        }
+    }
+    private var activeNode: DelegatableNode? = null
+
+    override fun onAttach() {
+        activeNode = delegate(factory.create(trackedInteractionSource))
+    }
+
+    override fun onDetach() {
+        resetBus.unregister(this)
+        activeNode?.let(::undelegate)
+        activeNode = null
+    }
+
+    override fun reset() {
+        if (!isAttached) return
+        activeNode?.let(::undelegate)
+        activeNode = delegate(factory.create(trackedInteractionSource))
+    }
+}
+
+private class PressTrackingInteractionSource(
+    private val delegate: InteractionSource,
+    private val onPressed: () -> Unit,
+) : InteractionSource {
+    override val interactions: Flow<Interaction> = delegate.interactions.onEach { interaction ->
+        if (interaction is PressInteraction.Press) {
+            onPressed()
+        }
+    }
 }

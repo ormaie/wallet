@@ -10,9 +10,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.gemwallet.android.model.text
+import androidx.compose.ui.platform.LocalConfiguration
 import com.gemwallet.android.ui.components.NumericText
 import com.gemwallet.android.ui.style.color
 import com.gemwallet.android.ui.theme.paddingDefault
@@ -21,11 +22,18 @@ import uniffi.gemstone.GemChartHeader
 
 @Composable
 fun ChartHeader(header: GemChartHeader, date: String?, modifier: Modifier = Modifier) {
+    val locale = LocalConfiguration.current.locales[0]
+    val formatted = remember(header, locale) { header.format(locale) }
+    ChartHeader(formatted = formatted, date = date, modifier = modifier)
+}
+
+@Composable
+internal fun ChartHeader(formatted: FormattedChartHeader, date: String?, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val secondaryValue = header.secondaryValue?.text()
+        val secondaryValue = formatted.secondaryValueText
         secondaryValue?.let { headerValue ->
             NumericText(
                 text = headerValue,
@@ -40,16 +48,18 @@ fun ChartHeader(header: GemChartHeader, date: String?, modifier: Modifier = Modi
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             NumericText(
-                text = header.value.text(),
+                text = formatted.valueText,
                 style = changeStyle,
-                color = header.value.tone.color(),
+                color = formatted.valueTone.color(),
             )
-            header.change?.let { change ->
+            val changeText = formatted.changeText
+            val changeTone = formatted.changeTone
+            if (changeText != null && changeTone != null) {
                 Spacer(modifier = Modifier.width(space8))
                 NumericText(
-                    text = change.text(),
+                    text = changeText,
                     style = if (secondaryValue != null) changeStyle else MaterialTheme.typography.bodyLarge,
-                    color = change.tone.color(),
+                    color = changeTone.color(),
                 )
             }
         }

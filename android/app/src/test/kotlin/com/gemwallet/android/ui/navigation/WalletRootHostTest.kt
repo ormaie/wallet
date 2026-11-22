@@ -103,28 +103,48 @@ class WalletRootHostTest {
     }
 
     @Test
-    fun walletRootHostState_incrementsRippleResetGenerationOnReturnAndReattach() {
+    fun walletRootHostState_resetsOnlyActiveIndicationsOnceOnReturnAndReattach() {
         val state = WalletRootHostState(initiallyActivated = true)
         val transition = { false }
+        var firstResets = 0
+        var secondResets = 0
+        val firstHandle = object : ResettableIndicationHandle {
+            override fun reset() {
+                firstResets += 1
+            }
+        }
+        val secondHandle = object : ResettableIndicationHandle {
+            override fun reset() {
+                secondResets += 1
+            }
+        }
 
         state.attachProxy(transition)
         state.updateRootTop(true)
-        assertEquals(0, state.rippleResetGeneration)
+        state.indicationResetBus.markActive(firstHandle)
+        assertEquals(1, state.indicationResetBus.activeCount)
 
         state.updateRootTop(false)
-        assertEquals(0, state.rippleResetGeneration)
+        assertEquals(0, firstResets)
+        assertEquals(0, secondResets)
 
         state.updateRootTop(true)
-        assertEquals(1, state.rippleResetGeneration)
+        assertEquals(1, firstResets)
+        assertEquals(0, secondResets)
+        assertEquals(0, state.indicationResetBus.activeCount)
 
+        state.indicationResetBus.markActive(firstHandle)
+        state.indicationResetBus.markActive(secondHandle)
+        state.indicationResetBus.unregister(secondHandle)
         state.updateRootTop(false)
         state.detachProxy(transition)
-        assertEquals(1, state.rippleResetGeneration)
 
         state.attachProxy(transition)
-        assertEquals(2, state.rippleResetGeneration)
+        assertEquals(2, firstResets)
+        assertEquals(0, secondResets)
 
         state.updateRootTop(true)
-        assertEquals(3, state.rippleResetGeneration)
+        assertEquals(2, firstResets)
+        assertEquals(0, secondResets)
     }
 }

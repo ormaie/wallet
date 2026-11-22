@@ -3,6 +3,7 @@ package com.gemwallet.android.ui.components.chart
 import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -12,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -23,6 +25,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -101,14 +105,52 @@ private object CandlestickMetrics {
     const val MARKER_GLYPH_INSET_RATIO = 0.25f
 }
 
+private class CandleStaticLayerCache {
+    var renderKey: Any? = null
+    var recordedSize: Size = Size.Unspecified
+}
+
 @Composable
-fun GemCandlestickChart(chart: GemCandleChart, onZoom: (Float, Float) -> Unit, onPan: (Float) -> Unit, modifier: Modifier = Modifier, selectedIndex: Int? = null, onSelectionChanged: (Int?) -> Unit = {}) {
+fun GemCandlestickChart(
+    chart: GemCandleChart,
+    onZoom: (Float, Float) -> Unit,
+    onPan: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    selectedIndex: Int? = null,
+    onSelectionChanged: (Int?) -> Unit = {},
+) {
+    val currentSelection by rememberUpdatedState(selectedIndex)
+    val cache = remember(chart) { CandleChartSelectionCache(chart) }
+    GemCandlestickChart(
+        chart = chart,
+        onZoom = onZoom,
+        onPan = onPan,
+        selectedIndexProvider = { currentSelection },
+        indexAt = cache::indexAt,
+        modifier = modifier,
+        onSelectionChanged = onSelectionChanged,
+    )
+}
+
+@Composable
+internal fun GemCandlestickChart(
+    chart: GemCandleChart,
+    onZoom: (Float, Float) -> Unit,
+    onPan: (Float) -> Unit,
+    selectedIndexProvider: () -> Int?,
+    indexAt: (Float) -> Int?,
+    modifier: Modifier = Modifier,
+    selection: ChartSelection = rememberChartSelection(selectedIndexProvider),
+    onSelectionChanged: (Int?) -> Unit = {},
+) {
     if (chart.candles.isEmpty()) return
 
     val layout = chart.layout
     val context = LocalContext.current
     val lineLabels = remember(chart) { layout.lines.map { it.label.string(context) } }
     val timeLabels = remember(chart) { chartTimeLabels(chart.xTicks, ZoneId.systemDefault(), Locale.getDefault()) }
+    val levelLabels = remember(layout.levels) { layout.levels.map { it.text() } }
+    val currentPriceLabel = remember(layout.currentPrice) { layout.currentPrice.text() }
     val density = LocalDensity.current
     val textMeasurer = rememberTextMeasurer(cacheSize = CandlestickMetrics.TEXT_CACHE_SIZE)
 
@@ -119,13 +161,26 @@ fun GemCandlestickChart(chart: GemCandleChart, onZoom: (Float, Float) -> Unit, o
     val gridGuidelineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.13f)
     val volumeColor = MaterialTheme.colorScheme.onSurface.copy(alpha = CandlestickMetrics.VOLUME_ALPHA)
     val selectionAccentColor = MaterialTheme.colorScheme.primary
-    val markerColors = PerpetualDirection.entries.associateWith { it.toPrimitives().color() }
+    val longColor = PerpetualDirection.LONG.toPrimitives().color()
+    val shortColor = PerpetualDirection.SHORT.toPrimitives().color()
+    val markerColors = remember(longColor, shortColor) {
+        mapOf(PerpetualDirection.LONG to longColor, PerpetualDirection.SHORT to shortColor)
+    }
     val markerRingColor = MaterialTheme.colorScheme.surface
     val currentPriceLineColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
     val referenceColorByRole = referenceColors()
 
     val gridDashEffect = remember(density) {
         val dashPx = with(density) { space4.toPx() }
+        PathEffect.dashPathEffect(floatArrayOf(dashPx, dashPx))
+    }
+    val referenceLineDashEffect = remember(density) {
+        with(density) {
+            PathEffect.dashPathEffect(floatArrayOf(CandlestickMetrics.referenceLineDash.toPx(), CandlestickMetrics.referenceLineGap.toPx()))
+        }
+    }
+    val selectionDashEffect = remember(density) {
+        val dashPx = with(density) { CandlestickMetrics.selectionDashLength.toPx() }
         PathEffect.dashPathEffect(floatArrayOf(dashPx, dashPx))
     }
     val axisLabelStyle = remember(axisLabelColor) {
@@ -142,11 +197,8 @@ fun GemCandlestickChart(chart: GemCandleChart, onZoom: (Float, Float) -> Unit, o
     val maxWickWidthPx = with(density) { CandlestickMetrics.maxWickWidth.toPx() }
     val timeLabelGapPx = with(density) { CandlestickMetrics.timeLabelGap.toPx() }
     val referenceLineThicknessPx = with(density) { CandlestickMetrics.referenceLineThickness.toPx() }
-    val referenceLineDashPx = with(density) { CandlestickMetrics.referenceLineDash.toPx() }
-    val referenceLineGapPx = with(density) { CandlestickMetrics.referenceLineGap.toPx() }
     val labelPaddingPx = with(density) { CandlestickMetrics.labelPadding.toPx() }
     val selectionLineWidthPx = with(density) { CandlestickMetrics.selectionLineWidth.toPx() }
-    val selectionDashLengthPx = with(density) { CandlestickMetrics.selectionDashLength.toPx() }
     val selectionDotOuterRadiusPx = with(density) { CandlestickMetrics.selectionDotOuterRadius.toPx() }
     val selectionDotBorderPx = with(density) { CandlestickMetrics.selectionDotBorderWidth.toPx() }
     val currentPriceBadgeHorizontalPaddingPx = with(density) { CandlestickMetrics.currentPriceBadgeHorizontalPadding.toPx() }
@@ -161,17 +213,23 @@ fun GemCandlestickChart(chart: GemCandleChart, onZoom: (Float, Float) -> Unit, o
     val topPaddingPx = with(density) { CandlestickMetrics.topPadding.toPx() }
     val bottomPaddingPx = with(density) { CandlestickMetrics.bottomPadding.toPx() }
     val leftPaddingPx = with(density) { CandlestickMetrics.leftPadding.toPx() }
-    val priceTextWidthPx = remember(layout.levels, layout.currentPrice, axisLabelStyle, density) {
-        val levelWidths = layout.levels.map { textMeasurer.measure(it.text(), axisLabelStyle).size.width }
-        (levelWidths + textMeasurer.measure(layout.currentPrice.text(), whiteLabelStyle).size.width).max().toFloat()
+    val priceTextWidthPx = remember(levelLabels, currentPriceLabel, axisLabelStyle, density) {
+        var maxWidth = textMeasurer.measure(currentPriceLabel, whiteLabelStyle).size.width
+        for (i in levelLabels.indices) {
+            val width = textMeasurer.measure(levelLabels[i], axisLabelStyle).size.width
+            if (width > maxWidth) maxWidth = width
+        }
+        maxWidth.toFloat()
     }
     val rightAxisWidthPx = labelPaddingPx + priceTextWidthPx + with(density) { CandlestickMetrics.rightPadding.toPx() }
     val volumeBandGapPx = with(density) { CandlestickMetrics.volumeBandGap.toPx() }
 
     var chartSize by remember { mutableStateOf(IntSize.Zero) }
-    val selection = rememberChartSelection(selectedIndex)
     val priceRange = rememberChartRange(layout.priceLow.toFloat(), layout.priceHigh.toFloat())
     val volumeRange = rememberChartRange(0f, layout.volumeHigh.toFloat())
+    val staticLayer = rememberGraphicsLayer()
+    val layerCache = remember { CandleStaticLayerCache() }
+    val markerPath = remember { Path() }
 
     Box(modifier = modifier.fillMaxSize().onSizeChanged { chartSize = it }) {
         if (chartSize.width <= 0 || chartSize.height <= 0) return@Box
@@ -179,15 +237,60 @@ fun GemCandlestickChart(chart: GemCandleChart, onZoom: (Float, Float) -> Unit, o
         val frame = Rect(leftPaddingPx, topPaddingPx, chartSize.width - rightAxisWidthPx, chartSize.height - bottomPaddingPx)
         if (frame.width <= 0 || frame.height <= 0) return@Box
         val priceViewport = priceRange.viewport ?: return@Box
-        val plot = CandlestickPlot(chart, frame, volumeBandGapPx, minWickWidthPx, maxWickWidthPx, markerSizePx, markerGapPx, priceViewport, volumeRange.viewport)
+        val volumeViewport = volumeRange.viewport
+        val plot = remember(
+            chart,
+            frame,
+            priceViewport,
+            volumeViewport,
+            volumeBandGapPx,
+            minWickWidthPx,
+            maxWickWidthPx,
+            markerSizePx,
+            markerGapPx,
+        ) {
+            CandlestickPlot(chart, frame, volumeBandGapPx, minWickWidthPx, maxWickWidthPx, markerSizePx, markerGapPx, priceViewport, volumeViewport)
+        }
 
-        val candleIndex by rememberUpdatedState { fraction: Float -> chart.indexAt(fraction.toDouble()) }
+        val candleIndex by rememberUpdatedState(indexAt)
         val selectionChanged by rememberUpdatedState(onSelectionChanged)
         val zoom by rememberUpdatedState(onZoom)
         val pan by rememberUpdatedState(onPan)
         val zoomed by rememberUpdatedState(chart.isZoomed)
 
-        Canvas(
+        val renderKey = remember(
+            plot,
+            upColor,
+            downColor,
+            flatColor,
+            axisLabelColor,
+            gridGuidelineColor,
+            volumeColor,
+            markerRingColor,
+            currentPriceLineColor,
+            lineLabels,
+            timeLabels,
+            levelLabels,
+            currentPriceLabel,
+        ) {
+            listOf(
+                plot,
+                upColor,
+                downColor,
+                flatColor,
+                axisLabelColor,
+                gridGuidelineColor,
+                volumeColor,
+                markerRingColor,
+                currentPriceLineColor,
+                lineLabels,
+                timeLabels,
+                levelLabels,
+                currentPriceLabel,
+            )
+        }
+
+        Spacer(
             modifier = Modifier
                 .fillMaxSize()
                 .chartGestures(
@@ -198,55 +301,75 @@ fun GemCandlestickChart(chart: GemCandleChart, onZoom: (Float, Float) -> Unit, o
                     onSelectionChanged = { selectionChanged(it) },
                     onZoom = { magnification, anchor -> zoom(magnification, anchor) },
                     onPan = { pan(it) },
-                ),
-        ) {
-            drawYAxis(layout.levels, plot, gridGuidelineColor, gridDashEffect, textMeasurer, axisLabelStyle, labelPaddingPx)
-            drawTimeAxis(chart.xTicks.map { plot.x(it.date) }, timeLabels, plot, gridGuidelineColor, gridDashEffect, textMeasurer, timeLabelStyle, timeLabelGapPx)
-            drawCurrentPriceLine(layout.currentPrice.value, plot, currentPriceLineColor, currentPriceDashEffect)
-            clipRect(left = frame.left, top = 0f, right = frame.right, bottom = size.height) {
-                drawVolumes(chart.candles, plot, volumeColor)
-                drawCandles(chart.candles, layout.tones, plot, upColor, downColor, flatColor)
-            }
-            drawReferenceLines(
-                referenceLines = layout.lines,
-                labels = lineLabels,
-                referenceColorByRole = referenceColorByRole,
-                plot = plot,
-                lineThicknessPx = referenceLineThicknessPx,
-                lineDashEffect = PathEffect.dashPathEffect(floatArrayOf(referenceLineDashPx, referenceLineGapPx)),
-                labelStyle = referenceLabelStyle,
-                labelGapPx = referenceLabelGapPx,
-                badgeHorizontalPaddingPx = referenceBadgeHorizontalPaddingPx,
-                badgeVerticalPaddingPx = referenceBadgeVerticalPaddingPx,
-                badgeCornerRadiusPx = badgeCornerRadiusPx,
-                textMeasurer = textMeasurer,
-            )
-            chart.markers.forEach { marker ->
-                drawMarker(plot.marker(marker), marker.direction, markerColors.getValue(marker.direction), markerRingColor, markerRingWidthPx)
-            }
-            drawCurrentPriceBadge(
-                price = layout.currentPrice.value,
-                tone = layout.currentTone,
-                priceLabel = layout.currentPrice.text(),
-                plot = plot,
-                labelPaddingPx = labelPaddingPx,
-                badgeHorizontalPaddingPx = currentPriceBadgeHorizontalPaddingPx,
-                badgeVerticalPaddingPx = currentPriceBadgeVerticalPaddingPx,
-                badgeCornerRadiusPx = badgeCornerRadiusPx,
-                labelStyle = whiteLabelStyle,
-                upColor = upColor,
-                downColor = downColor,
-                flatColor = flatColor,
-                textMeasurer = textMeasurer,
-            )
+                )
+                .drawBehind {
+                    if (size.width <= 0f || size.height <= 0f) return@drawBehind
+                    if (layerCache.renderKey != renderKey || layerCache.recordedSize != size) {
+                        layerCache.renderKey = renderKey
+                        layerCache.recordedSize = size
+                        staticLayer.record {
+                            drawYAxis(layout.levels, levelLabels, plot, gridGuidelineColor, gridDashEffect, textMeasurer, axisLabelStyle, labelPaddingPx)
+                            drawTimeAxis(chart.xTicks, timeLabels, plot, gridGuidelineColor, gridDashEffect, textMeasurer, timeLabelStyle, timeLabelGapPx)
+                            drawCurrentPriceLine(layout.currentPrice.value, plot, currentPriceLineColor, currentPriceDashEffect)
+                            clipRect(left = frame.left, top = 0f, right = frame.right, bottom = size.height) {
+                                drawVolumes(chart.candles, plot, volumeColor)
+                                drawCandles(chart.candles, layout.tones, plot, upColor, downColor, flatColor)
+                            }
+                            drawReferenceLines(
+                                referenceLines = layout.lines,
+                                labels = lineLabels,
+                                referenceColorByRole = referenceColorByRole,
+                                plot = plot,
+                                lineThicknessPx = referenceLineThicknessPx,
+                                lineDashEffect = referenceLineDashEffect,
+                                labelStyle = referenceLabelStyle,
+                                labelGapPx = referenceLabelGapPx,
+                                badgeHorizontalPaddingPx = referenceBadgeHorizontalPaddingPx,
+                                badgeVerticalPaddingPx = referenceBadgeVerticalPaddingPx,
+                                badgeCornerRadiusPx = badgeCornerRadiusPx,
+                                textMeasurer = textMeasurer,
+                            )
+                            for (i in chart.markers.indices) {
+                                val marker = chart.markers[i]
+                                drawMarker(
+                                    bounds = plot.marker(marker),
+                                    direction = marker.direction,
+                                    color = markerColors.getValue(marker.direction),
+                                    ringColor = markerRingColor,
+                                    ringWidth = markerRingWidthPx,
+                                    trianglePath = markerPath,
+                                )
+                            }
+                            drawCurrentPriceBadge(
+                                price = layout.currentPrice.value,
+                                tone = layout.currentTone,
+                                priceLabel = currentPriceLabel,
+                                plot = plot,
+                                labelPaddingPx = labelPaddingPx,
+                                badgeHorizontalPaddingPx = currentPriceBadgeHorizontalPaddingPx,
+                                badgeVerticalPaddingPx = currentPriceBadgeVerticalPaddingPx,
+                                badgeCornerRadiusPx = badgeCornerRadiusPx,
+                                labelStyle = whiteLabelStyle,
+                                upColor = upColor,
+                                downColor = downColor,
+                                flatColor = flatColor,
+                                textMeasurer = textMeasurer,
+                            )
+                        }
+                    }
+                    drawLayer(staticLayer)
+                },
+        )
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
             drawSelection(
-                selectedIndex = selectedIndex,
+                selectedIndex = selectedIndexProvider(),
                 selectionAlpha = selection.alpha,
                 candles = chart.candles,
                 plot = plot,
                 accentColor = selectionAccentColor,
                 lineWidthPx = selectionLineWidthPx,
-                dashLengthPx = selectionDashLengthPx,
+                dashEffect = selectionDashEffect,
                 dotOuterRadiusPx = selectionDotOuterRadiusPx,
                 dotBorderPx = selectionDotBorderPx,
             )
@@ -256,8 +379,20 @@ fun GemCandlestickChart(chart: GemCandleChart, onZoom: (Float, Float) -> Unit, o
 
 @Composable
 private fun referenceColors(): (GemPerpetualChartLineKind) -> Color {
-    val colors = GemPerpetualChartLineKind.entries.associateWith { it.color() }
-    return { role -> colors.getValue(role) }
+    val entry = GemPerpetualChartLineKind.ENTRY.color()
+    val takeProfit = GemPerpetualChartLineKind.TAKE_PROFIT.color()
+    val stopLoss = GemPerpetualChartLineKind.STOP_LOSS.color()
+    val liquidation = GemPerpetualChartLineKind.LIQUIDATION.color()
+    return remember(entry, takeProfit, stopLoss, liquidation) {
+        { role ->
+            when (role) {
+                GemPerpetualChartLineKind.ENTRY -> entry
+                GemPerpetualChartLineKind.TAKE_PROFIT -> takeProfit
+                GemPerpetualChartLineKind.STOP_LOSS -> stopLoss
+                GemPerpetualChartLineKind.LIQUIDATION -> liquidation
+            }
+        }
+    }
 }
 
 private fun candleColor(tone: GemValueTone, up: Color, down: Color, flat: Color): Color = when (tone) {
@@ -271,9 +406,19 @@ private fun candleColor(tone: GemValueTone, up: Color, down: Color, flat: Color)
     -> flat
 }
 
-private fun DrawScope.drawYAxis(ticks: List<GemFormattedNumber>, plot: CandlestickPlot, guidelineColor: Color, guidelineDash: PathEffect, textMeasurer: TextMeasurer, style: TextStyle, labelPaddingPx: Float) {
-    ticks.forEach { tick ->
-        val y = plot.y(tick.value)
+private fun DrawScope.drawYAxis(
+    ticks: List<GemFormattedNumber>,
+    labels: List<String>,
+    plot: CandlestickPlot,
+    guidelineColor: Color,
+    guidelineDash: PathEffect,
+    textMeasurer: TextMeasurer,
+    style: TextStyle,
+    labelPaddingPx: Float,
+) {
+    val count = min(ticks.size, labels.size)
+    for (i in 0 until count) {
+        val y = plot.y(ticks[i].value)
         drawLine(
             color = guidelineColor,
             start = Offset(plot.frame.left, y),
@@ -281,13 +426,24 @@ private fun DrawScope.drawYAxis(ticks: List<GemFormattedNumber>, plot: Candlesti
             strokeWidth = 1f,
             pathEffect = guidelineDash,
         )
-        val measured = textMeasurer.measure(tick.text(), style)
+        val measured = textMeasurer.measure(labels[i], style)
         drawText(textLayoutResult = measured, topLeft = Offset(plot.frame.right + labelPaddingPx, y - measured.size.height / 2f))
     }
 }
 
-private fun DrawScope.drawTimeAxis(positions: List<Float>, labels: List<String>, plot: CandlestickPlot, color: Color, dash: PathEffect, textMeasurer: TextMeasurer, style: TextStyle, labelGapPx: Float) {
-    positions.zip(labels).forEach { (x, label) ->
+private fun DrawScope.drawTimeAxis(
+    ticks: List<GemCandleTick>,
+    labels: List<String>,
+    plot: CandlestickPlot,
+    color: Color,
+    dash: PathEffect,
+    textMeasurer: TextMeasurer,
+    style: TextStyle,
+    labelGapPx: Float,
+) {
+    val count = min(ticks.size, labels.size)
+    for (i in 0 until count) {
+        val x = plot.x(ticks[i].date)
         drawLine(
             color = color,
             start = Offset(x, plot.frame.top),
@@ -295,7 +451,7 @@ private fun DrawScope.drawTimeAxis(positions: List<Float>, labels: List<String>,
             strokeWidth = 1f,
             pathEffect = dash,
         )
-        val measured = textMeasurer.measure(label, style)
+        val measured = textMeasurer.measure(labels[i], style)
         drawText(textLayoutResult = measured, topLeft = Offset(x - measured.size.width / 2f, plot.frame.bottom + labelGapPx))
     }
 }
@@ -313,19 +469,26 @@ private fun DrawScope.drawCurrentPriceLine(price: Double, plot: CandlestickPlot,
 }
 
 private fun DrawScope.drawVolumes(candles: List<ChartCandleStick>, plot: CandlestickPlot, color: Color) {
-    candles.filter { it.volume > 0.0 }.mapNotNull(plot::volume).forEach { bar ->
-        val corner = min(plot.bodyWidth * CandlestickMetrics.BODY_CORNER_RATIO, bar.height / 2f)
+    val bodyCorner = plot.bodyWidth * CandlestickMetrics.BODY_CORNER_RATIO
+    for (i in candles.indices) {
+        val candle = candles[i]
+        if (candle.volume <= 0.0) continue
+        val bar = plot.volume(candle) ?: continue
+        val corner = min(bodyCorner, bar.height / 2f)
         drawRoundRect(color = color, topLeft = bar.topLeft, size = bar.size, cornerRadius = CornerRadius(corner, corner))
     }
 }
 
 private fun DrawScope.drawCandles(candles: List<ChartCandleStick>, tones: List<GemValueTone>, plot: CandlestickPlot, upColor: Color, downColor: Color, flatColor: Color) {
-    candles.zip(tones).forEach { (candle, tone) ->
-        val color = candleColor(tone, upColor, downColor, flatColor)
+    val count = min(candles.size, tones.size)
+    val bodyCorner = plot.bodyWidth * CandlestickMetrics.BODY_CORNER_RATIO
+    for (i in 0 until count) {
+        val candle = candles[i]
+        val color = candleColor(tones[i], upColor, downColor, flatColor)
         val wick = plot.wick(candle)
         drawLine(color = color, start = wick.topCenter, end = wick.bottomCenter, strokeWidth = wick.width, cap = StrokeCap.Round)
         val body = plot.body(candle)
-        val corner = min(plot.bodyWidth * CandlestickMetrics.BODY_CORNER_RATIO, body.height / 2f)
+        val corner = min(bodyCorner, body.height / 2f)
         drawRoundRect(color = color, topLeft = body.topLeft, size = body.size, cornerRadius = CornerRadius(corner, corner))
     }
 }
@@ -344,11 +507,22 @@ private fun DrawScope.drawReferenceLines(
     badgeCornerRadiusPx: Float,
     textMeasurer: TextMeasurer,
 ) {
-    val visible = referenceLines.zip(labels).mapNotNull { (line, label) ->
-        val y = plot.y(line.price.value)
-        if (y !in plot.frame.top..plot.priceBottom) null else Triple(line, label, y)
+    val count = min(referenceLines.size, labels.size)
+    if (count == 0) return
+    val visibleYs = FloatArray(count)
+    val visibleIndices = IntArray(count)
+    var visibleCount = 0
+    for (i in 0 until count) {
+        val y = plot.y(referenceLines[i].price.value)
+        if (y in plot.frame.top..plot.priceBottom) {
+            visibleIndices[visibleCount] = i
+            visibleYs[visibleCount] = y
+            visibleCount += 1
+        }
     }
-    visible.forEach { (line, _, y) ->
+    for (v in 0 until visibleCount) {
+        val line = referenceLines[visibleIndices[v]]
+        val y = visibleYs[v]
         drawLine(
             color = referenceColorByRole(line.kind).copy(alpha = alpha60),
             start = Offset(plot.frame.left, y),
@@ -358,9 +532,13 @@ private fun DrawScope.drawReferenceLines(
         )
     }
     var previousBadgeEndX = plot.frame.left
-    visible.forEach { (line, label, y) ->
+    for (v in 0 until visibleCount) {
+        val idx = visibleIndices[v]
+        val line = referenceLines[idx]
+        val label = labels[idx]
+        val y = visibleYs[v]
         val anchorX = if (line.overlapLevel == 0) plot.frame.left else previousBadgeEndX + labelGapPx
-        drawBadgeLabel(
+        val badgeWidth = drawBadgeLabel(
             textMeasurer = textMeasurer,
             text = label,
             textStyle = labelStyle,
@@ -371,7 +549,7 @@ private fun DrawScope.drawReferenceLines(
             verticalPaddingPx = badgeVerticalPaddingPx,
             cornerRadiusPx = badgeCornerRadiusPx,
         )
-        previousBadgeEndX = anchorX + textMeasurer.measure(label, labelStyle).size.width + 2f * badgeHorizontalPaddingPx
+        previousBadgeEndX = anchorX + badgeWidth
     }
 }
 
@@ -405,7 +583,14 @@ private fun DrawScope.drawCurrentPriceBadge(
     )
 }
 
-private fun DrawScope.drawMarker(bounds: Rect, direction: PerpetualDirection, color: Color, ringColor: Color, ringWidth: Float) {
+private fun DrawScope.drawMarker(
+    bounds: Rect,
+    direction: PerpetualDirection,
+    color: Color,
+    ringColor: Color,
+    ringWidth: Float,
+    trianglePath: Path,
+) {
     val glyph = bounds.deflate(bounds.width * CandlestickMetrics.MARKER_GLYPH_INSET_RATIO)
     val (tipY, baseY) = when (direction) {
         PerpetualDirection.LONG -> glyph.top to glyph.bottom
@@ -413,13 +598,12 @@ private fun DrawScope.drawMarker(bounds: Rect, direction: PerpetualDirection, co
     }
     drawCircle(color = ringColor, radius = bounds.width / 2f + ringWidth, center = bounds.center)
     drawCircle(color = color, radius = bounds.width / 2f, center = bounds.center)
-    val triangle = Path().apply {
-        moveTo(glyph.center.x, tipY)
-        lineTo(glyph.left, baseY)
-        lineTo(glyph.right, baseY)
-        close()
-    }
-    drawPath(triangle, ringColor)
+    trianglePath.reset()
+    trianglePath.moveTo(glyph.center.x, tipY)
+    trianglePath.lineTo(glyph.left, baseY)
+    trianglePath.lineTo(glyph.right, baseY)
+    trianglePath.close()
+    drawPath(trianglePath, ringColor)
 }
 
 private fun DrawScope.drawSelection(
@@ -429,19 +613,20 @@ private fun DrawScope.drawSelection(
     plot: CandlestickPlot,
     accentColor: Color,
     lineWidthPx: Float,
-    dashLengthPx: Float,
+    dashEffect: PathEffect,
     dotOuterRadiusPx: Float,
     dotBorderPx: Float,
 ) {
     if (selectedIndex == null || selectedIndex !in candles.indices || selectionAlpha <= 0f) return
-    val centerX = plot.x(candles[selectedIndex].date)
-    val closeY = plot.y(candles[selectedIndex].close)
+    val candle = candles[selectedIndex]
+    val centerX = plot.x(candle.date)
+    val closeY = plot.y(candle.close)
     drawLine(
         color = accentColor.copy(alpha = CandlestickMetrics.SELECTION_LINE_ALPHA * selectionAlpha),
         start = Offset(centerX, plot.frame.top),
         end = Offset(centerX, plot.frame.bottom),
         strokeWidth = lineWidthPx,
-        pathEffect = PathEffect.dashPathEffect(floatArrayOf(dashLengthPx, dashLengthPx)),
+        pathEffect = dashEffect,
     )
     val ringRadius = dotOuterRadiusPx - dotBorderPx / 2f
     drawCircle(
@@ -457,7 +642,17 @@ private fun DrawScope.drawSelection(
     )
 }
 
-private fun DrawScope.drawBadgeLabel(textMeasurer: TextMeasurer, text: String, textStyle: TextStyle, backgroundColor: Color, anchorX: Float, anchorY: Float, horizontalPaddingPx: Float, verticalPaddingPx: Float, cornerRadiusPx: Float) {
+private fun DrawScope.drawBadgeLabel(
+    textMeasurer: TextMeasurer,
+    text: String,
+    textStyle: TextStyle,
+    backgroundColor: Color,
+    anchorX: Float,
+    anchorY: Float,
+    horizontalPaddingPx: Float,
+    verticalPaddingPx: Float,
+    cornerRadiusPx: Float,
+): Float {
     val measured = textMeasurer.measure(text, textStyle)
     val badgeWidth = measured.size.width + horizontalPaddingPx * 2f
     val badgeHeight = measured.size.height + verticalPaddingPx * 2f
@@ -473,6 +668,7 @@ private fun DrawScope.drawBadgeLabel(textMeasurer: TextMeasurer, text: String, t
         textLayoutResult = measured,
         topLeft = Offset(anchorX + horizontalPaddingPx, topY + verticalPaddingPx),
     )
+    return badgeWidth
 }
 
 internal fun chartTimeLabels(ticks: List<GemCandleTick>, zone: ZoneId, locale: Locale): List<String> {

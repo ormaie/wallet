@@ -7,7 +7,6 @@ import android.graphics.Shader
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -106,7 +105,6 @@ import com.gemwallet.android.ui.LocalNavTransitionRunning
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.ConnectionStatusBannerHost
 import com.gemwallet.android.ui.components.LocalConnectionBannerHandled
-import com.gemwallet.android.ui.components.animation.tabContentTransition
 import com.gemwallet.android.ui.icons.AppIcons
 import com.gemwallet.android.ui.models.actions.SettingsAction
 import com.gemwallet.android.ui.navigation.WalletNavigator
@@ -183,6 +181,7 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
     val activitiesListState = rememberLazyListState()
     val settingsScrollState = rememberScrollState()
     val tabStateHolder = rememberSaveableStateHolder()
+    val tabHostState = remember { PersistentTabHostState(currentTab.value) }
     val coroutineScope = rememberCoroutineScope()
     val scrollTabToTop: (String) -> Unit = { route ->
         coroutineScope.launch {
@@ -269,6 +268,7 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                         scrollTabToTop(route)
                     } else {
                         haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                        tabHostState.selectTab(route, ::tabIndex)
                         currentTab.value = route
                     }
                 },
@@ -296,68 +296,73 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                     }
                 },
         ) {
+            val onWalletAction = remember<(WalletAction.Navigation) -> Unit>(navigator) {
+                { action ->
+                    when (action) {
+                        WalletAction.ShowWallets -> navigator.openWallets()
+                        WalletAction.Manage -> navigator.openAssetsManage()
+                        WalletAction.Scan -> isPresentingScanner = true
+                        WalletAction.Search -> navigator.openAssetsSearch()
+                        WalletAction.Send -> navigator.openRecipient()
+                        WalletAction.Receive -> navigator.openReceive()
+                        WalletAction.Buy -> navigator.openBuy()
+                        WalletAction.Swap -> navigator.openSwap()
+                        WalletAction.Portfolio -> navigator.openPortfolio()
+                        WalletAction.Perpetuals -> navigator.openPerpetuals()
+                        is WalletAction.OpenPerpetual -> navigator.openPerpetual(action.assetId)
+                        is WalletAction.OpenAsset -> navigator.openAsset(action.assetId)
+                        WalletAction.OpenCollections -> navigator.openCollections()
+                        is WalletAction.OpenNftCollection -> navigator.openCollection(action.collectionId)
+                        is WalletAction.OpenNftAsset -> navigator.openCollectible(action.assetId)
+                    }
+                }
+            }
+            val onSettingsAction = remember<(SettingsAction) -> Unit>(navigator) {
+                { action ->
+                    when (action) {
+                        SettingsAction.Wallets -> navigator.openWallets()
+                        SettingsAction.Security -> navigator.openSecurity()
+                        SettingsAction.Notifications -> navigator.openNotifications()
+                        SettingsAction.Preferences -> navigator.openPreferences()
+                        SettingsAction.Connections -> navigator.openConnections()
+                        SettingsAction.Support -> navigator.openSupport()
+                        SettingsAction.Rewards -> navigator.openRewards()
+                        SettingsAction.AboutUs -> navigator.openAboutUs()
+                        SettingsAction.Developer -> navigator.openDeveloper()
+                    }
+                }
+            }
             CompositionLocalProvider(LocalConnectionBannerHandled provides true) {
-                AnimatedContent(
-                    targetState = currentTab.value,
-                    transitionSpec = { tabContentTransition(::tabIndex) },
-                    label = "MainTabContent",
+                PersistentTabHost(
+                    hostState = tabHostState,
+                    selectedTab = currentTab.value,
+                    tabIndex = ::tabIndex,
+                    saveableStateHolder = tabStateHolder,
                 ) { tab ->
-                    tabStateHolder.SaveableStateProvider(tab) {
-                        when (tab) {
-                            WalletRoute -> WalletScreen(
-                                onAction = { action ->
-                                    when (action) {
-                                        WalletAction.ShowWallets -> navigator.openWallets()
-                                        WalletAction.Manage -> navigator.openAssetsManage()
-                                        WalletAction.Scan -> isPresentingScanner = true
-                                        WalletAction.Search -> navigator.openAssetsSearch()
-                                        WalletAction.Send -> navigator.openRecipient()
-                                        WalletAction.Receive -> navigator.openReceive()
-                                        WalletAction.Buy -> navigator.openBuy()
-                                        WalletAction.Swap -> navigator.openSwap()
-                                        WalletAction.Portfolio -> navigator.openPortfolio()
-                                        WalletAction.Perpetuals -> navigator.openPerpetuals()
-                                        is WalletAction.OpenPerpetual -> navigator.openPerpetual(action.assetId)
-                                        is WalletAction.OpenAsset -> navigator.openAsset(action.assetId)
-                                        WalletAction.OpenCollections -> navigator.openCollections()
-                                        is WalletAction.OpenNftCollection -> navigator.openCollection(action.collectionId)
-                                        is WalletAction.OpenNftAsset -> navigator.openCollectible(action.assetId)
-                                    }
-                                },
-                                onContentReady = onWalletContentReady,
-                                listState = assetsListState,
-                                bottomPadding = bottomPadding,
-                                viewModel = walletViewModel,
-                            )
+                    when (tab) {
+                        WalletRoute -> WalletScreen(
+                            onAction = onWalletAction,
+                            onContentReady = onWalletContentReady,
+                            listState = assetsListState,
+                            bottomPadding = bottomPadding,
+                            viewModel = walletViewModel,
+                        )
 
-                            TransactionsRoute -> TransactionsScreen(
-                                listState = activitiesListState,
-                                bottomPadding = bottomPadding,
-                                onTransaction = navigator::openTransaction,
-                                onBuy = navigator::openBuy,
-                                onReceive = navigator::openReceive,
-                                viewModel = transactionsViewModel,
-                            )
+                        TransactionsRoute -> TransactionsScreen(
+                            listState = activitiesListState,
+                            bottomPadding = bottomPadding,
+                            onTransaction = navigator::openTransaction,
+                            onBuy = navigator::openBuy,
+                            onReceive = navigator::openReceive,
+                            viewModel = transactionsViewModel,
+                        )
 
-                            else -> SettingsScreen(
-                                scrollState = settingsScrollState,
-                                bottomPadding = bottomPadding,
-                                viewModel = settingsViewModel,
-                                onAction = { action ->
-                                    when (action) {
-                                        SettingsAction.Wallets -> navigator.openWallets()
-                                        SettingsAction.Security -> navigator.openSecurity()
-                                        SettingsAction.Notifications -> navigator.openNotifications()
-                                        SettingsAction.Preferences -> navigator.openPreferences()
-                                        SettingsAction.Connections -> navigator.openConnections()
-                                        SettingsAction.Support -> navigator.openSupport()
-                                        SettingsAction.Rewards -> navigator.openRewards()
-                                        SettingsAction.AboutUs -> navigator.openAboutUs()
-                                        SettingsAction.Developer -> navigator.openDeveloper()
-                                    }
-                                },
-                            )
-                        }
+                        else -> SettingsScreen(
+                            scrollState = settingsScrollState,
+                            bottomPadding = bottomPadding,
+                            viewModel = settingsViewModel,
+                            onAction = onSettingsAction,
+                        )
                     }
                 }
             }
