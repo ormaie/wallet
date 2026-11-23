@@ -70,6 +70,7 @@ class ReceiveSceneCopyTest {
         val copiedLabel = composeRule.activity.getString(R.string.wallet_copied)
         val clipboard = composeRule.activity.getSystemService(ClipboardManager::class.java)
 
+        composeRule.onNodeWithTag("receive_qr_code").assertIsDisplayed().assertHasNoClickAction()
         composeRule.onNodeWithTag("main_action").assertIsDisplayed().assertTextEquals(copyLabel).performClick()
         passTime(0)
         assertEquals(address, clipboard.primaryClip?.getItemAt(0)?.text?.toString())

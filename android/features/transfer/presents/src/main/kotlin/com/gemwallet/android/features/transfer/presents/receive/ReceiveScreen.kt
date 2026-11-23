@@ -345,7 +345,6 @@ private fun ReceiveCard(
         ReceiveQrCode(
             address = address,
             imageSize = if (isCompactHeight) qrSizeCompact else qrSize,
-            onCopyClick = onCopyClick,
         )
         ReceiveAddress(
             address = address,
@@ -453,7 +452,7 @@ private fun ReceiveNetworkPill(chainRow: GemChainRow, onSelectNetwork: (() -> Un
 }
 
 @Composable
-private fun ReceiveQrCode(address: String, imageSize: Dp, onCopyClick: () -> Unit) {
+private fun ReceiveQrCode(address: String, imageSize: Dp) {
     Box(
         modifier = Modifier
             .widthIn(max = imageSize)
@@ -461,7 +460,7 @@ private fun ReceiveQrCode(address: String, imageSize: Dp, onCopyClick: () -> Uni
             .aspectRatio(1f)
             .clip(RoundedCornerShape(qrInnerCornerRadius))
             .background(Color.White)
-            .clickable(onClick = onCopyClick)
+            .testTag("receive_qr_code")
             .padding(space6),
         contentAlignment = Alignment.Center,
     ) {
@@ -472,7 +471,7 @@ private fun ReceiveQrCode(address: String, imageSize: Dp, onCopyClick: () -> Uni
             Image(
                 modifier = Modifier.fillMaxSize(),
                 painter = painter,
-                contentDescription = stringResource(R.string.wallet_copy_address),
+                contentDescription = null,
                 contentScale = ContentScale.FillBounds,
             )
         }
