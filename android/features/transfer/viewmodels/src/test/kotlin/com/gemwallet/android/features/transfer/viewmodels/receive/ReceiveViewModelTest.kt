@@ -30,6 +30,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import uniffi.gemstone.GemReceiveAssetState
@@ -59,15 +61,42 @@ class ReceiveViewModelTest {
         accounts = listOf(mockAccount(chain = Chain.Bitcoin, address = "bc1q"), mockAccount(chain = Chain.Ethereum, address = "0xabc")),
     )
 
-    private fun receiveModel(service: GemReceiveServiceInterface, assets: Map<com.wallet.core.primitives.AssetId, AssetData> = mapOf(bitcoin.id to mockAssetData(asset = bitcoin))): ReceiveViewModel {
+    private fun receiveModel(
+        service: GemReceiveServiceInterface,
+        assets: Map<com.wallet.core.primitives.AssetId, AssetData> = mapOf(bitcoin.id to mockAssetData(asset = bitcoin)),
+        cachedAssets: List<AssetData> = assets.values.toList(),
+    ): ReceiveViewModel {
         val assetQuery: AssetQueryOptional = mockk {
             every { this@mockk.invoke(wallet.id.id, any()) } answers { flowOf(assets[secondArg()]) }
         }
         val walletAssets: GetWalletAssets = mockk {
-            every { this@mockk.invoke() } returns MutableStateFlow(assets.values.toList())
+            every { this@mockk.invoke() } returns MutableStateFlow(cachedAssets)
         }
         val session: GetSession = mockk { every { this@mockk.invoke() } returns MutableStateFlow(mockSession(wallet = wallet)) }
         return ReceiveViewModel(bitcoin.id, assetQuery, walletAssets, service, session, dispatcher, mockk(relaxed = true)).also { models.add(it) }
+    }
+
+    @Test
+    fun `initial state derives networks and account synchronously from cached wallet asset`() = runTest(dispatcher) {
+        val source = mockAssetData(asset = bitcoin, associations = listOf(AssetAssociation(ethereum.id, AssetAssociationType.Bridged)))
+        val model = receiveModel(mockk(relaxed = true), assets = mapOf(bitcoin.id to source))
+
+        val initial = requireNotNull(model.uiState.value)
+        assertEquals("bc1q", initial.assetInfo.account.address)
+        assertTrue(initial.networks.showsSelector)
+        assertEquals(listOf(bitcoin.id.toIdentifier(), ethereum.id.toIdentifier()), initial.networks.networks.map { it.assetId })
+    }
+
+    @Test
+    fun `uncached asset waits and delivers asset and networks together in one emission`() = runTest(dispatcher) {
+        val source = mockAssetData(asset = bitcoin, associations = listOf(AssetAssociation(ethereum.id, AssetAssociationType.Bridged)))
+        val model = receiveModel(mockk(relaxed = true), assets = mapOf(bitcoin.id to source), cachedAssets = emptyList())
+
+        assertNull(model.uiState.value)
+        val loaded = requireNotNull(model.uiState.first { it != null })
+        assertEquals(bitcoin.id, loaded.assetInfo.asset.id)
+        assertTrue(loaded.networks.showsSelector)
+        assertEquals(listOf(bitcoin.id.toIdentifier(), ethereum.id.toIdentifier()), loaded.networks.networks.map { it.assetId })
     }
 
     @Test
@@ -78,7 +107,10 @@ class ReceiveViewModelTest {
         val source = mockAssetData(asset = bitcoin, associations = listOf(AssetAssociation(ethereum.id, AssetAssociationType.Bridged)))
         val model = receiveModel(service, assets = mapOf(bitcoin.id to source))
 
-        assertEquals(listOf(bitcoin.id.toIdentifier(), ethereum.id.toIdentifier()), model.networks.first { it.showsSelector }.networks.map { it.assetId })
+        assertEquals(
+            listOf(bitcoin.id.toIdentifier(), ethereum.id.toIdentifier()),
+            requireNotNull(model.uiState.first { it?.networks?.showsSelector == true }).networks.networks.map { it.assetId },
+        )
         assertEquals(listOf(GemReceiveWarning.NoMemoRequired), model.assetState(bitcoin).warnings)
         assertEquals(bitcoin.name, model.assetState(bitcoin).asset.asset.name)
     }
@@ -87,12 +119,12 @@ class ReceiveViewModelTest {
     fun `picking another network keeps the networks of the asset the screen opened on`() = runTest(dispatcher) {
         val source = mockAssetData(asset = bitcoin, associations = listOf(AssetAssociation(ethereum.id, AssetAssociationType.Bridged)))
         val model = receiveModel(mockk(relaxed = true), assets = mapOf(bitcoin.id to source, ethereum.id to mockAssetData(asset = ethereum)))
-        model.networks.first { it.showsSelector }
+        model.uiState.first { it?.networks?.showsSelector == true }
 
         model.selectAsset(ethereum.id)
-        model.asset.first { it?.asset?.id == ethereum.id }
+        val switched = requireNotNull(model.uiState.first { it?.assetInfo?.asset?.id == ethereum.id })
 
-        assertEquals(listOf(bitcoin.id.toIdentifier(), ethereum.id.toIdentifier()), model.networks.value.networks.map { it.assetId })
+        assertEquals(listOf(bitcoin.id.toIdentifier(), ethereum.id.toIdentifier()), switched.networks.networks.map { it.assetId })
     }
 
     @Test
@@ -103,11 +135,11 @@ class ReceiveViewModelTest {
             service,
             assets = mapOf(bitcoin.id to mockAssetData(asset = bitcoin), ethereum.id to mockAssetData(asset = ethereum)),
         )
-        model.asset.first { it?.asset?.id == bitcoin.id }
+        model.uiState.first { it?.assetInfo?.asset?.id == bitcoin.id }
 
         model.selectAsset(ethereum.id)
 
-        assertEquals(ethereum.id, model.asset.first { it?.asset?.id == ethereum.id }?.asset?.id)
+        assertEquals(ethereum.id, model.uiState.first { it?.assetInfo?.asset?.id == ethereum.id }?.assetInfo?.asset?.id)
     }
 
     @Test
@@ -116,7 +148,7 @@ class ReceiveViewModelTest {
         }
         val model = receiveModel(service, assets = mapOf(bitcoin.id to mockAssetData(asset = bitcoin)))
 
-        assertEquals("bc1q", model.asset.first { it?.account?.address?.isNotEmpty() == true }?.account?.address)
+        assertEquals("bc1q", model.uiState.first { it?.assetInfo?.account?.address?.isNotEmpty() == true }?.assetInfo?.account?.address)
         assertEquals("bc1q", model.shareAddress())
     }
 
@@ -125,10 +157,10 @@ class ReceiveViewModelTest {
         val bitcoinData = mockAssetData(asset = bitcoin, account = mockAccount(chain = Chain.Bitcoin, address = "bc1q"))
         val ethereumData = mockAssetData(asset = ethereum, account = mockAccount(chain = Chain.Ethereum, address = "0xabc"))
         val model = receiveModel(mockk(relaxed = true), assets = mapOf(bitcoin.id to bitcoinData, ethereum.id to ethereumData))
-        val rendered = requireNotNull(model.asset.first { it?.asset?.id == bitcoin.id })
+        val rendered = requireNotNull(model.uiState.first { it?.assetInfo?.asset?.id == bitcoin.id }).assetInfo
 
         model.selectAsset(ethereum.id)
-        model.asset.first { it?.asset?.id == ethereum.id }
+        model.uiState.first { it?.assetInfo?.asset?.id == ethereum.id }
 
         assertEquals("bc1q", model.shareAddress(rendered))
         assertEquals("bc1q", model.copyAddress(rendered)?.value)
@@ -139,7 +171,7 @@ class ReceiveViewModelTest {
         val service: GemReceiveServiceInterface = mockk(relaxed = true) {
         }
         val model = receiveModel(service)
-        model.asset.first { it != null }
+        model.uiState.first { it != null }
 
         model.setVisible().join()
 

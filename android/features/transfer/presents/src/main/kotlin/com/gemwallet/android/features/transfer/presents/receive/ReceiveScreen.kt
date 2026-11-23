@@ -2,6 +2,7 @@ package com.gemwallet.android.features.transfer.presents.receive
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -129,18 +130,20 @@ private const val WARNING_EMPHASIS_ALPHA = 0.75f
 private const val COPY_FEEDBACK_DURATION_MS = 1_500L
 private const val COPY_FEEDBACK_ANIMATION_MS = 180
 private const val COPY_ICON_INITIAL_SCALE = 0.6f
+private const val NETWORK_PILL_ANIMATION_MS = 180
 
 @Composable
 fun ReceiveScreen(assetId: AssetId, closeIcon: Boolean = false, onCancel: () -> Unit) {
     val viewModel = hiltViewModel<ReceiveViewModel, ReceiveViewModel.Factory>(
         key = assetId.toIdentifier(),
     ) { it.create(assetId) }
-    val assetInfo by viewModel.asset.collectAsStateWithLifecycle()
-    val networks by viewModel.networks.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var isShowingNetworkSelector by rememberSaveable { mutableStateOf(false) }
-    val info = assetInfo
+    val state = uiState
 
-    if (info != null) {
+    if (state != null) {
+        val info = state.assetInfo
+        val networks = state.networks
         LaunchedEffect(info.asset.id) {
             viewModel.setVisible()
         }
@@ -403,6 +406,7 @@ private fun ReceiveNetworkPill(chainRow: GemChainRow, onSelectNetwork: (() -> Un
                     )
                 } ?: base
             }
+            .animateContentSize(animationSpec = tween(NETWORK_PILL_ANIMATION_MS))
             .padding(
                 start = space6,
                 top = space6,

@@ -17,6 +17,7 @@ import com.gemwallet.android.ui.localization.text
 import com.wallet.core.primitives.Asset
 import com.wallet.core.primitives.AssetData
 import com.wallet.core.primitives.AssetId
+import com.wallet.core.primitives.Wallet
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -26,6 +27,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -42,6 +45,11 @@ import uniffi.gemstone.addressCopy
 import uniffi.gemstone.chainRow
 import uniffi.gemstone.newReceiveSession
 
+data class ReceiveUiState(
+    val assetInfo: AssetData,
+    val networks: GemReceiveNetworks,
+)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel(assistedFactory = ReceiveViewModel.Factory::class)
 class ReceiveViewModel @AssistedInject constructor(
@@ -57,19 +65,47 @@ class ReceiveViewModel @AssistedInject constructor(
     private val selectedAssetId = MutableStateFlow(sourceAssetId)
     private val session = getSession()
 
-    val asset = selectedAssetId
-        .flatMapLatest { assetId ->
-            session.filterNotNull().flatMapLatest { session ->
-                assetQuery(session.wallet.id.id, assetId).map { info ->
-                    val account = info?.account?.takeIf { it.address.isEmpty() }?.let { session.wallet.getAccount(info.asset.chain) }
-                    if (info == null || account == null) info else info.copy(account = account)
+    private val initialState = storedAsset(sourceAssetId)?.let { source ->
+        val wallet = session.value?.wallet
+        if (wallet != null) {
+            ReceiveUiState(
+                assetInfo = resolveAsset(source, wallet),
+                networks = computeNetworks(source, wallet),
+            )
+        } else {
+            ReceiveUiState(
+                assetInfo = source,
+                networks = fallbackNetworks(),
+            )
+        }
+    }
+
+    val uiState: StateFlow<ReceiveUiState?> = session
+        .filterNotNull()
+        .flatMapLatest { currentSession ->
+            val wallet = currentSession.wallet
+            val sourceFlow = assetQuery(wallet.id.id, sourceAssetId)
+                .filterNotNull()
+                .map { source ->
+                    resolveAsset(source, wallet) to computeNetworks(source, wallet)
+                }
+            selectedAssetId.flatMapLatest { assetId ->
+                if (assetId == sourceAssetId) {
+                    sourceFlow.map { (assetInfo, networks) ->
+                        ReceiveUiState(assetInfo = assetInfo, networks = networks)
+                    }
+                } else {
+                    combine(
+                        sourceFlow,
+                        assetQuery(wallet.id.id, assetId).filterNotNull().map { resolveAsset(it, wallet) },
+                    ) { (_, networks), selected ->
+                        ReceiveUiState(assetInfo = selected, networks = networks)
+                    }
                 }
             }
         }
         .flowOn(ioDispatcher)
-        .stateIn(viewModelScope, SharingStarted.Eagerly, storedAsset(sourceAssetId))
-
-    private fun storedAsset(assetId: AssetId) = getWalletAssets().value.firstOrNull { it.asset.id == assetId }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, initialState)
 
     init {
         viewModelScope.launch(ioDispatcher) {
@@ -77,17 +113,6 @@ class ReceiveViewModel @AssistedInject constructor(
                 .onFailure { Log.d(TAG, "asset update failed (${it.javaClass.simpleName})") }
         }
     }
-
-    val networks = session.filterNotNull()
-        .flatMapLatest { session ->
-            assetQuery(session.wallet.id.id, sourceAssetId).filterNotNull().map { source ->
-                newReceiveSession(source.asset.toGem())
-                    .onAssociations(source.associations.map { it.assetId.toIdentifier() })
-                    .networks(session.wallet.toGem())
-            }
-        }
-        .flowOn(ioDispatcher)
-        .stateIn(viewModelScope, SharingStarted.Eagerly, GemReceiveNetworks(networks = listOf(GemReceiveNetwork(sourceAssetId.toIdentifier(), row = chainRow(sourceAssetId.chain.string))), showsSelector = false))
 
     fun assetState(asset: Asset): GemReceiveAssetState = service.assetState(asset.toGem())
 
@@ -97,9 +122,9 @@ class ReceiveViewModel @AssistedInject constructor(
         selectedAssetId.value = assetId
     }
 
-    fun shareAddress(assetInfo: AssetData? = asset.value): String? = assetInfo?.account?.address?.takeIf { it.isNotEmpty() }
+    fun shareAddress(assetInfo: AssetData? = uiState.value?.assetInfo): String? = assetInfo?.account?.address?.takeIf { it.isNotEmpty() }
 
-    fun copyAddress(assetInfo: AssetData? = asset.value): GemCopy? = assetInfo?.let { info ->
+    fun copyAddress(assetInfo: AssetData? = uiState.value?.assetInfo): GemCopy? = assetInfo?.let { info ->
         info.account.address.takeIf { it.isNotEmpty() }?.let { addressCopy(info.asset.id.chain.string, it) }
     }
 
@@ -109,11 +134,27 @@ class ReceiveViewModel @AssistedInject constructor(
     }
 
     fun setVisible() = viewModelScope.launch(ioDispatcher) {
-        val assetId = asset.value?.asset?.id ?: return@launch
+        val assetId = uiState.value?.assetInfo?.asset?.id ?: return@launch
         val wallet = session.filterNotNull().first().wallet
         runCatchingCancellable { service.enableAsset(wallet.id.id, assetId.toIdentifier()) }
             .onFailure { Log.e(TAG, "enabling ${assetId.toIdentifier()} failed", it) }
     }
+
+    private fun storedAsset(assetId: AssetId) = getWalletAssets().value.firstOrNull { it.asset.id == assetId }
+
+    private fun resolveAsset(info: AssetData, wallet: Wallet): AssetData {
+        val account = info.account.takeIf { it.address.isEmpty() }?.let { wallet.getAccount(info.asset.chain) }
+        return if (account == null) info else info.copy(account = account)
+    }
+
+    private fun computeNetworks(source: AssetData, wallet: Wallet): GemReceiveNetworks = newReceiveSession(source.asset.toGem())
+        .onAssociations(source.associations.map { it.assetId.toIdentifier() })
+        .networks(wallet.toGem())
+
+    private fun fallbackNetworks(): GemReceiveNetworks = GemReceiveNetworks(
+        networks = listOf(GemReceiveNetwork(sourceAssetId.toIdentifier(), row = chainRow(sourceAssetId.chain.string))),
+        showsSelector = false,
+    )
 }
 
 private const val TAG = "Receive"
