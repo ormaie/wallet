@@ -22,7 +22,6 @@ import kotlinx.coroutines.withContext
 
 private val defaultQrCodeSize = 180.dp
 private const val QUIET_MODULES = 0.5f
-private const val CENTER_CLEAR_RADIUS_RATIO = 0.105f
 private const val MODULE_INSET_RATIO = 0.04f
 private const val MODULE_CORNER_RATIO = 0.14f
 private const val FINDER_OUTER_CORNER_RATIO = 1.2f
@@ -32,19 +31,19 @@ private const val FINDER_QUIET_SPAN = 8
 private val qrInkColor = Color.rgb(0x11, 0x11, 0x13)
 
 @Composable
-fun rememberQRCodePainter(content: String, size: Dp = defaultQrCodeSize, clearCenter: Boolean = true): BitmapPainter? {
+fun rememberQRCodePainter(content: String, size: Dp = defaultQrCodeSize): BitmapPainter? {
     val density = LocalDensity.current
     val sizePx = with(density) { size.roundToPx() }
 
-    val painter by produceState<BitmapPainter?>(initialValue = null, content, sizePx, clearCenter) {
+    val painter by produceState<BitmapPainter?>(initialValue = null, content, sizePx) {
         value = withContext(Dispatchers.Default) {
-            BitmapPainter(generateQr(content, sizePx, clearCenter).asImageBitmap())
+            BitmapPainter(generateQr(content, sizePx).asImageBitmap())
         }
     }
     return painter
 }
 
-private fun generateQr(content: String, sizePx: Int, clearCenter: Boolean): Bitmap {
+private fun generateQr(content: String, sizePx: Int): Bitmap {
     if (sizePx <= 0 || content.isEmpty()) {
         return createBitmap(1, 1)
     }
@@ -71,20 +70,12 @@ private fun generateQr(content: String, sizePx: Int, clearCenter: Boolean): Bitm
         strokeWidth = cellSize
     }
 
-    val centerCoord = moduleCount / 2f
-    val clearRadius = if (clearCenter) moduleCount * CENTER_CLEAR_RADIUS_RATIO else 0f
-    val clearRadiusSquared = clearRadius * clearRadius
     val inset = cellSize * MODULE_INSET_RATIO
     val radius = cellSize * MODULE_CORNER_RATIO
 
     for (y in 0 until moduleCount) {
         for (x in 0 until moduleCount) {
             if (isFinderZone(x, y, moduleCount)) continue
-            if (clearCenter) {
-                val dx = x + 0.5f - centerCoord
-                val dy = y + 0.5f - centerCoord
-                if (dx * dx + dy * dy <= clearRadiusSquared) continue
-            }
             if (matrix.get(x, y)) {
                 val left = offset + x * cellSize + inset
                 val top = offset + y * cellSize + inset

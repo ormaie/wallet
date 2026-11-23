@@ -91,7 +91,7 @@ class ReceiveViewModel @AssistedInject constructor(
 
     fun assetState(asset: Asset): GemReceiveAssetState = service.assetState(asset.toGem())
 
-    fun warningText(state: GemReceiveAssetState): String = state.warnings.joinToString(" ") { it.text(context) }
+    fun warnings(state: GemReceiveAssetState): List<String> = state.warnings.map { it.text(context) }
 
     fun selectAsset(assetId: AssetId) {
         selectedAssetId.value = assetId

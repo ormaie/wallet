@@ -6,10 +6,12 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gemwallet.android.ext.toGem
@@ -54,7 +56,7 @@ class ReceiveSceneCopyTest {
                         account = mockAccount(chain = Chain.Base, address = address),
                     ),
                     header = assetText(asset.toGem()),
-                    warning = "",
+                    warnings = emptyList(),
                     shareText = address,
                     copyText = addressCopy(Chain.Base.string, address),
                     chainRow = mockGemChainRow(title = "Base"),
@@ -98,7 +100,7 @@ class ReceiveSceneCopyTest {
                         account = mockAccount(chain = Chain.Base, address = address),
                     ),
                     header = assetText(asset.toGem()),
-                    warning = "",
+                    warnings = emptyList(),
                     shareText = address,
                     copyText = copyTarget,
                     chainRow = mockGemChainRow(title = "Base"),
@@ -118,6 +120,71 @@ class ReceiveSceneCopyTest {
         copyTarget = addressCopy(Chain.Arbitrum.string, address)
         passTime(0)
         composeRule.onNodeWithTag("main_action").assertTextEquals(copyLabel)
+    }
+
+    @Test
+    fun networkPillOpensSelectorOnlyWhenSelectable() {
+        var selectClicks = 0
+        var selectable by mutableStateOf(true)
+        composeRule.setContent {
+            WalletTheme {
+                ReceiveScene(
+                    closeIcon = false,
+                    assetInfo = mockAssetData(
+                        asset = asset,
+                        account = mockAccount(chain = Chain.Base, address = address),
+                    ),
+                    header = assetText(asset.toGem()),
+                    warnings = emptyList(),
+                    shareText = address,
+                    copyText = addressCopy(Chain.Base.string, address),
+                    chainRow = mockGemChainRow(title = "Base"),
+                    onSelectNetwork = if (selectable) {
+                        { selectClicks++ }
+                    } else {
+                        null
+                    },
+                    onCancel = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Base").assertIsDisplayed().performClick()
+        assertEquals(1, selectClicks)
+
+        selectable = false
+        composeRule.onNodeWithText("Base").assertIsDisplayed().assertHasNoClickAction()
+    }
+
+    @Test
+    fun cardHeaderShowsSymbolAndWarningsRenderOnSeparateLines() {
+        val tether = mockAsset(id = mockAssetId(chain = Chain.Ethereum), name = "Tether", symbol = "USDT")
+        composeRule.setContent {
+            WalletTheme {
+                ReceiveScene(
+                    closeIcon = false,
+                    assetInfo = mockAssetData(
+                        asset = tether,
+                        account = mockAccount(chain = Chain.Ethereum, address = address),
+                    ),
+                    header = assetText(tether.toGem()),
+                    warnings = listOf(
+                        "Send only **USDT** on the **Ethereum (ERC20)** network.",
+                        "No memo required",
+                    ),
+                    shareText = address,
+                    copyText = addressCopy(Chain.Ethereum.string, address),
+                    chainRow = mockGemChainRow(title = "Ethereum"),
+                    onSelectNetwork = null,
+                    onCancel = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("USDT").assertIsDisplayed()
+        composeRule.onNodeWithText("Tether").assertDoesNotExist()
+        composeRule.onNodeWithText("Send only USDT on the Ethereum (ERC20) network.", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("No memo required").assertIsDisplayed()
     }
 
     private fun passTime(millis: Long) {
