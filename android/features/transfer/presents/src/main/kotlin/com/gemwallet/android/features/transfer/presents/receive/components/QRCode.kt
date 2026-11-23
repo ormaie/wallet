@@ -22,12 +22,6 @@ import kotlinx.coroutines.withContext
 
 private val defaultQrCodeSize = 180.dp
 private const val QUIET_MODULES = 0.5f
-private const val MODULE_INSET_RATIO = 0.04f
-private const val MODULE_CORNER_RATIO = 0.14f
-private const val FINDER_OUTER_CORNER_RATIO = 1.2f
-private const val FINDER_INNER_CORNER_RATIO = 0.6f
-private const val FINDER_SPAN = 7
-private const val FINDER_QUIET_SPAN = 8
 private val qrInkColor = Color.rgb(0x11, 0x11, 0x13)
 
 @Composable
@@ -49,7 +43,7 @@ private fun generateQr(content: String, sizePx: Int): Bitmap {
     }
     val hints = mapOf(
         EncodeHintType.MARGIN to 0,
-        EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.Q,
+        EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
     )
     val matrix = runCatching {
         QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, 1, 1, hints)
@@ -60,71 +54,21 @@ private fun generateQr(content: String, sizePx: Int): Bitmap {
     val canvas = Canvas(bitmap)
     val cellSize = sizePx / (moduleCount + QUIET_MODULES * 2f)
     val offset = QUIET_MODULES * cellSize
-    val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    val paint = Paint().apply {
         color = qrInkColor
         style = Paint.Style.FILL
     }
-    val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = qrInkColor
-        style = Paint.Style.STROKE
-        strokeWidth = cellSize
-    }
-
-    val inset = cellSize * MODULE_INSET_RATIO
-    val radius = cellSize * MODULE_CORNER_RATIO
 
     for (y in 0 until moduleCount) {
+        val top = (offset + y * cellSize).toInt().toFloat()
+        val bottom = (offset + (y + 1) * cellSize).toInt().toFloat()
         for (x in 0 until moduleCount) {
-            if (isFinderZone(x, y, moduleCount)) continue
             if (matrix.get(x, y)) {
-                val left = offset + x * cellSize + inset
-                val top = offset + y * cellSize + inset
-                val right = offset + (x + 1) * cellSize - inset
-                val bottom = offset + (y + 1) * cellSize - inset
-                canvas.drawRoundRect(left, top, right, bottom, radius, radius, fillPaint)
+                val left = (offset + x * cellSize).toInt().toFloat()
+                val right = (offset + (x + 1) * cellSize).toInt().toFloat()
+                canvas.drawRect(left, top, right, bottom, paint)
             }
         }
     }
-
-    drawFinderPattern(canvas, fillPaint, strokePaint, 0, 0, offset, cellSize)
-    drawFinderPattern(canvas, fillPaint, strokePaint, moduleCount - FINDER_SPAN, 0, offset, cellSize)
-    drawFinderPattern(canvas, fillPaint, strokePaint, 0, moduleCount - FINDER_SPAN, offset, cellSize)
     return bitmap
-}
-
-private fun isFinderZone(x: Int, y: Int, moduleCount: Int): Boolean =
-    (x < FINDER_QUIET_SPAN && y < FINDER_QUIET_SPAN) ||
-        (x >= moduleCount - FINDER_QUIET_SPAN && y < FINDER_QUIET_SPAN) ||
-        (x < FINDER_QUIET_SPAN && y >= moduleCount - FINDER_QUIET_SPAN)
-
-private fun drawFinderPattern(
-    canvas: Canvas,
-    fillPaint: Paint,
-    strokePaint: Paint,
-    ox: Int,
-    oy: Int,
-    offset: Float,
-    cellSize: Float,
-) {
-    val outerRadius = cellSize * FINDER_OUTER_CORNER_RATIO
-    canvas.drawRoundRect(
-        offset + (ox + 0.5f) * cellSize,
-        offset + (oy + 0.5f) * cellSize,
-        offset + (ox + 6.5f) * cellSize,
-        offset + (oy + 6.5f) * cellSize,
-        outerRadius,
-        outerRadius,
-        strokePaint,
-    )
-
-    val innerRadius = cellSize * FINDER_INNER_CORNER_RATIO
-    canvas.drawRoundRect(
-        offset + (ox + 2f) * cellSize,
-        offset + (oy + 2f) * cellSize,
-        offset + (ox + 5f) * cellSize,
-        offset + (oy + 5f) * cellSize,
-        innerRadius,
-        innerRadius,
-        fillPaint,
-    )
 }
