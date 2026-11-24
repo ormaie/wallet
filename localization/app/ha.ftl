@@ -831,3 +831,9 @@ qr_sign_instruction = Duba wannan lambar QR da walat ɗinka na sanyi don dubawa 
 qr_sign_scan_signature = Duba Sa Hannu
 qr_sign_scan_instruction = Duba lambar QR ta sa hannu da aka nuna a kan walat ɗinka na sanyi.
 qr_sign_progress = An karɓi %d / %d sassa
+
+# Avatar
+
+avatar_presets = Zaɓaɓɓu
+avatar_unique = Na musamman
+avatar_nft = NFT

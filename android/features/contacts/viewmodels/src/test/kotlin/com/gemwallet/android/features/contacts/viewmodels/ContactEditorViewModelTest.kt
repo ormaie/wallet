@@ -8,6 +8,10 @@ import com.gemwallet.android.testkit.mockGemContactAddressSession
 import com.gemwallet.android.testkit.mockGemContactScannedAddress
 import com.gemwallet.android.testkit.mockGemContactSession
 import com.gemwallet.android.testkit.mockGemRecipientValidation
+import com.gemwallet.android.ui.components.image.AvatarPreset
+import com.gemwallet.android.ui.components.image.BoringAvatar
+import com.gemwallet.android.ui.components.image.BoringAvatarPalette
+import com.gemwallet.android.ui.components.image.BoringAvatarVariant
 import com.gemwallet.android.ui.components.list_item.ListItemImage
 import com.wallet.core.primitives.Chain
 import io.mockk.every
@@ -68,9 +72,30 @@ class ContactEditorViewModelTest {
     }
 
     @Test
-    fun `selecting an identicon previews it on the form and removing clears it`() = runTest(dispatcher) {
+    fun `selecting a preset previews it on the form and removing clears it`() = runTest(dispatcher) {
         val model = model()
-        assertEquals(emptyList<Any>(), model.uiState.value.identicons)
+
+        model.selectAvatar()
+        advanceUntilIdle()
+        assertEquals(ContactEditorPage.Avatar, model.uiState.value.page)
+
+        model.setPreset(AvatarPreset.GeoCobaltSplit)
+        advanceUntilIdle()
+
+        assertEquals(ContactEditorPage.Form, model.uiState.value.page)
+        assertTrue(model.uiState.value.hasAvatar)
+        assertEquals(ListItemImage.Preset(AvatarPreset.GeoCobaltSplit), model.uiState.value.avatar)
+
+        model.removeAvatar()
+        advanceUntilIdle()
+
+        assertFalse(model.uiState.value.hasAvatar)
+    }
+
+    @Test
+    fun `selecting an address boring avatar previews it on the form and removing clears it`() = runTest(dispatcher) {
+        val model = model()
+        val avatar = BoringAvatar("UQaddress", BoringAvatarVariant.Bauhaus, BoringAvatarPalette.Cobalt)
 
         model.addAddress()
         model.scanAddress("code")
@@ -78,19 +103,16 @@ class ContactEditorViewModelTest {
         model.confirmAddress()
         advanceUntilIdle()
 
-        val identicons = model.uiState.value.identicons
-        assertEquals(2, identicons.size)
+        assertEquals("UQaddress", model.uiState.value.avatarAddressSeed)
 
         model.selectAvatar()
         advanceUntilIdle()
-        assertEquals(ContactEditorPage.Avatar, model.uiState.value.page)
-
-        model.setIdenticon(identicons.first())
+        model.setBoring(avatar)
         advanceUntilIdle()
 
         assertEquals(ContactEditorPage.Form, model.uiState.value.page)
         assertTrue(model.uiState.value.hasAvatar)
-        assertEquals(ListItemImage.Jdenticon(identicons.first()), model.uiState.value.avatar)
+        assertEquals(ListItemImage.Boring(avatar), model.uiState.value.avatar)
 
         model.removeAvatar()
         advanceUntilIdle()

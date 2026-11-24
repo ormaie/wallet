@@ -1,34 +1,30 @@
 package com.gemwallet.android.features.contacts.presents
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.res.stringResource
-import com.gemwallet.android.ui.R
-import com.gemwallet.android.ui.components.EmojiPickerGrid
-import com.gemwallet.android.ui.components.screen.Scene
-import com.gemwallet.android.ui.theme.AvatarEmoji
-import com.gemwallet.android.ui.theme.secondaryFaded
-import uniffi.gemstone.GemJdenticon
+import com.gemwallet.android.ui.components.AvatarPickerScene
+import com.gemwallet.android.ui.components.image.AvatarPreset
+import com.gemwallet.android.ui.components.image.BoringAvatar
+import com.gemwallet.android.ui.components.image.StoredAvatarInfo
+import com.gemwallet.android.ui.components.list_item.ListItemImage
 
 @Composable
 internal fun ContactAvatarScene(
-    identicons: List<GemJdenticon>,
-    onSelect: (String, Int) -> Unit,
-    onSelectIdenticon: (GemJdenticon) -> Unit,
+    heroImage: ListItemImage,
+    hasAvatar: Boolean,
+    addressSeed: String?,
+    storedAvatarInfo: StoredAvatarInfo?,
+    onSelectBoring: (BoringAvatar) -> Unit,
+    onSelectPreset: (AvatarPreset) -> Unit,
+    onRemove: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    val background = MaterialTheme.colorScheme.secondaryFaded
-    Scene(
-        title = stringResource(R.string.common_emoji),
+    AvatarPickerScene(
+        heroImage = heroImage,
+        addressSeed = addressSeed,
+        storedAvatarInfo = storedAvatarInfo,
         onClose = onCancel,
-    ) {
-        EmojiPickerGrid(
-            emojis = AvatarEmoji.all,
-            onSelect = { onSelect(it, background.toArgb()) },
-            background = background,
-            identicons = identicons,
-            onSelectIdenticon = onSelectIdenticon,
-        )
-    }
+        onRemove = if (hasAvatar) onRemove else null,
+        onSelectBoring = onSelectBoring,
+        onSelectPreset = onSelectPreset,
+    )
 }

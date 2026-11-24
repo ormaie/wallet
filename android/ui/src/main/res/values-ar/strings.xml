@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">مسح التوقيع</string>
   <string name="qr_sign_scan_instruction">امسح رمز QR للتوقيع المعروض على محفظتك الباردة.</string>
   <string name="qr_sign_progress">تم استلام %1$d / %2$d أجزاء</string>
+  <string name="avatar_presets">القوالب</string>
+  <string name="avatar_unique">حصري</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

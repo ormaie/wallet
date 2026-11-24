@@ -58,6 +58,7 @@ object AppIcons {
     val QrCode: ImageVector @Composable get() = cachedVectorResource(R.drawable.ic_qr_code)
     val QrCodeScanner: ImageVector @Composable get() = cachedVectorResource(R.drawable.ic_qr_code_scanner)
     val Refresh: ImageVector @Composable get() = cachedVectorResource(R.drawable.ic_refresh)
+    val Reset: ImageVector @Composable get() = cachedVectorResource(R.drawable.ic_reset)
     val Search: ImageVector @Composable get() = cachedVectorResource(R.drawable.ic_search)
     val SendMessage: ImageVector @Composable get() = cachedVectorResource(R.drawable.ic_send_message)
     val Settings: ImageVector @Composable get() = cachedVectorResource(R.drawable.ic_settings)

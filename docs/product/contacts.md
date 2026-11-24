@@ -8,7 +8,7 @@ flowchart LR
     H[Recipient or transaction] --> I[Add to Contact] --> D
 ```
 
-1. The user creates a contact: a name, an optional description, an optional avatar from its identicon or an emoji, and one or more addresses, each on a network, with a memo where that network uses one.
+1. The user creates a contact: a name, an optional description, an optional avatar from its address-derived Unique avatars or a built-in geometric preset, and one or more addresses, each on a network, with a memo where that network uses one.
 2. From a recipient or a transaction the user saves the address as a new contact or adds it to an existing one.
 3. When sending, the recipient screen offers the contacts that have an address on that network.
 
@@ -16,7 +16,7 @@ flowchart LR
 
 | When | Expected | Why |
 |---|---|---|
-| The Emoji avatar picker opens for a contact | when the contact has an address, Jdenticon and Blockies identicons for its first EVM address, or its first address otherwise, appear before the emojis; without an address only emojis appear | the same address produces the same identicons whether saved as a contact or imported as a wallet |
+| The avatar picker opens for a contact | when the contact has an address, Unique shows five deterministic address-derived avatars for its first EVM address, or its first address otherwise, with switchable color palettes alongside Presets; without an address only Presets appears | the same address produces the same Unique avatars whether saved as a contact or imported as a wallet |
 | The sender of a received transfer is saved as a contact | the contact gets no memo; a sent transfer keeps its memo | a received memo identifies the user's own account, so sending with it would credit the wrong one |
 | The user picks another network for an address | the memo is cleared; picking the network already selected keeps it | a memo belongs to one network, and the form does not show it, so a lost one goes unnoticed |
 | An address is saved on a network without a memo | it is saved with no memo, even when the scanned code or the source transfer carried one | the form shows no memo there, so a hidden one could never be seen or removed |

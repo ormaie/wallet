@@ -831,3 +831,9 @@ qr_sign_instruction = جائزہ لینے اور دستخط کرنے کے لیے
 qr_sign_scan_signature = دستخط اسکین کریں
 qr_sign_scan_instruction = اپنے کولڈ والیٹ پر دکھایا گیا دستخطی QR کوڈ اسکین کریں۔
 qr_sign_progress = %d / %d حصے موصول ہوئے
+
+# Avatar
+
+avatar_presets = پری سیٹس
+avatar_unique = منفرد
+avatar_nft = NFT

@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Scansiona firma</string>
   <string name="qr_sign_scan_instruction">Scansiona il codice QR della firma mostrato sul tuo cold wallet.</string>
   <string name="qr_sign_progress">Ricevute %1$d / %2$d parti</string>
+  <string name="avatar_presets">Predefiniti</string>
+  <string name="avatar_unique">Unico</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

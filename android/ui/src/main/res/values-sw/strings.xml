@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Changanua Saini</string>
   <string name="qr_sign_scan_instruction">Changanua msimbo wa QR wa saini unaoonyeshwa kwenye pochi yako baridi.</string>
   <string name="qr_sign_progress">Imepokelewa sehemu %1$d / %2$d</string>
+  <string name="avatar_presets">Chaguo</string>
+  <string name="avatar_unique">Kipekee</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

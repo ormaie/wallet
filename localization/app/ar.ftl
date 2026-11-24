@@ -831,3 +831,9 @@ qr_sign_instruction = امسح رمز QR هذا باستخدام محفظتك ا
 qr_sign_scan_signature = مسح التوقيع
 qr_sign_scan_instruction = امسح رمز QR للتوقيع المعروض على محفظتك الباردة.
 qr_sign_progress = تم استلام %d / %d أجزاء
+
+# Avatar
+
+avatar_presets = القوالب
+avatar_unique = حصري
+avatar_nft = NFT

@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">हस्ताक्षर स्कैन करें</string>
   <string name="qr_sign_scan_instruction">अपने कोल्ड वॉलेट पर दिखाए गए हस्ताक्षर QR कोड को स्कैन करें।</string>
   <string name="qr_sign_progress">%1$d / %2$d भाग प्राप्त हुए</string>
+  <string name="avatar_presets">प्रीसेट</string>
+  <string name="avatar_unique">अद्वितीय</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

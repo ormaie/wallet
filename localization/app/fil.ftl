@@ -831,3 +831,9 @@ qr_sign_instruction = I-scan ang QR code na ito gamit ang iyong cold wallet upan
 qr_sign_scan_signature = I-scan ang Lagda
 qr_sign_scan_instruction = I-scan ang signature QR code na ipinapakita sa iyong cold wallet.
 qr_sign_progress = Natanggap %d / %d bahagi
+
+# Avatar
+
+avatar_presets = Preset
+avatar_unique = Natatangi
+avatar_nft = NFT

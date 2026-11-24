@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Signatur scannen</string>
   <string name="qr_sign_scan_instruction">Scannen Sie den auf Ihrer Cold Wallet angezeigten Signatur-QR-Code.</string>
   <string name="qr_sign_progress">%1$d / %2$d Teile empfangen</string>
+  <string name="avatar_presets">Vorlagen</string>
+  <string name="avatar_unique">Einzigartig</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

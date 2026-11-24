@@ -65,6 +65,16 @@ fun ListItemImageView(image: ListItemImage, modifier: Modifier = Modifier, style
             modifier = modifier.size(size),
         )
 
+        is ListItemImage.Preset -> AvatarPresetView(
+            preset = image.preset,
+            modifier = modifier.size(size),
+        )
+
+        is ListItemImage.Boring -> BoringAvatarView(
+            avatar = image.avatar,
+            modifier = modifier.size(size),
+        )
+
         is ListItemImage.Initials -> InitialsAvatar(text = image.text, size = size, modifier = modifier, placeholder = AppIcons.Person)
 
         is ListItemImage.Symbol -> if (style == ListItemImageStyle.Action) {

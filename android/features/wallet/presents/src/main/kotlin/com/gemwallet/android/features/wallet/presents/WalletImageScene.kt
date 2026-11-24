@@ -2,46 +2,30 @@ package com.gemwallet.android.features.wallet.presents
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.res.stringResource
-import com.gemwallet.android.ui.R
-import com.gemwallet.android.ui.components.EmojiPickerGrid
+import com.gemwallet.android.ui.components.AvatarPickerScene
 import com.gemwallet.android.ui.components.empty.EmptyContentView
 import com.gemwallet.android.ui.components.image.NftImage
-import com.gemwallet.android.ui.components.image.WalletAvatar
+import com.gemwallet.android.ui.components.image.StoredAvatarInfo
 import com.gemwallet.android.ui.components.image.toImageSource
-import com.gemwallet.android.ui.components.screen.Scene
+import com.gemwallet.android.ui.components.image.walletAvatarSeed
 import com.gemwallet.android.ui.style.badgeImage
 import com.gemwallet.android.ui.style.listItemImage
-import com.gemwallet.android.ui.theme.Spacer16
-import com.gemwallet.android.ui.theme.extraLargeIconSize
 import com.gemwallet.android.ui.theme.paddingDefault
 import com.gemwallet.android.ui.theme.paddingSmall
-import com.gemwallet.android.ui.theme.secondaryFaded
 import uniffi.gemstone.GemAvatarList
 import uniffi.gemstone.GemListPhase
 import uniffi.gemstone.GemNftEntry
@@ -49,85 +33,51 @@ import uniffi.gemstone.GemWalletDetails
 
 private const val NFT_COLUMNS = 2
 
-private enum class WalletImageTab { EMOJI, COLLECTIONS }
-
 @Composable
-internal fun WalletImageScene(wallet: GemWalletDetails?, emojis: List<String>, avatars: GemAvatarList?, snackbar: SnackbarHostState? = null, onAction: (WalletImageAction) -> Unit) {
+internal fun WalletImageScene(
+    wallet: GemWalletDetails?,
+    avatars: GemAvatarList?,
+    storedAvatarInfo: StoredAvatarInfo? = null,
+    snackbar: SnackbarHostState? = null,
+    onAction: (WalletImageAction) -> Unit,
+) {
     wallet ?: return
-    var selectedTab by rememberSaveable { mutableStateOf(WalletImageTab.EMOJI) }
-    val identicons = remember(wallet.row.id) { wallet.row.identicons() }
-    val emojiBackground = MaterialTheme.colorScheme.secondaryFaded
-    val onEmoji: (String) -> Unit = { onAction(WalletImageAction.SetEmoji(it, emojiBackground.toArgb())) }
+    val addressSeed = remember(wallet.row.id) { walletAvatarSeed(wallet.row.id) }
 
-    Scene(
-        title = stringResource(id = R.string.common_avatar),
-        onClose = { onAction(WalletImageAction.Close) },
+    AvatarPickerScene(
+        heroImage = wallet.row.listItemImage(),
+        badgeImage = wallet.row.badgeImage(),
+        addressSeed = addressSeed,
+        storedAvatarInfo = storedAvatarInfo,
         snackbar = snackbar,
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            WalletAvatar(
-                image = wallet.row.listItemImage(),
-                size = extraLargeIconSize,
-                modifier = Modifier.padding(top = paddingDefault),
-                badgeImage = wallet.row.badgeImage(),
-                onRemove = if (wallet.row.hasAvatar) {
-                    { onAction(WalletImageAction.ResetToDefault) }
-                } else {
-                    null
-                },
-            )
-            Spacer16()
-            PrimaryTabRow(
-                selectedTabIndex = selectedTab.ordinal,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Tab(
-                    selected = selectedTab == WalletImageTab.EMOJI,
-                    onClick = { selectedTab = WalletImageTab.EMOJI },
-                    text = { Text(stringResource(id = R.string.common_emoji)) },
-                )
-                Tab(
-                    selected = selectedTab == WalletImageTab.COLLECTIONS,
-                    onClick = { selectedTab = WalletImageTab.COLLECTIONS },
-                    text = { Text(stringResource(id = R.string.nft_collections)) },
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-            ) {
-                when (selectedTab) {
-                    WalletImageTab.EMOJI -> EmojiPickerGrid(
-                        emojis = emojis,
-                        onSelect = onEmoji,
-                        background = emojiBackground,
-                        identicons = identicons,
-                        onSelectIdenticon = { onAction(WalletImageAction.SetJdenticon(it)) },
+        onClose = { onAction(WalletImageAction.Close) },
+        onRemove = if (wallet.row.hasAvatar) {
+            { onAction(WalletImageAction.ResetToDefault) }
+        } else {
+            null
+        },
+        onSelectBoring = { onAction(WalletImageAction.SetBoring(it)) },
+        onSelectPreset = { onAction(WalletImageAction.SetPreset(it)) },
+        nftContent = {
+            Box(modifier = Modifier.fillMaxSize()) {
+                when (val phase = avatars?.phase) {
+                    is GemListPhase.Empty -> EmptyContentView(
+                        state = phase.state,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(paddingDefault),
                     )
 
-                    WalletImageTab.COLLECTIONS -> when (val phase = avatars?.phase) {
-                        is GemListPhase.Empty -> EmptyContentView(
-                            state = phase.state,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .padding(paddingDefault),
-                        )
+                    GemListPhase.Rows -> NftGrid(
+                        nftImages = avatars.items,
+                        onNftImage = { onAction(WalletImageAction.SetNftImage(it)) },
+                    )
 
-                        GemListPhase.Rows -> NftGrid(
-                            nftImages = avatars.items,
-                            onNftImage = { onAction(WalletImageAction.SetNftImage(it)) },
-                        )
-
-                        is GemListPhase.Error, null -> Unit
-                    }
+                    is GemListPhase.Error, null -> Unit
                 }
             }
-        }
-    }
+        },
+    )
 }
 
 @Composable

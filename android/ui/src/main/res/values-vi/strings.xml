@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Quét chữ ký</string>
   <string name="qr_sign_scan_instruction">Quét mã QR chữ ký hiển thị trên ví lạnh của bạn.</string>
   <string name="qr_sign_progress">Đã nhận %1$d / %2$d phần</string>
+  <string name="avatar_presets">Mẫu sẵn</string>
+  <string name="avatar_unique">Riêng</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

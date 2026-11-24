@@ -831,3 +831,9 @@ qr_sign_instruction = পর্যালোচনা এবং স্বাক�
 qr_sign_scan_signature = স্বাক্ষর স্ক্যান করুন
 qr_sign_scan_instruction = আপনার কোল্ড ওয়ালেটে দেখানো স্বাক্ষরের QR কোডটি স্ক্যান করুন।
 qr_sign_progress = %d / %d অংশ গৃহীত হয়েছে
+
+# Avatar
+
+avatar_presets = প্রিসেট
+avatar_unique = অনন্য
+avatar_nft = NFT

@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Escanear firma</string>
   <string name="qr_sign_scan_instruction">Escanea el código QR de la firma que aparece en tu billetera fría.</string>
   <string name="qr_sign_progress">Recibidas %1$d / %2$d partes</string>
+  <string name="avatar_presets">Preajustes</string>
+  <string name="avatar_unique">Único</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

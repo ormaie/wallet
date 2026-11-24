@@ -831,3 +831,9 @@ qr_sign_instruction = Pindai kode QR ini dengan dompet dingin Anda untuk meninja
 qr_sign_scan_signature = Pindai Tanda Tangan
 qr_sign_scan_instruction = Pindai kode QR tanda tangan yang ditampilkan di dompet dingin Anda.
 qr_sign_progress = Diterima %d / %d bagian
+
+# Avatar
+
+avatar_presets = Prasetel
+avatar_unique = Unik
+avatar_nft = NFT

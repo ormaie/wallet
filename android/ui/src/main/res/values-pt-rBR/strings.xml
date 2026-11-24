@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Escanear assinatura</string>
   <string name="qr_sign_scan_instruction">Escaneie o QR code da assinatura exibido em sua carteira fria.</string>
   <string name="qr_sign_progress">Recebidas %1$d / %2$d partes</string>
+  <string name="avatar_presets">Predefinições</string>
+  <string name="avatar_unique">Exclusivo</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

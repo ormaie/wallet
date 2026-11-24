@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">掃描簽名 QR Code</string>
   <string name="qr_sign_scan_instruction">請掃描冷錢包上顯示的簽名結果 QR Code。</string>
   <string name="qr_sign_progress">已接收 %1$d / %2$d 幀</string>
+  <string name="avatar_presets">預設</string>
+  <string name="avatar_unique">專屬</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

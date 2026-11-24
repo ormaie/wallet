@@ -831,3 +831,9 @@ qr_sign_instruction = Scannez ce QR code avec votre portefeuille froid pour vér
 qr_sign_scan_signature = Scanner la signature
 qr_sign_scan_instruction = Scannez le QR code de signature affiché sur votre portefeuille froid.
 qr_sign_progress = %d / %d parties reçues
+
+# Avatar
+
+avatar_presets = Préréglages
+avatar_unique = Unique
+avatar_nft = NFT

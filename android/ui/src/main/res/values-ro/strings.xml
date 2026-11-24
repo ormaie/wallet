@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Scanează semnătura</string>
   <string name="qr_sign_scan_instruction">Scanează codul QR al semnăturii afișat pe portofelul tău rece.</string>
   <string name="qr_sign_progress">Primite %1$d / %2$d părți</string>
+  <string name="avatar_presets">Presetări</string>
+  <string name="avatar_unique">Unic</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

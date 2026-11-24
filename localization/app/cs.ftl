@@ -831,3 +831,9 @@ qr_sign_instruction = Naskenujte tento QR kód svou offline peněženkou pro kon
 qr_sign_scan_signature = Naskenovat podpis
 qr_sign_scan_instruction = Naskenujte QR kód podpisu zobrazený na vaší offline peněžence.
 qr_sign_progress = Přijato %d / %d částí
+
+# Avatar
+
+avatar_presets = Předvolby
+avatar_unique = Unikátní
+avatar_nft = NFT

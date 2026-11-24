@@ -831,3 +831,9 @@ qr_sign_instruction = Scan denne QR-kode med din kolde wallet for at gennemgå o
 qr_sign_scan_signature = Scan signatur
 qr_sign_scan_instruction = Scan signatur-QR-koden vist på din kolde wallet.
 qr_sign_progress = Modtaget %d / %d dele
+
+# Avatar
+
+avatar_presets = Forudindstillede
+avatar_unique = Unik
+avatar_nft = NFT

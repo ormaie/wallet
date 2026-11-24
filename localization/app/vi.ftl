@@ -831,3 +831,9 @@ qr_sign_instruction = Quét mã QR này bằng ví lạnh của bạn để ki�
 qr_sign_scan_signature = Quét chữ ký
 qr_sign_scan_instruction = Quét mã QR chữ ký hiển thị trên ví lạnh của bạn.
 qr_sign_progress = Đã nhận %d / %d phần
+
+# Avatar
+
+avatar_presets = Mẫu sẵn
+avatar_unique = Riêng
+avatar_nft = NFT

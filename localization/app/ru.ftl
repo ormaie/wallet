@@ -831,3 +831,9 @@ qr_sign_instruction = Отсканируйте этот QR-код холодны
 qr_sign_scan_signature = Сканировать подпись
 qr_sign_scan_instruction = Отсканируйте QR-код подписи на экране холодного кошелька.
 qr_sign_progress = Получено %d / %d частей
+
+# Avatar
+
+avatar_presets = Готовые
+avatar_unique = Уникальные
+avatar_nft = NFT

@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Scan signatur</string>
   <string name="qr_sign_scan_instruction">Scan signatur-QR-koden vist på din kolde wallet.</string>
   <string name="qr_sign_progress">Modtaget %1$d / %2$d dele</string>
+  <string name="avatar_presets">Forudindstillede</string>
+  <string name="avatar_unique">Unik</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

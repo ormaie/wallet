@@ -65,7 +65,7 @@ class ContactsViewModel @Inject constructor(
             title = row.title,
             titleExtra = row.subtitle,
             titleExtraLineLimit = 1,
-            image = row.avatar.listItemImage(emojiBackground = 0),
+            image = row.avatar.listItemImage(),
         ),
     )
 

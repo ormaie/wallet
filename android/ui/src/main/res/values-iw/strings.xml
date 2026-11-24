@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">סריקת חתימה</string>
   <string name="qr_sign_scan_instruction">סרקו את קוד ה-QR של החתימה המוצג בארנק הקר שלכם.</string>
   <string name="qr_sign_progress">התקבלו %1$d / %2$d חלקים</string>
+  <string name="avatar_presets">תבניות</string>
+  <string name="avatar_unique">ייחודי</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

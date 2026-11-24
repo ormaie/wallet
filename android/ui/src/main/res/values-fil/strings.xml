@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">I-scan ang Lagda</string>
   <string name="qr_sign_scan_instruction">I-scan ang signature QR code na ipinapakita sa iyong cold wallet.</string>
   <string name="qr_sign_progress">Natanggap %1$d / %2$d bahagi</string>
+  <string name="avatar_presets">Preset</string>
+  <string name="avatar_unique">Natatangi</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

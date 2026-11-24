@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Scanner la signature</string>
   <string name="qr_sign_scan_instruction">Scannez le QR code de signature affiché sur votre portefeuille froid.</string>
   <string name="qr_sign_progress">%1$d / %2$d parties reçues</string>
+  <string name="avatar_presets">Préréglages</string>
+  <string name="avatar_unique">Unique</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

@@ -69,9 +69,13 @@ fun ContactEditorScreen(onSaved: () -> Unit, onCancel: () -> Unit, viewModel: Co
             )
 
             ContactEditorPage.Avatar -> ContactAvatarScene(
-                identicons = uiState.identicons,
-                onSelect = viewModel::setAvatar,
-                onSelectIdenticon = viewModel::setIdenticon,
+                heroImage = uiState.avatar,
+                hasAvatar = uiState.hasAvatar,
+                addressSeed = uiState.avatarAddressSeed,
+                storedAvatarInfo = uiState.storedAvatarInfo,
+                onSelectBoring = viewModel::setBoring,
+                onSelectPreset = viewModel::setPreset,
+                onRemove = viewModel::removeAvatar,
                 onCancel = viewModel::cancelAvatar,
             )
         }

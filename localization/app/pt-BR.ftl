@@ -831,3 +831,9 @@ qr_sign_instruction = Escaneie este QR code com sua carteira fria para revisar e
 qr_sign_scan_signature = Escanear assinatura
 qr_sign_scan_instruction = Escaneie o QR code da assinatura exibido em sua carteira fria.
 qr_sign_progress = Recebidas %d / %d partes
+
+# Avatar
+
+avatar_presets = Predefinições
+avatar_unique = Exclusivo
+avatar_nft = NFT

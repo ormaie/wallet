@@ -831,3 +831,9 @@ qr_sign_instruction = समीक्षा और हस्ताक्षर �
 qr_sign_scan_signature = हस्ताक्षर स्कैन करें
 qr_sign_scan_instruction = अपने कोल्ड वॉलेट पर दिखाए गए हस्ताक्षर QR कोड को स्कैन करें।
 qr_sign_progress = %d / %d भाग प्राप्त हुए
+
+# Avatar
+
+avatar_presets = प्रीसेट
+avatar_unique = अद्वितीय
+avatar_nft = NFT

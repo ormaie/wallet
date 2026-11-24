@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Pindai Tanda Tangan</string>
   <string name="qr_sign_scan_instruction">Pindai kode QR tanda tangan yang ditampilkan di dompet dingin Anda.</string>
   <string name="qr_sign_progress">Diterima %1$d / %2$d bagian</string>
+  <string name="avatar_presets">Prasetel</string>
+  <string name="avatar_unique">Unik</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

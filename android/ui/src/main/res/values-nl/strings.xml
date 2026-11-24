@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Handtekening scannen</string>
   <string name="qr_sign_scan_instruction">Scan de handtekening-QR-code op je cold wallet.</string>
   <string name="qr_sign_progress">%1$d / %2$d delen ontvangen</string>
+  <string name="avatar_presets">Voorinstellingen</string>
+  <string name="avatar_unique">Uniek</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

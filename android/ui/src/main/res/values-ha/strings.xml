@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Duba Sa Hannu</string>
   <string name="qr_sign_scan_instruction">Duba lambar QR ta sa hannu da aka nuna a kan walat ɗinka na sanyi.</string>
   <string name="qr_sign_progress">An karɓi %1$d / %2$d sassa</string>
+  <string name="avatar_presets">Zaɓaɓɓu</string>
+  <string name="avatar_unique">Na musamman</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

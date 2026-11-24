@@ -15,8 +15,15 @@ import com.gemwallet.android.features.contacts.viewmodels.models.ContactEditorPa
 import com.gemwallet.android.features.contacts.viewmodels.models.ContactEditorUIState
 import com.gemwallet.android.features.contacts.viewmodels.models.listItemImage
 import com.gemwallet.android.ui.R
+import com.gemwallet.android.ui.components.image.AvatarPreset
+import com.gemwallet.android.ui.components.image.AvatarPresetRenderer
+import com.gemwallet.android.ui.components.image.BoringAvatar
+import com.gemwallet.android.ui.components.image.BoringAvatarRenderer
 import com.gemwallet.android.ui.components.image.EmojiAvatarRenderer
 import com.gemwallet.android.ui.components.image.JdenticonAvatarRenderer
+import com.gemwallet.android.ui.components.image.StoredAvatarInfo
+import com.gemwallet.android.ui.components.image.inspectStoredAvatar
+import com.gemwallet.android.ui.components.list_item.ListItemImage
 import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.localization.text
 import com.gemwallet.android.ui.models.ToastMessage
@@ -44,7 +51,6 @@ import uniffi.gemstone.GemContactAvatar
 import uniffi.gemstone.GemContactAvatarChoice
 import uniffi.gemstone.GemContactEditorServiceInterface
 import uniffi.gemstone.GemContactSession
-import uniffi.gemstone.GemJdenticon
 import uniffi.gemstone.GemNameServiceInterface
 import javax.inject.Inject
 
@@ -64,10 +70,16 @@ class ContactEditorViewModel @Inject constructor(
         data class Edit(val contactId: String) : Mode
     }
 
+    private sealed interface PendingAvatar {
+        data class Preset(val preset: AvatarPreset) : PendingAvatar
+        data class Boring(val avatar: BoringAvatar) : PendingAvatar
+    }
+
     private data class ContactEditorState(
         val session: GemContactSession,
         val isEdit: Boolean,
-        val emojiBackground: Int = 0,
+        val pendingAvatar: PendingAvatar? = null,
+        val storedAvatarInfo: StoredAvatarInfo? = null,
         val page: ContactEditorPage = ContactEditorPage.Form,
         val addressSession: GemContactAddressSession? = null,
         val saved: Boolean = false,
@@ -102,20 +114,33 @@ class ContactEditorViewModel @Inject constructor(
         addressInput.isValid,
     ) { current, address, resolve, addressError, isValid ->
         val session = current.session
+        val addressRows = session.addressRows()
+        val seedRow = addressRows
+            .filter { it.address.address.isNotBlank() }
+            .firstOrNull { row ->
+                val raw = row.address.address.trim()
+                raw.startsWith("0x", ignoreCase = true) && raw.length == 42
+            }
+            ?: addressRows.firstOrNull { it.address.address.isNotBlank() }
         ContactEditorUIState(
             isEdit = current.isEdit,
             name = session.name,
             description = session.description,
-            avatar = session.avatarImage().listItemImage(current.emojiBackground),
-            hasAvatar = when (session.avatar) {
+            avatar = when (val pending = current.pendingAvatar) {
+                is PendingAvatar.Preset -> ListItemImage.Preset(pending.preset)
+                is PendingAvatar.Boring -> ListItemImage.Boring(pending.avatar)
+                null -> session.avatarImage().listItemImage()
+            },
+            hasAvatar = current.pendingAvatar != null || when (session.avatar) {
                 GemContactAvatarChoice.Empty -> false
                 is GemContactAvatarChoice.Image,
                 is GemContactAvatarChoice.Emoji,
                 is GemContactAvatarChoice.Identicon,
                 -> true
             },
-            identicons = session.identicons(),
-            addressRows = session.addressRows(),
+            avatarAddressSeed = seedRow?.address?.address?.trim(),
+            storedAvatarInfo = if (current.pendingAvatar == null) current.storedAvatarInfo else null,
+            addressRows = addressRows,
             page = current.page,
             isSaving = session.isSaving,
             saved = current.saved,
@@ -139,7 +164,13 @@ class ContactEditorViewModel @Inject constructor(
         when (val mode = mode) {
             is Mode.Edit -> viewModelScope.launch(ioDispatcher) {
                 val data = contactQuery(mode.contactId) ?: return@launch
-                updateSession { service.newSession(data.contact.toGem(), data.addresses.map { address -> address.toGem() }) }
+                val storedAvatar = inspectStoredAvatar(context, data.contact.imageUrl)
+                state.update {
+                    it.copy(
+                        session = service.newSession(data.contact.toGem(), data.addresses.map { address -> address.toGem() }),
+                        storedAvatarInfo = storedAvatar,
+                    )
+                }
             }
 
             is Mode.Add -> Unit
@@ -165,22 +196,31 @@ class ContactEditorViewModel @Inject constructor(
 
     fun cancelAvatar() = state.update { it.copy(page = ContactEditorPage.Form) }
 
-    fun setAvatar(emoji: String, backgroundColor: Int) = state.update {
+    fun setBoring(avatar: BoringAvatar) = state.update {
         it.copy(
-            session = it.session.onAvatarChanged(GemContactAvatarChoice.Emoji(emoji)),
-            emojiBackground = backgroundColor,
+            session = it.session.onAvatarChanged(GemContactAvatarChoice.Empty),
+            pendingAvatar = PendingAvatar.Boring(avatar),
+            storedAvatarInfo = null,
             page = ContactEditorPage.Form,
         )
     }
 
-    fun setIdenticon(jdenticon: GemJdenticon) = state.update {
+    fun setPreset(preset: AvatarPreset) = state.update {
         it.copy(
-            session = it.session.onAvatarChanged(GemContactAvatarChoice.Identicon(jdenticon)),
+            session = it.session.onAvatarChanged(GemContactAvatarChoice.Empty),
+            pendingAvatar = PendingAvatar.Preset(preset),
+            storedAvatarInfo = null,
             page = ContactEditorPage.Form,
         )
     }
 
-    fun removeAvatar() = updateSession { it.onAvatarChanged(GemContactAvatarChoice.Empty) }
+    fun removeAvatar() = state.update {
+        it.copy(
+            session = it.session.onAvatarChanged(GemContactAvatarChoice.Empty),
+            pendingAvatar = null,
+            storedAvatarInfo = null,
+        )
+    }
 
     fun deleteAddress(address: ContactAddress) = updateSession { it.onAddressDeleted(address.id) }
 
@@ -253,14 +293,17 @@ class ContactEditorViewModel @Inject constructor(
         updateSession { it.onSaving(true) }
 
         viewModelScope.launch(ioDispatcher) {
-            val input = current.session.input(
-                when (val avatar = current.session.avatar) {
+            val avatarInput = when (val pending = current.pendingAvatar) {
+                is PendingAvatar.Preset -> GemContactAvatar.Rendered(AvatarPresetRenderer.render(context, pending.preset))
+                is PendingAvatar.Boring -> GemContactAvatar.Rendered(BoringAvatarRenderer.render(context, pending.avatar))
+                null -> when (val avatar = current.session.avatar) {
                     GemContactAvatarChoice.Empty -> GemContactAvatar.Empty
                     is GemContactAvatarChoice.Image -> GemContactAvatar.Image(avatar.imageUrl)
-                    is GemContactAvatarChoice.Emoji -> GemContactAvatar.Rendered(EmojiAvatarRenderer.render(context, avatar.emoji, current.emojiBackground))
+                    is GemContactAvatarChoice.Emoji -> GemContactAvatar.Rendered(EmojiAvatarRenderer.render(context, avatar.emoji, 0))
                     is GemContactAvatarChoice.Identicon -> GemContactAvatar.Rendered(JdenticonAvatarRenderer.render(context, avatar.value))
-                },
-            )
+                }
+            }
+            val input = current.session.input(avatarInput)
             runCatchingCancellable { service.saveContact(input) }
                 .onSuccess {
                     when (mode) {

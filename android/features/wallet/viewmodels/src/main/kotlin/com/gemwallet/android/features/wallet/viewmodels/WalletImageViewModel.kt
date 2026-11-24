@@ -1,6 +1,7 @@
 package com.gemwallet.android.features.wallet.viewmodels
 
 import android.content.Context
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,10 +11,13 @@ import com.gemwallet.android.data.services.store.queries.WalletQuery
 import com.gemwallet.android.ext.errorText
 import com.gemwallet.android.ext.runCatchingCancellable
 import com.gemwallet.android.ext.toGem
-import com.gemwallet.android.ui.components.image.EmojiAvatarRenderer
-import com.gemwallet.android.ui.components.image.JdenticonAvatarRenderer
+import com.gemwallet.android.ui.components.image.AvatarPreset
+import com.gemwallet.android.ui.components.image.AvatarPresetRenderer
+import com.gemwallet.android.ui.components.image.BoringAvatar
+import com.gemwallet.android.ui.components.image.BoringAvatarRenderer
+import com.gemwallet.android.ui.components.image.StoredAvatarInfo
+import com.gemwallet.android.ui.components.image.inspectStoredAvatar
 import com.gemwallet.android.ui.localization.text
-import com.gemwallet.android.ui.theme.AvatarEmoji
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
@@ -27,11 +31,17 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import uniffi.gemstone.GemAvatarList
-import uniffi.gemstone.GemJdenticon
 import uniffi.gemstone.GemWalletDetails
 import uniffi.gemstone.GemWalletServiceInterface
 import javax.inject.Inject
+
+@Immutable
+data class WalletAvatarDetails(
+    val wallet: GemWalletDetails,
+    val storedAvatar: StoredAvatarInfo? = null,
+)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -46,11 +56,17 @@ class WalletImageViewModel @Inject constructor(
 
     private val walletId = savedStateHandle.requireWalletId()
 
-    val details: StateFlow<GemWalletDetails?> = walletQuery(walletId)
-        .mapLatest { wallet -> wallet?.let { walletService.walletDetails(it.toGem()) } }
+    val details: StateFlow<WalletAvatarDetails?> = walletQuery(walletId)
+        .mapLatest { wallet ->
+            wallet?.let {
+                val gemDetails = walletService.walletDetails(it.toGem())
+                val storedAvatar = withContext(ioDispatcher) {
+                    inspectStoredAvatar(context, gemDetails.row.imageUrl)
+                }
+                WalletAvatarDetails(wallet = gemDetails, storedAvatar = storedAvatar)
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
-
-    val emojis: List<String> = AvatarEmoji.all
 
     val avatars: StateFlow<GemAvatarList?> = nftQuery(walletId.id)
         .map { data -> walletService.avatarList(data.map { it.toGem() }) }
@@ -59,13 +75,13 @@ class WalletImageViewModel @Inject constructor(
     private val errorState = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = errorState.asStateFlow()
 
-    fun setEmoji(emoji: String, backgroundColor: Int) = viewModelScope.launch(ioDispatcher) {
-        runCatchingCancellable { walletService.setAvatarImage(walletId.id, EmojiAvatarRenderer.render(context, emoji, backgroundColor)) }
+    fun setBoring(avatar: BoringAvatar) = viewModelScope.launch(ioDispatcher) {
+        runCatchingCancellable { walletService.setAvatarImage(walletId.id, BoringAvatarRenderer.render(context, avatar)) }
             .onFailure { errorState.value = it.errorText().text(context) }
     }
 
-    fun setJdenticon(jdenticon: GemJdenticon) = viewModelScope.launch(ioDispatcher) {
-        runCatchingCancellable { walletService.setAvatarImage(walletId.id, JdenticonAvatarRenderer.render(context, jdenticon)) }
+    fun setPreset(preset: AvatarPreset) = viewModelScope.launch(ioDispatcher) {
+        runCatchingCancellable { walletService.setAvatarImage(walletId.id, AvatarPresetRenderer.render(context, preset)) }
             .onFailure { errorState.value = it.errorText().text(context) }
     }
 

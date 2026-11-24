@@ -831,3 +831,9 @@ qr_sign_instruction = Scansiona questo codice QR con il tuo cold wallet per veri
 qr_sign_scan_signature = Scansiona firma
 qr_sign_scan_instruction = Scansiona il codice QR della firma mostrato sul tuo cold wallet.
 qr_sign_progress = Ricevute %d / %d parti
+
+# Avatar
+
+avatar_presets = Predefiniti
+avatar_unique = Unico
+avatar_nft = NFT

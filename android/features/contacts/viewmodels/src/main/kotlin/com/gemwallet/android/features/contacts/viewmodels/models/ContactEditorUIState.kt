@@ -1,10 +1,10 @@
 package com.gemwallet.android.features.contacts.viewmodels.models
 
 import androidx.compose.runtime.Immutable
+import com.gemwallet.android.ui.components.image.StoredAvatarInfo
 import com.gemwallet.android.ui.components.list_item.ListItemImage
 import com.wallet.core.primitives.Chain
 import uniffi.gemstone.GemContactAddressRow
-import uniffi.gemstone.GemJdenticon
 import uniffi.gemstone.GemNameIndicator
 
 enum class ContactEditorPage {
@@ -21,7 +21,8 @@ data class ContactEditorUIState(
     val description: String = "",
     val avatar: ListItemImage = ListItemImage.Initials(""),
     val hasAvatar: Boolean = false,
-    val identicons: List<GemJdenticon> = emptyList(),
+    val avatarAddressSeed: String? = null,
+    val storedAvatarInfo: StoredAvatarInfo? = null,
     val addressRows: List<GemContactAddressRow> = emptyList(),
     val page: ContactEditorPage = ContactEditorPage.Form,
     val addressInput: ContactAddressInput? = null,

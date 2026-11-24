@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.gemwallet.android.ui.components.InfoSheetEntity
 import com.gemwallet.android.ui.components.LocalNumericTransition
 import com.gemwallet.android.ui.components.NumericText
+import com.gemwallet.android.ui.components.image.AvatarPreset
+import com.gemwallet.android.ui.components.image.BoringAvatar
 import com.gemwallet.android.ui.components.image.ListItemImageView
 import com.gemwallet.android.ui.components.list_item.property.PropertyDataText
 import com.gemwallet.android.ui.components.list_item.property.PropertyItem
@@ -129,6 +131,14 @@ sealed interface ListItemImage {
     }
 
     data class Jdenticon(val jdenticon: GemJdenticon) : ListItemImage {
+        override val style: ListItemImageStyle = ListItemImageStyle.Avatar
+    }
+
+    data class Preset(val preset: AvatarPreset) : ListItemImage {
+        override val style: ListItemImageStyle = ListItemImageStyle.Avatar
+    }
+
+    data class Boring(val avatar: BoringAvatar) : ListItemImage {
         override val style: ListItemImageStyle = ListItemImageStyle.Avatar
     }
 

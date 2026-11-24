@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">İmzayı Tara</string>
   <string name="qr_sign_scan_instruction">Soğuk cüzdanınızda gösterilen imza QR kodunu tarayın.</string>
   <string name="qr_sign_progress">%1$d / %2$d parça alındı</string>
+  <string name="avatar_presets">Hazır</string>
+  <string name="avatar_unique">Özel</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

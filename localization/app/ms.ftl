@@ -831,3 +831,9 @@ qr_sign_instruction = Imbas kod QR ini dengan dompet sejuk anda untuk menyemak d
 qr_sign_scan_signature = Imbas Tandatangan
 qr_sign_scan_instruction = Imbas kod QR tandatangan yang dipaparkan pada dompet sejuk anda.
 qr_sign_progress = Diterima %d / %d bahagian
+
+# Avatar
+
+avatar_presets = Pratetap
+avatar_unique = Unik
+avatar_nft = NFT

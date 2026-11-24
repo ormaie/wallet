@@ -831,3 +831,9 @@ qr_sign_instruction = Зіскануйте цей QR-код холодним г�
 qr_sign_scan_signature = Зісканувати підпис
 qr_sign_scan_instruction = Зіскануйте QR-код підпису на екрані вашого холодного гаманця.
 qr_sign_progress = Отримано %d / %d частин
+
+# Avatar
+
+avatar_presets = Готові
+avatar_unique = Унікальні
+avatar_nft = NFT

@@ -831,3 +831,9 @@ qr_sign_instruction = Scanează acest cod QR cu portofelul tău rece pentru a ve
 qr_sign_scan_signature = Scanează semnătura
 qr_sign_scan_instruction = Scanează codul QR al semnăturii afișat pe portofelul tău rece.
 qr_sign_progress = Primite %d / %d părți
+
+# Avatar
+
+avatar_presets = Presetări
+avatar_unique = Unic
+avatar_nft = NFT

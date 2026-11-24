@@ -831,3 +831,9 @@ qr_sign_instruction = 콜드 월렛으로 이 QR 코드를 스캔하여 검토�
 qr_sign_scan_signature = 서명 스캔
 qr_sign_scan_instruction = 콜드 월렛에 표시된 서명 QR 코드를 스캔하세요.
 qr_sign_progress = %d / %d 파트 수신됨
+
+# Avatar
+
+avatar_presets = 프리셋
+avatar_unique = 고유
+avatar_nft = NFT

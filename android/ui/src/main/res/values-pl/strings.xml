@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Zeskanuj podpis</string>
   <string name="qr_sign_scan_instruction">Zeskanuj kod QR podpisu wyświetlony w portfelu offline.</string>
   <string name="qr_sign_progress">Odebrano %1$d / %2$d części</string>
+  <string name="avatar_presets">Gotowe</string>
+  <string name="avatar_unique">Unikalne</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

@@ -831,3 +831,9 @@ qr_sign_instruction = סרקו קוד QR זה באמצעות הארנק הקר �
 qr_sign_scan_signature = סריקת חתימה
 qr_sign_scan_instruction = סרקו את קוד ה-QR של החתימה המוצג בארנק הקר שלכם.
 qr_sign_progress = התקבלו %d / %d חלקים
+
+# Avatar
+
+avatar_presets = תבניות
+avatar_unique = ייחודי
+avatar_nft = NFT

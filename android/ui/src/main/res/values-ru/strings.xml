@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Сканировать подпись</string>
   <string name="qr_sign_scan_instruction">Отсканируйте QR-код подписи на экране холодного кошелька.</string>
   <string name="qr_sign_progress">Получено %1$d / %2$d частей</string>
+  <string name="avatar_presets">Готовые</string>
+  <string name="avatar_unique">Уникальные</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

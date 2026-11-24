@@ -831,3 +831,9 @@ qr_sign_instruction = 請使用冷錢包掃描此 QR Code 以核對並簽名。
 qr_sign_scan_signature = 掃描簽名 QR Code
 qr_sign_scan_instruction = 請掃描冷錢包上顯示的簽名結果 QR Code。
 qr_sign_progress = 已接收 %d / %d 幀
+
+# Avatar
+
+avatar_presets = 預設
+avatar_unique = 專屬
+avatar_nft = NFT

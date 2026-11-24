@@ -831,3 +831,9 @@ qr_sign_instruction = Changanua msimbo huu wa QR kwa pochi yako baridi ili kukag
 qr_sign_scan_signature = Changanua Saini
 qr_sign_scan_instruction = Changanua msimbo wa QR wa saini unaoonyeshwa kwenye pochi yako baridi.
 qr_sign_progress = Imepokelewa sehemu %d / %d
+
+# Avatar
+
+avatar_presets = Chaguo
+avatar_unique = Kipekee
+avatar_nft = NFT

@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">扫描签名二维码</string>
   <string name="qr_sign_scan_instruction">请扫描冷钱包上显示的签名结果二维码。</string>
   <string name="qr_sign_progress">已接收 %1$d / %2$d 帧</string>
+  <string name="avatar_presets">预设</string>
+  <string name="avatar_unique">专属</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

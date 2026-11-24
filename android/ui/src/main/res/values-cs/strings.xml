@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">Naskenovat podpis</string>
   <string name="qr_sign_scan_instruction">Naskenujte QR kód podpisu zobrazený na vaší offline peněžence.</string>
   <string name="qr_sign_progress">Přijato %1$d / %2$d částí</string>
+  <string name="avatar_presets">Předvolby</string>
+  <string name="avatar_unique">Unikátní</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

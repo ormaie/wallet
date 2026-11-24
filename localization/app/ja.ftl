@@ -831,3 +831,9 @@ qr_sign_instruction = コールドウォレットでこのQRコードをスキ�
 qr_sign_scan_signature = 署名をスキャン
 qr_sign_scan_instruction = コールドウォレットに表示された署名QRコードをスキャンしてください。
 qr_sign_progress = %d / %d パーツ受信済み
+
+# Avatar
+
+avatar_presets = プリセット
+avatar_unique = 専用
+avatar_nft = NFT

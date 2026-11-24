@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">اسکن امضا</string>
   <string name="qr_sign_scan_instruction">کد QR امضای نمایش داده شده در کیف پول سرد خود را اسکن کنید.</string>
   <string name="qr_sign_progress">%1$d / %2$d بخش دریافت شد</string>
+  <string name="avatar_presets">پیش‌فرض‌ها</string>
+  <string name="avatar_unique">اختصاصی</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

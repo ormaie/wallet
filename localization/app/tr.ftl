@@ -831,3 +831,9 @@ qr_sign_instruction = İncelemek ve imzalamak için bu QR kodu soğuk cüzdanın
 qr_sign_scan_signature = İmzayı Tara
 qr_sign_scan_instruction = Soğuk cüzdanınızda gösterilen imza QR kodunu tarayın.
 qr_sign_progress = %d / %d parça alındı
+
+# Avatar
+
+avatar_presets = Hazır
+avatar_unique = Özel
+avatar_nft = NFT

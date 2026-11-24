@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">دستخط اسکین کریں</string>
   <string name="qr_sign_scan_instruction">اپنے کولڈ والیٹ پر دکھایا گیا دستخطی QR کوڈ اسکین کریں۔</string>
   <string name="qr_sign_progress">%1$d / %2$d حصے موصول ہوئے</string>
+  <string name="avatar_presets">پری سیٹس</string>
+  <string name="avatar_unique">منفرد</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

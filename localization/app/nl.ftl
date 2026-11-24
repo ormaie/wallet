@@ -831,3 +831,9 @@ qr_sign_instruction = Scan deze QR-code met je cold wallet om te controleren en 
 qr_sign_scan_signature = Handtekening scannen
 qr_sign_scan_instruction = Scan de handtekening-QR-code op je cold wallet.
 qr_sign_progress = %d / %d delen ontvangen
+
+# Avatar
+
+avatar_presets = Voorinstellingen
+avatar_unique = Uniek
+avatar_nft = NFT

@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">署名をスキャン</string>
   <string name="qr_sign_scan_instruction">コールドウォレットに表示された署名QRコードをスキャンしてください。</string>
   <string name="qr_sign_progress">%1$d / %2$d パーツ受信済み</string>
+  <string name="avatar_presets">プリセット</string>
+  <string name="avatar_unique">専用</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

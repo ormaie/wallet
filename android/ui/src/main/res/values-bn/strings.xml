@@ -655,4 +655,7 @@
   <string name="qr_sign_scan_signature">স্বাক্ষর স্ক্যান করুন</string>
   <string name="qr_sign_scan_instruction">আপনার কোল্ড ওয়ালেটে দেখানো স্বাক্ষরের QR কোডটি স্ক্যান করুন।</string>
   <string name="qr_sign_progress">%1$d / %2$d অংশ গৃহীত হয়েছে</string>
+  <string name="avatar_presets">প্রিসেট</string>
+  <string name="avatar_unique">অনন্য</string>
+  <string name="avatar_nft">NFT</string>
 </resources>

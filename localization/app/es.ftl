@@ -831,3 +831,9 @@ qr_sign_instruction = Escanea este código QR con tu billetera fría para revisa
 qr_sign_scan_signature = Escanear firma
 qr_sign_scan_instruction = Escanea el código QR de la firma que aparece en tu billetera fría.
 qr_sign_progress = Recibidas %d / %d partes
+
+# Avatar
+
+avatar_presets = Preajustes
+avatar_unique = Único
+avatar_nft = NFT

@@ -1481,3 +1481,12 @@ qr_sign_scan_signature = Scan Signature
 qr_sign_scan_instruction = Scan the signature QR code displayed on your cold wallet.
 # Progress indicator when receiving multi-frame UR QR codes. First %d is received parts, second %d is expected parts.
 qr_sign_progress = Received %d / %d parts
+
+# Avatar
+
+# Tab label on the wallet avatar screen for built-in preset avatars.
+avatar_presets = Presets
+# Segmented tab label on the avatar screen for address-derived unique avatars.
+avatar_unique = Unique
+# Segmented tab label on the avatar screen for NFT collection avatars.
+avatar_nft = NFT

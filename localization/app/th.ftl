@@ -831,3 +831,9 @@ qr_sign_instruction = สแกนคิวอาร์โค้ดนี้ด�
 qr_sign_scan_signature = สแกนลายเซ็น
 qr_sign_scan_instruction = สแกนคิวอาร์โค้ดลายเซ็นที่แสดงบนกระเป๋าเงินออฟไลน์ของคุณ
 qr_sign_progress = ได้รับแล้ว %d / %d ส่วน
+
+# Avatar
+
+avatar_presets = ที่ตั้งไว้
+avatar_unique = เฉพาะตัว
+avatar_nft = NFT

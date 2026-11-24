@@ -831,3 +831,9 @@ qr_sign_instruction = این کد QR را با کیف پول سرد خود بر�
 qr_sign_scan_signature = اسکن امضا
 qr_sign_scan_instruction = کد QR امضای نمایش داده شده در کیف پول سرد خود را اسکن کنید.
 qr_sign_progress = %d / %d بخش دریافت شد
+
+# Avatar
+
+avatar_presets = پیش‌فرض‌ها
+avatar_unique = اختصاصی
+avatar_nft = NFT

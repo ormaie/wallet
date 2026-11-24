@@ -16,14 +16,14 @@ fun WalletImageScreen(onCancel: () -> Unit, viewModel: WalletImageViewModel = hi
     val snackbar = rememberSnackbarState(message = error, iconRes = R.drawable.ic_error, onShown = viewModel::clearError)
 
     WalletImageScene(
-        wallet = wallet,
-        emojis = viewModel.emojis,
+        wallet = wallet?.wallet,
+        storedAvatarInfo = wallet?.storedAvatar,
         avatars = avatars,
         snackbar = snackbar,
         onAction = { action ->
             when (action) {
-                is WalletImageAction.SetEmoji -> viewModel.setEmoji(action.emoji, action.backgroundColor)
-                is WalletImageAction.SetJdenticon -> viewModel.setJdenticon(action.jdenticon)
+                is WalletImageAction.SetBoring -> viewModel.setBoring(action.avatar)
+                is WalletImageAction.SetPreset -> viewModel.setPreset(action.preset)
                 is WalletImageAction.SetNftImage -> viewModel.setNftImage(action.url)
                 WalletImageAction.ResetToDefault -> viewModel.resetToDefault()
                 WalletImageAction.Close -> onCancel()

@@ -831,3 +831,9 @@ qr_sign_instruction = Zeskanuj ten kod QR swoim portfelem offline, aby sprawdzi�
 qr_sign_scan_signature = Zeskanuj podpis
 qr_sign_scan_instruction = Zeskanuj kod QR podpisu wyświetlony w portfelu offline.
 qr_sign_progress = Odebrano %d / %d części
+
+# Avatar
+
+avatar_presets = Gotowe
+avatar_unique = Unikalne
+avatar_nft = NFT
