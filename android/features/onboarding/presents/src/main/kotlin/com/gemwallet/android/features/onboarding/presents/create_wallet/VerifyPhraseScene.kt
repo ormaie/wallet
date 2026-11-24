@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +32,7 @@ import com.gemwallet.android.ui.theme.WalletTheme
 import com.gemwallet.android.ui.theme.WindowDimension
 import com.gemwallet.android.ui.theme.isCompactDimension
 import com.gemwallet.android.ui.theme.paddingDefault
+import com.gemwallet.android.ui.theme.plainContainer
 import com.gemwallet.android.ui.theme.sceneContentPaddingValues
 import com.gemwallet.android.ui.theme.space8
 import uniffi.gemstone.GemButtonState
@@ -53,7 +55,7 @@ internal fun VerifyPhraseScene(state: GemVerifyPhraseViewState, choices: List<St
 
     Scene(
         title = stringResource(id = R.string.transfer_confirm),
-        containerColor = onboardingContainerColor(),
+        containerColor = MaterialTheme.colorScheme.plainContainer,
         onClose = onCancel,
         padding = sceneContentPaddingValues(),
         mainAction = {

@@ -42,10 +42,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gemwallet.android.features.onboarding.presents.create_wallet.onboardingNeutralFillColor
 import com.gemwallet.android.ui.components.sensitiveData
 import com.gemwallet.android.ui.theme.WindowDimension
 import com.gemwallet.android.ui.theme.isCompactDimension
+import com.gemwallet.android.ui.theme.neutralFill
 import com.gemwallet.android.ui.theme.paddingHalfSmall
 import com.gemwallet.android.ui.theme.space10
 import kotlinx.coroutines.delay
@@ -123,7 +123,7 @@ internal fun WordChip(word: String, isEnable: Boolean, modifier: Modifier = Modi
                     }
                     .semantics { if (!isEnable) disabled() },
                 shape = shape,
-                color = onboardingNeutralFillColor(),
+                color = MaterialTheme.colorScheme.neutralFill,
             ) {
                 Box(
                     modifier = Modifier

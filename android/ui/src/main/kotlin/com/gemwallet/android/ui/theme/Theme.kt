@@ -11,6 +11,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -24,8 +25,19 @@ const val alpha40 = 0.4f
 const val alpha50 = 0.5f
 const val alpha60 = 0.6f
 
+private const val LightSurfaceLuminanceThreshold = 0.5f
+
 val ColorScheme.secondaryFaded: Color
     get() = secondary.copy(alpha = alpha50)
+
+val ColorScheme.isLightSurface: Boolean
+    get() = surface.luminance() > LightSurfaceLuminanceThreshold
+
+val ColorScheme.plainContainer: Color
+    get() = if (isLightSurface) background else surface
+
+val ColorScheme.neutralFill: Color
+    get() = if (isLightSurface) surface else surfaceContainerHighest
 
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF2D5BE6),

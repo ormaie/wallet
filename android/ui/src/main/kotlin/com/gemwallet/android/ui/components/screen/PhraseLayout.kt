@@ -30,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -44,14 +43,15 @@ import com.gemwallet.android.ui.theme.WindowDimension
 import com.gemwallet.android.ui.theme.adaptivePadding
 import com.gemwallet.android.ui.theme.hairlineThickness
 import com.gemwallet.android.ui.theme.isCompactDimension
+import com.gemwallet.android.ui.theme.isLightSurface
 import com.gemwallet.android.ui.theme.paddingDefault
 import com.gemwallet.android.ui.theme.paddingMiddle
+import com.gemwallet.android.ui.theme.plainContainer
 import com.gemwallet.android.ui.theme.space10
 import com.gemwallet.android.ui.theme.space8
 import uniffi.gemstone.GemSecretPhraseRow
 import uniffi.gemstone.secretPhraseRows
 
-private const val LightSurfaceLuminanceThreshold = 0.5f
 private const val TabularNumbersFeature = "tnum"
 private const val OrdinalDigits = 2
 private const val HighlightAlphaLight = 0.07f
@@ -73,12 +73,8 @@ fun PhraseLayout(words: List<String>, modifier: Modifier = Modifier, highlightIn
     if (rows.isEmpty()) {
         return
     }
-    val isLight = MaterialTheme.colorScheme.surface.luminance() > LightSurfaceLuminanceThreshold
-    val containerColor = if (isLight) {
-        MaterialTheme.colorScheme.background
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
+    val isLight = MaterialTheme.colorScheme.isLightSurface
+    val containerColor = MaterialTheme.colorScheme.plainContainer
     val dividerColor = MaterialTheme.colorScheme.outlineVariant
 
     Surface(

@@ -20,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -44,6 +43,7 @@ import com.gemwallet.android.ui.theme.WalletTheme
 import com.gemwallet.android.ui.theme.hairlineThickness
 import com.gemwallet.android.ui.theme.paddingDefault
 import com.gemwallet.android.ui.theme.paddingLarge
+import com.gemwallet.android.ui.theme.plainContainer
 import com.gemwallet.android.ui.theme.space24
 import com.gemwallet.android.ui.theme.space6
 import uniffi.gemstone.DocsUrl
@@ -51,7 +51,6 @@ import uniffi.gemstone.GemSecurityReminderItem
 import uniffi.gemstone.GemSecurityReminderKind
 import uniffi.gemstone.securityReminderItems
 
-private const val LightSurfaceLuminanceThreshold = 0.5f
 private const val TabularNumbersFeature = "tnum"
 private const val OrdinalDigits = 2
 private val ruleVerticalPadding = 20.dp
@@ -61,15 +60,10 @@ fun SecurityReminderScene(title: String = stringResource(R.string.wallet_new_tit
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val items = remember(kind) { securityReminderItems(kind) }
-    val containerColor = if (MaterialTheme.colorScheme.surface.luminance() > LightSurfaceLuminanceThreshold) {
-        MaterialTheme.colorScheme.background
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
 
     Scene(
         title = title,
-        containerColor = containerColor,
+        containerColor = MaterialTheme.colorScheme.plainContainer,
         mainAction = {
             MainActionButton(
                 stringResource(R.string.common_continue),
