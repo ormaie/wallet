@@ -439,7 +439,7 @@ sign_message_view_full_message = 查看完整消息
 # Secret Phrase
 
 secret_phrase_do_not_share_title = 切勿泄露助记词！
-secret_phrase_do_not_share_description = 任何人只要拥有助记词，就能完全控制这个钱包！
+secret_phrase_do_not_share_description = 助记词等同于钱包控制权，\n切勿向任何人泄露。
 secret_phrase_save_phrase_safely = 请将助记词保存在\n只有您能掌控的安全位置。
 secret_phrase_confirm_quick_test_title = 请按顺序点选助记词，\n确认已准确备份。
 secret_phrase_screenshot_detected_title = 检测到屏幕截图
@@ -456,7 +456,7 @@ private_key_reminder_do_not_share_subtitle = 任何人拿到私钥，都能控�
 private_key_reminder_no_recovery_title = 我们无法找回私钥
 private_key_reminder_no_recovery_subtitle = 如果丢失私钥，将无法访问钱包。
 private_key_do_not_share_title = 切勿泄露私钥！
-private_key_do_not_share_description = 任何人只要拥有私钥，就能完全控制这个账户！
+private_key_do_not_share_description = 私钥等同于账户控制权，\n切勿向任何人泄露。
 private_key_screenshot_detected_description = 屏幕截图可能会被其他应用访问；以此方式保存私钥会带来泄露风险。
 private_key_export_reminder_intro = 私钥可完全访问此账户。
 private_key_export_reminder_keep_safe_subtitle = 任何拥有私钥的人都能使用此账户。
