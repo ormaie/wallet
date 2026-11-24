@@ -13,7 +13,6 @@ import com.gemwallet.android.ui.components.image.BoringPaletteMode
 import com.gemwallet.android.ui.components.image.StoredAvatarSelection
 import com.gemwallet.android.ui.components.image.inspectStoredAvatar
 import com.gemwallet.android.ui.components.image.walletAvatarSeed
-import java.io.File
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -21,8 +20,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.GraphicsMode
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class BoringAvatarRendererTest {
 
     @Test
