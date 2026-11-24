@@ -40,6 +40,7 @@ import javax.inject.Inject
 @Immutable
 data class WalletAvatarDetails(
     val wallet: GemWalletDetails,
+    val avatarAddressSeed: String,
     val storedAvatar: StoredAvatarInfo? = null,
 )
 
@@ -63,7 +64,7 @@ class WalletImageViewModel @Inject constructor(
                 val storedAvatar = withContext(ioDispatcher) {
                     inspectStoredAvatar(context, gemDetails.row.imageUrl)
                 }
-                WalletAvatarDetails(wallet = gemDetails, storedAvatar = storedAvatar)
+                WalletAvatarDetails(wallet = gemDetails, avatarAddressSeed = gemDetails.row.avatarAddress(), storedAvatar = storedAvatar)
             }
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)

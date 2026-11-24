@@ -143,13 +143,3 @@ fun boringHashCode(seed: String): Int {
     }
     return if (hash == Int.MIN_VALUE) 0 else abs(hash)
 }
-
-fun walletAvatarSeed(walletId: String): String? {
-    val parts = walletId.split("_", limit = 3)
-    val raw = when {
-        parts.size >= 2 && parts[0] == "multicoin" -> walletId.removePrefix("multicoin_")
-        parts.size == 3 -> parts[2]
-        else -> null
-    }
-    return raw?.trim()?.takeIf { it.isNotEmpty() }
-}

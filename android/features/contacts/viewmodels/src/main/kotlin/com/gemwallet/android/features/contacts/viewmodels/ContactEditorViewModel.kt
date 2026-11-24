@@ -113,14 +113,6 @@ class ContactEditorViewModel @Inject constructor(
         addressInput.isValid,
     ) { current, address, resolve, addressError, isValid ->
         val session = current.session
-        val addressRows = session.addressRows()
-        val seedRow = addressRows
-            .filter { it.address.address.isNotBlank() }
-            .firstOrNull { row ->
-                val raw = row.address.address.trim()
-                raw.startsWith("0x", ignoreCase = true) && raw.length == 42
-            }
-            ?: addressRows.firstOrNull { it.address.address.isNotBlank() }
         ContactEditorUIState(
             isEdit = current.isEdit,
             name = session.name,
@@ -136,9 +128,9 @@ class ContactEditorViewModel @Inject constructor(
                 is GemContactAvatarChoice.Emoji,
                 -> true
             },
-            avatarAddressSeed = seedRow?.address?.address?.trim(),
+            avatarAddressSeed = session.avatarAddress(),
             storedAvatarInfo = if (current.pendingAvatar == null) current.storedAvatarInfo else null,
-            addressRows = addressRows,
+            addressRows = session.addressRows(),
             page = current.page,
             isSaving = session.isSaving,
             saved = current.saved,

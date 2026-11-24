@@ -10,14 +10,13 @@ import com.gemwallet.android.ui.components.screen.rememberSnackbarState
 
 @Composable
 fun WalletImageScreen(onCancel: () -> Unit, viewModel: WalletImageViewModel = hiltViewModel()) {
-    val wallet by viewModel.details.collectAsStateWithLifecycle()
+    val details by viewModel.details.collectAsStateWithLifecycle()
     val avatars by viewModel.avatars.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
     val snackbar = rememberSnackbarState(message = error, iconRes = R.drawable.ic_error, onShown = viewModel::clearError)
 
     WalletImageScene(
-        wallet = wallet?.wallet,
-        storedAvatarInfo = wallet?.storedAvatar,
+        details = details,
         avatars = avatars,
         snackbar = snackbar,
         onAction = { action ->

@@ -12,11 +12,9 @@ import com.gemwallet.android.ui.components.image.BoringAvatarVariant
 import com.gemwallet.android.ui.components.image.BoringPaletteMode
 import com.gemwallet.android.ui.components.image.StoredAvatarSelection
 import com.gemwallet.android.ui.components.image.inspectStoredAvatar
-import com.gemwallet.android.ui.components.image.walletAvatarSeed
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,16 +24,6 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class BoringAvatarRendererTest {
-
-    @Test
-    fun walletAvatarSeed_extractsAddressFromEveryWalletIdFormat() {
-        val address = "0x39B70628bf57Ee6b8CCA6b67C47da7934C1489DA"
-        assertEquals(address, walletAvatarSeed("multicoin_$address"))
-        assertEquals(address, walletAvatarSeed("single_ethereum_$address"))
-        assertEquals(address, walletAvatarSeed("privateKey_ethereum_$address"))
-        assertEquals(address, walletAvatarSeed("view_ethereum_$address"))
-        assertNull(walletAvatarSeed("invalid"))
-    }
 
     @Test
     fun mixPaletteMode_assignsDistinctDeterministicPalettesAcrossVariants() {
