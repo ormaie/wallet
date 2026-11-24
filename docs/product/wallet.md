@@ -79,7 +79,7 @@ flowchart LR
 
 1. Wallets lists "Create a New Wallet", "Import an Existing Wallet", then every wallet with its avatar, name and "Multi-Coin" or its address; the current one has a checkmark.
 2. Tapping another wallet selects it; a long press pins it into a "Pinned" section above the rest.
-3. A wallet's screen edits the name and sets an avatar from its address-derived Unique avatars (with switchable color palettes), a built-in geometric preset, or one of its own NFTs.
+3. A wallet's screen edits the name and sets an avatar from its address-derived Unique avatars (with switchable color palettes), a built-in geometric or landscape preset, or one of its own NFTs.
 4. A wallet's screen has a Backup section with "Show Secret Phrase", or "Show Private Key" for a wallet imported from a key, and for a Secret Phrase wallet an Advanced section with "Show Private Key" for one of its accounts.
 5. "Show Private Key" under Advanced opens the same security reminders, worded for one exported account key (the Secret Phrase still backs it up, so losing the key loses nothing; theft is the risk), then the account list (network and short address, in the same network order on both apps) under a neutral note that the Secret Phrase already backs these accounts up, then the key with a Copy button; a wallet with one exportable account skips the list.
 6. Delete removes everything the wallet owned on the device.
@@ -89,7 +89,7 @@ flowchart LR
 | Wallets are listed | Multi-Coin first, then single-network, then watch-only | |
 | Any wallet picker opens (WalletConnect, Rewards) | the same Pinned section | |
 | The user edits the name | it is saved as typed; a blank name keeps the last one | |
-| The avatar picker opens for a wallet | Unique shows five deterministic address-derived geometric avatars (Bauhaus, Ring, Beam, Sunset, Marble) with a mix-plus-8-palette swatch bar, Presets shows the built-in geometric grid, and NFT shows the wallet's NFTs | the same address produces the same Unique avatars whether imported or watch-only |
+| The avatar picker opens for a wallet | Unique shows five deterministic address-derived geometric avatars (Bauhaus, Ring, Beam, Sunset, Marble) with a mix-plus-8-palette swatch bar, Presets shows the built-in geometric and landscape grid, and NFT shows the wallet's NFTs | the same address produces the same Unique avatars whether imported or watch-only |
 | The wallet has a single network | its screen shows the address with an explorer link | |
 | The wallet is watch-only | no "Show Secret Phrase" or "Show Private Key" row | |
 | A Secret Phrase wallet lists accounts for a private key | only networks whose raw key another wallet can import; no Bitcoin-family or Cardano account, EVM networks one row each | a Bitcoin key would be raw, not WIF, and Cardano has no raw-key import |

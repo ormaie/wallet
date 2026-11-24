@@ -1,5 +1,3 @@
-pub mod blockies;
-pub mod jdenticon;
 #[cfg(test)]
 pub(crate) mod testkit;
 
@@ -11,12 +9,6 @@ use crate::alien::AlienProvider;
 use crate::services::error::GemServiceError;
 use crate::services::file::{GemFileStore, IMAGE_EXTENSION, download};
 use crate::services::wallet::GemWalletStore;
-
-pub use jdenticon::{GemJdenticon, GemJdenticonColor, GemJdenticonLayer, GemJdenticonPoint, GemJdenticonSubpath};
-
-pub(crate) fn identicons(address: &str) -> Vec<GemJdenticon> {
-    vec![jdenticon::generate(address), blockies::generate(address)]
-}
 
 #[derive(uniffi::Object)]
 pub struct GemAvatarService {

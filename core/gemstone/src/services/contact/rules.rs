@@ -1,12 +1,10 @@
 use std::collections::HashSet;
 
-use chain_primitives::checksum_address;
-use primitives::{AddressName, AddressType, Chain, ChainType, Contact, DateTime, OptionStringExt, PaymentRequest, VerificationStatus, contact::ContactAddress};
+use primitives::{AddressName, AddressType, Chain, Contact, DateTime, OptionStringExt, PaymentRequest, VerificationStatus, contact::ContactAddress};
 
 use super::model::{GemContactAddressField, GemContactAddressSession, GemContactAvatarChoice, GemContactScannedAddress, GemContactSession};
 use crate::address::validate_address;
 use crate::config::chain::is_memo_supported;
-use crate::services::avatar::{self, GemJdenticon};
 use crate::services::collections::stale_by;
 
 pub fn new_session(contact: Option<Contact>, addresses: Vec<ContactAddress>, new_id: String) -> GemContactSession {
@@ -123,41 +121,8 @@ pub fn contact_address_fields(chain: Chain) -> Vec<GemContactAddressField> {
     fields
 }
 
-pub fn identicons(addresses: &[ContactAddress]) -> Vec<GemJdenticon> {
-    let selected = addresses
-        .iter()
-        .filter(|address| !address.address.trim().is_empty())
-        .find(|address| is_evm_address_chain(address.chain))
-        .or_else(|| addresses.iter().find(|address| !address.address.trim().is_empty()));
-    let Some(address) = selected else {
-        return Vec::new();
-    };
-    let seed = checksum_address(&address.address, address.chain);
-    avatar::identicons(&seed)
-}
-
-fn is_evm_address_chain(chain: Chain) -> bool {
-    match chain.chain_type() {
-        ChainType::Ethereum | ChainType::HyperCore => true,
-        ChainType::Bitcoin
-        | ChainType::Solana
-        | ChainType::Cosmos
-        | ChainType::Ton
-        | ChainType::Tron
-        | ChainType::Aptos
-        | ChainType::Sui
-        | ChainType::Xrp
-        | ChainType::Near
-        | ChainType::Stellar
-        | ChainType::Algorand
-        | ChainType::Polkadot
-        | ChainType::Cardano => false,
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use std::slice;
     use std::time::Duration;
 
     use primitives::{AssetId, Chain, DateTime, DurationExt};
@@ -339,41 +304,5 @@ mod tests {
         assert_eq!(editing.replacing_id.as_deref(), Some("old"));
         assert_eq!(editing.memo, "tag");
         assert_eq!(editing.fields, contact_address_fields(Chain::Cosmos));
-    }
-
-    #[test]
-    fn test_identicons() {
-        let evm_checksummed = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
-        let evm_lower = "0xd8da6bf26964af9d7eed9e03e53415d37aa96045";
-        let solana_address = "GvhwZwtV32kYUXUw965CUM3KGPdtBsDwPVpi92brY5R2";
-        let blank = ContactAddress {
-            address: "   ".into(),
-            ..ContactAddress::mock("blank")
-        };
-        let solana = ContactAddress {
-            chain: Chain::Solana,
-            address: solana_address.into(),
-            ..ContactAddress::mock("solana")
-        };
-        let bitcoin = ContactAddress {
-            chain: Chain::Bitcoin,
-            address: "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4".into(),
-            ..ContactAddress::mock("bitcoin")
-        };
-        let base = ContactAddress {
-            chain: Chain::Base,
-            address: evm_lower.into(),
-            ..ContactAddress::mock("base")
-        };
-        let ethereum = ContactAddress {
-            chain: Chain::Ethereum,
-            address: "0x1f9090aaE28b8a3dCeaDf281B0F12828e676c326".into(),
-            ..ContactAddress::mock("ethereum")
-        };
-
-        assert_eq!(identicons(&[]), Vec::new());
-        assert_eq!(identicons(slice::from_ref(&blank)), Vec::new());
-        assert_eq!(identicons(&[blank, solana.clone(), bitcoin]), avatar::identicons(solana_address));
-        assert_eq!(identicons(&[solana, base, ethereum]), avatar::identicons(evm_checksummed));
     }
 }

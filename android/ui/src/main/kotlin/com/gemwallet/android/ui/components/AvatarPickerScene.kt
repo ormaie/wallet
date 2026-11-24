@@ -41,8 +41,10 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -51,6 +53,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -119,6 +122,9 @@ import java.io.File
 import kotlin.math.roundToInt
 
 private const val PRESET_COLUMNS = 4
+private const val GEOMETRIC_PRESET_COUNT = 12
+private const val LANDSCAPE_SCROLL_THRESHOLD = 16
+private const val LANDSCAPE_INITIAL_SCROLL_INDEX = 8
 private const val LIGHT_GLOW_ALPHA = 0.18f
 private const val DARK_GLOW_ALPHA = 0.28f
 private const val LIGHT_FLOAT_TINT_ALPHA = 0.16f
@@ -1019,35 +1025,76 @@ private fun GeometricPresetsTabContent(
     sheetBackground: Color,
     onSelectPreset: (AvatarPreset) -> Unit,
 ) {
+    val geometricPresets = remember { AvatarPreset.entries.take(GEOMETRIC_PRESET_COUNT) }
+    val landscapePresets = remember { AvatarPreset.entries.drop(GEOMETRIC_PRESET_COUNT) }
+    val initialScrollIndex = if (selectedPreset != null && selectedPreset.ordinal >= LANDSCAPE_SCROLL_THRESHOLD) {
+        LANDSCAPE_INITIAL_SCROLL_INDEX
+    } else {
+        0
+    }
+    val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = initialScrollIndex)
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(PRESET_COLUMNS),
+        state = gridState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(paddingDefault),
     ) {
-        items(AvatarPreset.entries, key = { it.name }) { preset ->
-            val selected = preset == selectedPreset
-            val ringColor by animateColorAsState(
-                targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                animationSpec = labelColorAnimationSpec,
-                label = "avatar_preset_ring_color",
+        items(geometricPresets, key = { it.name }) { preset ->
+            PresetGridItem(
+                preset = preset,
+                selected = preset == selectedPreset,
+                sheetBackground = sheetBackground,
+                onSelect = { onSelectPreset(preset) },
             )
-            Box(
-                modifier = Modifier
-                    .aspectRatio(1f)
-                    .padding(space4)
-                    .border(width = selectionRingWidth, color = ringColor, shape = CircleShape)
-                    .padding(selectionRingGap)
-                    .background(sheetBackground, CircleShape),
-            ) {
-                AvatarPresetView(
+        }
+        if (landscapePresets.isNotEmpty()) {
+            item(key = "preset_group_divider", span = { GridItemSpan(PRESET_COLUMNS) }) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = space8, vertical = paddingSmall),
+                    thickness = hairlineThickness,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+            }
+            items(landscapePresets, key = { it.name }) { preset ->
+                PresetGridItem(
                     preset = preset,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("avatar_preset_${preset.name}"),
-                    onClick = { onSelectPreset(preset) },
+                    selected = preset == selectedPreset,
+                    sheetBackground = sheetBackground,
+                    onSelect = { onSelectPreset(preset) },
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun PresetGridItem(
+    preset: AvatarPreset,
+    selected: Boolean,
+    sheetBackground: Color,
+    onSelect: () -> Unit,
+) {
+    val ringColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+        animationSpec = labelColorAnimationSpec,
+        label = "avatar_preset_ring_color",
+    )
+    Box(
+        modifier = Modifier
+            .aspectRatio(1f)
+            .padding(space4)
+            .border(width = selectionRingWidth, color = ringColor, shape = CircleShape)
+            .padding(selectionRingGap)
+            .background(sheetBackground, CircleShape),
+    ) {
+        AvatarPresetView(
+            preset = preset,
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("avatar_preset_${preset.name}"),
+            onClick = onSelect,
+        )
     }
 }
 

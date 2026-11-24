@@ -20,7 +20,6 @@ import com.gemwallet.android.ui.components.image.AvatarPresetRenderer
 import com.gemwallet.android.ui.components.image.BoringAvatar
 import com.gemwallet.android.ui.components.image.BoringAvatarRenderer
 import com.gemwallet.android.ui.components.image.EmojiAvatarRenderer
-import com.gemwallet.android.ui.components.image.JdenticonAvatarRenderer
 import com.gemwallet.android.ui.components.image.StoredAvatarInfo
 import com.gemwallet.android.ui.components.image.inspectStoredAvatar
 import com.gemwallet.android.ui.components.list_item.ListItemImage
@@ -135,7 +134,6 @@ class ContactEditorViewModel @Inject constructor(
                 GemContactAvatarChoice.Empty -> false
                 is GemContactAvatarChoice.Image,
                 is GemContactAvatarChoice.Emoji,
-                is GemContactAvatarChoice.Identicon,
                 -> true
             },
             avatarAddressSeed = seedRow?.address?.address?.trim(),
@@ -300,7 +298,6 @@ class ContactEditorViewModel @Inject constructor(
                     GemContactAvatarChoice.Empty -> GemContactAvatar.Empty
                     is GemContactAvatarChoice.Image -> GemContactAvatar.Image(avatar.imageUrl)
                     is GemContactAvatarChoice.Emoji -> GemContactAvatar.Rendered(EmojiAvatarRenderer.render(context, avatar.emoji, 0))
-                    is GemContactAvatarChoice.Identicon -> GemContactAvatar.Rendered(JdenticonAvatarRenderer.render(context, avatar.value))
                 }
             }
             val input = current.session.input(avatarInput)

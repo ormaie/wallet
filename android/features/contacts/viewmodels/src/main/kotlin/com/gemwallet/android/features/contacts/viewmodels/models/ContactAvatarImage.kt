@@ -8,5 +8,4 @@ fun GemContactAvatarImage.listItemImage(): ListItemImage = when (this) {
     GemContactAvatarImage.Placeholder -> ListItemImage.Initials("")
     is GemContactAvatarImage.Image -> ListItemImage.Stored(imageUrl, placeholder = initials)
     is GemContactAvatarImage.Emoji -> ListItemImage.Emoji(emoji)
-    is GemContactAvatarImage.Identicon -> ListItemImage.Jdenticon(value)
 }

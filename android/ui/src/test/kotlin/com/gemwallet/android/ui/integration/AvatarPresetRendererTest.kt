@@ -20,9 +20,9 @@ import java.io.File
 class AvatarPresetRendererTest {
 
     @Test
-    fun render_producesDistinctCircularPngsForAllTwelveGeometricPresets() {
+    fun render_producesDistinctCircularPngsForAllPresets() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assertEquals(12, AvatarPreset.entries.size)
+        assertEquals(24, AvatarPreset.entries.size)
         val hashes = HashSet<Int>(AvatarPreset.entries.size)
 
         for (preset in AvatarPreset.entries) {

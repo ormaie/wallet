@@ -5,7 +5,7 @@
 [![Repo Checks](https://github.com/ormaie/wallet/actions/workflows/repo-checks.yml/badge.svg)](https://github.com/ormaie/wallet/actions/workflows/repo-checks.yml)
 [![License](https://badgen.net/github/license/ormaie/wallet)](https://github.com/ormaie/wallet/blob/main/LICENSE)
 
-An Android-only fork of [gemwalletcom/wallet](https://github.com/gemwalletcom/wallet) built on the shared Rust core, adding **BC-UR air-gapped QR cold wallet signing**, Jdenticon/Blockies wallet avatars, and Android UI refinements.
+An Android-only fork of [gemwalletcom/wallet](https://github.com/gemwalletcom/wallet) built on the shared Rust core, adding **BC-UR air-gapped QR cold wallet signing**, custom wallet and contact avatars, and Android UI refinements.
 
 ## Download
 

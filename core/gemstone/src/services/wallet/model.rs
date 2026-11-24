@@ -8,10 +8,7 @@ use primitives::{Chain, NameRecord, Wallet, WalletId, WalletListItem, WalletSour
 
 use super::rules;
 use crate::models::state::GemListPhase;
-use crate::services::avatar;
 use crate::services::nft::model::GemNftEntry;
-
-pub use crate::services::avatar::GemJdenticon;
 
 #[derive(Clone, uniffi::Enum)]
 pub enum GemWalletImportType {
@@ -188,13 +185,6 @@ pub struct GemWalletRow {
     pub has_avatar: bool,
     pub image_url: Option<String>,
     pub delete_prompt: GemLocalizedText,
-}
-
-#[uniffi::export]
-impl GemWalletRow {
-    pub fn identicons(&self) -> Vec<GemJdenticon> {
-        avatar::identicons(self.id.address())
-    }
 }
 
 #[uniffi::export]

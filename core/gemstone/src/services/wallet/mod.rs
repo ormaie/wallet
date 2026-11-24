@@ -53,7 +53,6 @@ use crate::services::wallet_preferences::GemWalletPreferencesService;
 use crate::services::wallet_session::GemWalletSessionService;
 use crate::ur::merge_unique_accounts;
 
-pub use crate::services::avatar::{GemJdenticon, GemJdenticonColor, GemJdenticonLayer, GemJdenticonPoint, GemJdenticonSubpath};
 pub use error::GemWalletImportError;
 pub use model::{GemAvatarList, GemPrivateKeyAccount, GemWalletDeletion, GemWalletDetails, GemWalletImportKind, GemWalletImportRequest, GemWalletImportResult, GemWalletImportScreen, GemWalletImportType, GemWalletSecret};
 pub use password::{GemKeystoreAuthentication, GemKeystorePassword};

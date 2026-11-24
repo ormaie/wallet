@@ -60,11 +60,6 @@ fun ListItemImageView(image: ListItemImage, modifier: Modifier = Modifier, style
             scale = AvatarScale.EMOJI,
         )
 
-        is ListItemImage.Jdenticon -> JdenticonView(
-            jdenticon = image.jdenticon,
-            modifier = modifier.size(size),
-        )
-
         is ListItemImage.Preset -> AvatarPresetView(
             preset = image.preset,
             modifier = modifier.size(size),
