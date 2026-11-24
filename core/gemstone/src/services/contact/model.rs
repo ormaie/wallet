@@ -103,6 +103,10 @@ impl GemContactSession {
         rules::can_save_contact(&self.name, self.is_saving)
     }
 
+    pub fn avatar_address(&self) -> Option<String> {
+        rules::avatar_address(&self.addresses)
+    }
+
     pub fn avatar_image(&self) -> GemContactAvatarImage {
         match &self.avatar {
             GemContactAvatarChoice::Empty => contact_avatar_image(None, &self.name),
@@ -202,7 +206,10 @@ impl GemContactAddressInput {
 
 #[cfg(test)]
 mod tests {
+    use primitives::{Wallet, WalletId};
+
     use super::*;
+    use crate::services::wallet::model::wallet_row;
 
     fn session() -> GemContactSession {
         GemContactSession {
@@ -271,6 +278,24 @@ mod tests {
 
         assert_eq!((input.id.as_str(), input.name.as_str(), input.description.as_str()), ("contact", "Ada", "Friend"));
         assert!(matches!(input.avatar, GemContactAvatar::Rendered { .. }));
+    }
+
+    #[test]
+    fn test_avatar_address() {
+        let address = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+        let wallet = wallet_row(Wallet {
+            id: WalletId::Multicoin(address.into()),
+            ..Wallet::mock()
+        });
+        let contact = session().on_address_saved(GemContactAddressInput {
+            contact_id: "contact".into(),
+            chain: Chain::Base,
+            address: address.to_lowercase(),
+            memo: None,
+            replacing_id: None,
+        });
+
+        assert_eq!(contact.avatar_address(), Some(wallet.avatar_address()));
     }
 
     #[test]

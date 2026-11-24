@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
-use primitives::{AddressName, AddressType, Chain, Contact, DateTime, OptionStringExt, PaymentRequest, VerificationStatus, contact::ContactAddress};
+use chain_primitives::checksum_address;
+use primitives::{AddressName, AddressType, Chain, ChainType, Contact, DateTime, OptionStringExt, PaymentRequest, VerificationStatus, contact::ContactAddress};
 
 use super::model::{GemContactAddressField, GemContactAddressSession, GemContactAvatarChoice, GemContactScannedAddress, GemContactSession};
 use crate::address::validate_address;
@@ -119,6 +120,30 @@ pub fn contact_address_fields(chain: Chain) -> Vec<GemContactAddressField> {
         fields.push(GemContactAddressField::Memo);
     }
     fields
+}
+
+pub fn avatar_address(addresses: &[ContactAddress]) -> Option<String> {
+    let address = addresses.iter().find(|address| is_evm_address_chain(address.chain)).or_else(|| addresses.first())?;
+    Some(checksum_address(&address.address, address.chain))
+}
+
+fn is_evm_address_chain(chain: Chain) -> bool {
+    match chain.chain_type() {
+        ChainType::Ethereum | ChainType::HyperCore => true,
+        ChainType::Bitcoin
+        | ChainType::Solana
+        | ChainType::Cosmos
+        | ChainType::Ton
+        | ChainType::Tron
+        | ChainType::Aptos
+        | ChainType::Sui
+        | ChainType::Xrp
+        | ChainType::Near
+        | ChainType::Stellar
+        | ChainType::Algorand
+        | ChainType::Polkadot
+        | ChainType::Cardano => false,
+    }
 }
 
 #[cfg(test)]
@@ -304,5 +329,35 @@ mod tests {
         assert_eq!(editing.replacing_id.as_deref(), Some("old"));
         assert_eq!(editing.memo, "tag");
         assert_eq!(editing.fields, contact_address_fields(Chain::Cosmos));
+    }
+
+    #[test]
+    fn test_avatar_address() {
+        let evm_checksummed = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+        let solana_address = "GvhwZwtV32kYUXUw965CUM3KGPdtBsDwPVpi92brY5R2";
+        let solana = ContactAddress {
+            chain: Chain::Solana,
+            address: solana_address.into(),
+            ..ContactAddress::mock("solana")
+        };
+        let bitcoin = ContactAddress {
+            chain: Chain::Bitcoin,
+            address: "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4".into(),
+            ..ContactAddress::mock("bitcoin")
+        };
+        let base = ContactAddress {
+            chain: Chain::Base,
+            address: evm_checksummed.to_lowercase(),
+            ..ContactAddress::mock("base")
+        };
+        let ethereum = ContactAddress {
+            chain: Chain::Ethereum,
+            address: "0x1f9090aaE28b8a3dCeaDf281B0F12828e676c326".into(),
+            ..ContactAddress::mock("ethereum")
+        };
+
+        assert_eq!(avatar_address(&[]), None);
+        assert_eq!(avatar_address(&[solana.clone(), bitcoin]), Some(solana_address.to_string()));
+        assert_eq!(avatar_address(&[solana, base, ethereum]), Some(evm_checksummed.to_string()));
     }
 }

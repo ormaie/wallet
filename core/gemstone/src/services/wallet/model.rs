@@ -188,6 +188,13 @@ pub struct GemWalletRow {
 }
 
 #[uniffi::export]
+impl GemWalletRow {
+    pub fn avatar_address(&self) -> String {
+        self.id.address().to_string()
+    }
+}
+
+#[uniffi::export]
 pub fn wallet_row(wallet: Wallet) -> GemWalletRow {
     rules::row(&WalletListItem::from(&wallet))
 }
