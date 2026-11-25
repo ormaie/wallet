@@ -3,7 +3,7 @@ use std::sync::Arc;
 use primitives::{Chain, ContactData, Payment, WalletAddressItem};
 
 use super::model::{GemRecipientError, GemRecipientNext, GemRecipientScan, GemRecipientType};
-use super::rules::{contact_recipients, matched_contact, recipient_sections, scan_route, select_step};
+use super::rules::{matched_contact, recipient_sections, scan_route, select_step};
 use crate::models::list::GemGroup;
 use crate::payment::{GemPaymentService, asset_step};
 use crate::services::name::GemNameRecordState;
@@ -26,7 +26,7 @@ impl GemRecipientService {
     pub fn recipient_sections(&self, wallets: Vec<WalletAddressItem>, chain: Chain, contacts: Vec<ContactData>) -> Vec<GemGroup> {
         let current = self.session.get_current_wallet_id().unwrap_or_default();
         let others = wallets.into_iter().filter(|item| Some(&item.wallet.id) != current.as_ref()).collect();
-        recipient_sections(others, chain, contact_recipients(contacts, chain))
+        recipient_sections(others, chain, contacts)
     }
 
     pub fn match_contact(&self, chain: Chain, input: String, name_state: GemNameRecordState, contacts: Vec<ContactData>) -> Option<GemRecipient> {
